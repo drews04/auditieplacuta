@@ -1,0 +1,28 @@
+// public/assets/scss/_menu-overrides.scss
+
+// —————————————————————————————
+// Menu Mega-dropdown tweaks for “Arena” section
+// —————————————————————————————
+
+// Wrap each column link in a bit of horizontal gutter
+.scmenu-main .menu_column {
+  padding: 0 0.75rem;
+}
+
+// Headings (the big “ABILITĂȚI” / “JOACĂ TRIVIA” / “CLASAMENTE”)
+.scmenu-main .menu_column > a {
+  font-size: 1.2rem;
+  margin-right: 1rem;
+  transition: color 0.2s ease, text-decoration 0.2s ease;
+}
+
+// Hover state: red + underline
+.scmenu-main .menu_column > a:hover {
+  color: #e63946;
+  text-decoration: underline;
+}
+
+// Sub-items: a little breathing room
+.scmenu-main .menu_column ul li {
+  margin-bottom: 0.5rem;
+}
