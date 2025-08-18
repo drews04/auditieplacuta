@@ -1,0 +1,64 @@
+/* alege-tema.css – Stiluri speciale pentru pagina Alege Tema */
+
+/* Page background can inherit site theme, but we can add a subtle animated glow */
+.alege-tema-page {
+    animation: backgroundPulse 6s infinite alternate;
+  }
+  
+  @keyframes backgroundPulse {
+    0% { background-color: rgba(0, 0, 0, 0.15); }
+    100% { background-color: rgba(0, 0, 0, 0.25); }
+  }
+  
+  /* Neon card adjustments for this page */
+  .alege-tema-card {
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 0 25px rgba(255, 255, 255, 0.08),
+                0 0 50px rgba(0, 255, 200, 0.3);
+    backdrop-filter: blur(8px);
+  }
+  
+  /* Inputs */
+  .alege-tema-select,
+  .alege-tema-text {
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: #fff;
+    transition: border-color 0.2s ease;
+  }
+  
+  .alege-tema-select:focus,
+  .alege-tema-text:focus {
+    border-color: #00ffd5;
+    box-shadow: 0 0 10px #00ffd5;
+  }
+  
+  /* Live preview */
+  .alege-tema-preview {
+    font-size: 1.1rem;
+    font-weight: 500;
+    color: #00ffd5;
+    text-shadow: 0 0 5px #00ffd5, 0 0 10px #00ffd5;
+  }
+  
+  /* Buttons */
+  .alege-tema-buttons .btn-neon {
+    min-width: 150px;
+  }
+  
+  .alege-tema-buttons .btn-ghost {
+    min-width: 150px;
+    border-color: rgba(255,255,255,0.4);
+    color: rgba(255,255,255,0.8);
+  }
+  
+  .alege-tema-buttons .btn-ghost:hover {
+    background: rgba(255,255,255,0.1);
+  }
+  
+  /* Note */
+  .alege-tema-note {
+    color: rgba(255, 255, 255, 0.6);
+    font-style: italic;
+  }
+  

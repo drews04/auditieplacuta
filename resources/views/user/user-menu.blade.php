@@ -1,28 +1,26 @@
-
-<div class="user-menu">
-    <span id="user-name" class="username" style="cursor: pointer;">
-        @auth
+<div class="user-menu-container">
+    @auth
+        <!-- Toggle Button -->
+        <span id="user-name" class="user-dropdown-toggle">
             Salut, {{ Auth::user()->name }}
-        @else
-            Salut, vizitator
-        @endauth
-    </span>
+        </span>
 
-    <ul id="user-dropdown" class="hidden">
-        <li><a href="{{ route('user.user_profile') }}">Profilul meu</a></li>
-        <li><a href="{{ route('user.statistics') }}">Statistici personale</a></li>
-        <li><a href="{{ route('user.songs') }}">Melodiile mele</a></li>
-        <li><a href="{{ route('user.user-trivia') }}">Trivia mea</a></li>
-        <li><a href="{{ route('user.abilities') }}">Abilitățile mele</a></li>
-        <li><a href="{{ route('user.votes') }}">Voturile mele</a></li>
-        <li><a href="{{ route('user.settings') }}">Setări cont</a></li>
-        <li class="logout">
-            <form method="POST" action="{{ route('logout') }}">
-                @csrf
-                <button type="submit" style="all: unset; color: #ff4c4c; font-weight: 600; cursor: pointer;">
+        <!-- Dropdown List -->
+        <ul id="user-dropdown" class="user-dropdown-list hidden">
+            <li><a href="{{ route('user.user_profile') }}">Profilul meu</a></li>
+            <li><a href="{{ route('user.statistics') }}">Statistici personale</a></li>
+            <li><a href="{{ route('abilities.index') }}">Abilitățile mele</a></li>
+            <li><a href="{{ route('user.settings') }}">Setări cont</a></li>
+            <li class="logout">
+                <a href="#" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
                     Deconectare
-                </button>
-            </form>
-        </li>
-    </ul>
+                </a>
+                <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
+                    @csrf
+                </form>
+            </li>
+        </ul>
+    @else
+        <span class="username">Salut, vizitator</span>
+    @endauth
 </div>

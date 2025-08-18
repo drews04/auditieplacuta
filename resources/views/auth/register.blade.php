@@ -4,7 +4,7 @@
 <div class="guest-container">
     <div class="register-container">
         <div class="logo" style="text-align:center; margin-bottom: 30px;">
-            <img src="/logo.png" alt="Auditie Placuta" style="max-width: 200px;">
+            <img src="{{ asset('assets/images/logo.png') }}" alt="Auditie Placuta" style="max-width: 200px;">
         </div>
 
         <h2>Înregistrare</h2>

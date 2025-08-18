@@ -1,44 +1,43 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Resetare parolă</title>
-    <link rel="stylesheet" href="{{ asset('css/auth.css') }}"> {{-- Optional: your own styling --}}
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-</head>
-<body>
+@extends('layouts.guest')
 
-<div class="auth-form-container">
-    <h2>Resetare parolă</h2>
+@section('content')
+<body class="guest-body">
+  <div class="guest-container">
+    <div class="register-container">
+      <div class="logo">
+        <img src="{{ asset('assets/images/logo.png') }}"> {{-- Replace with your real path --}}
+      </div>
 
-    @if ($errors->any())
-        <div class="alert alert-danger">
-            <ul style="margin-bottom: 0;">
-                @foreach ($errors->all() as $error)
-                    <li>{{ $error }}</li>
-                @endforeach
-            </ul>
+      <h2>Resetare parolă</h2>
+
+      @if ($errors->any())
+        <div class="alert-danger">
+          <ul style="margin-bottom: 0;">
+            @foreach ($errors->all() as $error)
+              <li>{{ $error }}</li>
+            @endforeach
+          </ul>
         </div>
-    @endif
+      @endif
 
-    <form method="POST" action="{{ route('password.email') }}">
+      <form method="POST" action="{{ route('password.email') }}">
         @csrf
 
         <div class="form-group">
-            <label for="email">Adresa de email</label>
-            <input
-                type="email"
-                id="email"
-                name="email"
-                required
-            >
+          <label for="email">Adresă de email</label>
+          <input
+            type="email"
+            id="email"
+            name="email"
+            required
+          >
         </div>
 
-        <button type="submit" class="btn">
-            Trimite codul de resetare
+        <button type="submit" class="register-btn">
+          Trimite codul de resetare
         </button>
-    </form>
-</div>
-
+      </form>
+    </div>
+  </div>
 </body>
-</html>
+@endsection

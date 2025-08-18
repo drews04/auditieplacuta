@@ -19,21 +19,23 @@
             <li>
               <a href="{{ route('home') }}">Acasa</a>
               <ul class="sub-menu">
-                <li><a href="{{ route('clasament-lunar') }}">Clasament lunar</a></li>
+                
                 <li><a href="{{ route('evenimente') }}">Evenimente</a></li>
-                <li><a href="{{ route('regulament') }}">Regulament</a></li>
+                
               </ul>
             </li>
 
             {{-- Concurs --}}
             <li>
-              <a href="{{ route('concurs.index') }}">Concurs</a>
+              <a href="{{ route('concurs') }}">Concurs</a>
               <ul class="sub-menu">
+              <li><a href="{{ route('leaderboard.monthly') }}">Clasament</a></li>
                 <li><a href="{{ route('concurs.incarca-melodie') }}">Încarcă melodie</a></li>
                 <li><a href="{{ route('concurs.melodiile-zilei') }}">Melodiile zilei</a></li>
                 <li><a href="{{ route('concurs.voteaza') }}">Votează</a></li>
                 <li><a href="{{ route('concurs.rezultate') }}">Rezultate (Arhivă)</a></li>
                 <li><a href="{{ route('concurs.arhiva-teme') }}">Arhivă teme</a></li>
+                <li><a href="{{ route('regulament') }}">Regulament</a></li>
               </ul>
             </li>
 
@@ -56,7 +58,7 @@
                   <div class="container">
                     <div class="mega_menu_content">
                       <div class="menu_column">
-                        <h2><a href="{{ route('abilitati') }}">Abilități</a></h2>
+                        <h2><a href="{{ route('abilities.index') }}">Abilități</a></h2>
                         <ul>
                           <li><a href="{{ route('abilitati-disponibile') }}">Disponibile</a></li>
                           <li><a href="{{ route('foloseste-abilitate') }}">Folosește abilitate</a></li>
@@ -107,13 +109,12 @@
             {{-- Conectare --}}
             @guest
             <li class="connect-btn-wrapper">
-              <button type="button" class="connect-btn readon white-btn" data-bs-toggle="modal" data-bs-target="#loginModal">
-                <img src="{{ asset('assets/images/icons/connect.png') }}" alt="">
+              <button type="button" class="connect-btn cyberpunk-pass" data-bs-toggle="modal" data-bs-target="#loginModal">
                 <span>Conectează-te</span>
               </button>
             </li>
-            @endguest
-          </ul>
+              @endguest
+            </ul>
         </div>
 
         {{-- User menu shown if authenticated --}}
