@@ -85,7 +85,9 @@ use App\Http\Controllers\LeaderboardController;
 use App\Http\Controllers\HomeController;
 // Admin controller for testing the competition
 use App\Http\Controllers\Admin\ConcursTestController;
-
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
+use Carbon\Carbon;
 
 //Acasa - Routes
 Route::get('/clasament-lunar', [ClasamentLunarController::class, 'index'])->name('clasament-lunar');
@@ -387,13 +389,16 @@ Route::middleware(['auth', AdminOnly::class])->group(function () {
                 }
             }
 
-            // 4) (Optional) Clear TODAY’s theme so you MUST pick a new one
-            if (Schema::hasTable('themes')) {
-                if (Schema::hasColumn('themes','competition_date')) {
-                    DB::table('themes')->whereDate('competition_date', $today)->delete();
-                } elseif (Schema::hasColumn('themes','date')) {
-                    DB::table('themes')->whereDate('date', $today)->delete();
-                }
+           
+            /// 4) Clear TODAY & NEXT contest themes (new table: contest_themes)
+            if (\Schema::hasTable('contest_themes')) {
+                \DB::table('contest_themes')->whereDate('contest_date', $today)->delete();
+
+                // also clear the next contest day (skip weekend), so you truly restart
+                $tomorrow = \Carbon\Carbon::parse($today)->addDay();
+                while (in_array($tomorrow->dayOfWeekIso, [6, 7])) { $tomorrow->addDay(); }
+
+                \DB::table('contest_themes')->whereDate('contest_date', $tomorrow->toDateString())->delete();
             }
         });
 
@@ -426,48 +431,110 @@ Route::middleware(['auth', AdminOnly::class])->group(function () {
 });
 
 // Concurs admin tools (these inherit the fake weekday when ON)
-Route::middleware(['auth', AdminOnly::class, ForceWeekdayIfTesting::class])->group(function () {
-    // Start Concurs Test = reset today and go pick a new theme
+Route::middleware(['auth', \App\Http\Middleware\AdminOnly::class, \App\Http\Middleware\ForceWeekdayIfTesting::class])->group(function () {
+    // 🚀 Start Concurs Test = hard reset TODAY + NEXT theme, then go pick a new theme
     Route::get('/admin/concurs/start', function () {
         $today = now()->toDateString();
 
         \DB::transaction(function () use ($today) {
+            // 1) Delete TODAY’s votes (only for songs from today)
             if (\Schema::hasTable('votes') && \Schema::hasTable('songs')) {
-                $songIds = \DB::table('songs')->whereDate('competition_date', $today)->pluck('id');
+                $songIds = \DB::table('songs')
+                    ->whereDate('competition_date', $today)
+                    ->pluck('id');
+
                 if ($songIds->isNotEmpty()) {
                     \DB::table('votes')->whereIn('song_id', $songIds)->delete();
                 }
             }
+
+            // 2) Delete TODAY’s songs
             if (\Schema::hasTable('songs')) {
                 \DB::table('songs')->whereDate('competition_date', $today)->delete();
             }
+
+            // 3) Delete TODAY’s winner (any column variant)
             if (\Schema::hasTable('winners')) {
-                if (\Schema::hasColumn('winners','contest_date')) {
-                    \DB::table('winners')->whereDate('contest_date', $today)->delete();
-                } elseif (\Schema::hasColumn('winners','competition_date')) {
-                    \DB::table('winners')->whereDate('competition_date', $today)->delete();
-                }
+                \DB::table('winners')->whereDate('contest_date', $today)->delete();
+                \DB::table('winners')->whereDate('win_date', $today)->delete();
             }
-            if (\Schema::hasTable('themes')) {
-                if (\Schema::hasColumn('themes','competition_date')) {
-                    \DB::table('themes')->whereDate('competition_date', $today)->delete();
-                } elseif (\Schema::hasColumn('themes','date')) {
-                    \DB::table('themes')->whereDate('date', $today)->delete();
+
+            // 4) Clear TODAY & NEXT contest themes (new table: contest_themes)
+            if (\Schema::hasTable('contest_themes')) {
+                \DB::table('contest_themes')->whereDate('contest_date', $today)->delete();
+
+                // also clear the next contest day (skip weekend)
+                $tomorrow = \Carbon\Carbon::parse($today)->addDay();
+                while (in_array($tomorrow->dayOfWeekIso, [6, 7])) { 
+                    $tomorrow->addDay(); 
                 }
+
+                \DB::table('contest_themes')
+                    ->whereDate('contest_date', $tomorrow->toDateString())
+                    ->delete();
+            }
+
+            // 5) Ensure a WINNER row for TODAY so the current admin can choose the theme,
+//    create a DUMMY song to satisfy the FK (we'll ignore this in app logic).
+if (\Schema::hasTable('winners') && \Schema::hasTable('songs')) {
+    $me = auth()->id();
+    $exists = \DB::table('winners')->whereDate('contest_date', $today)->exists();
+
+    if (!$exists && $me) {
+        // create dummy song (won't be shown; title marks it)
+        $dummySongId = \DB::table('songs')->insertGetId([
+            'user_id'          => $me,
+            'youtube_url'      => 'https://youtu.be/dQw4w9WgXcQ',
+            'title'            => '__AP_DUMMY__',
+            'competition_date' => $today,
+            'votes'            => 0,
+            'is_winner'        => 0,
+            'theme_id'         => null,
+            'created_at'       => now(),
+            'updated_at'       => now(),
+        ]);
+
+        \DB::table('winners')->insert([
+            'contest_date'         => $today,
+            'win_date'             => $today,
+            'user_id'              => $me,
+            'song_id'              => $dummySongId,  // ✅ valid FK
+            'competition_theme_id' => null,
+            'vote_count'           => 0,
+            'was_tie'              => 0,
+            'theme_chosen'         => 0,
+            'created_at'           => now(),
+            'updated_at'           => now(),
+        ]);
+    }
+}
+
+            // 6) Safety: remove any leftover placeholder songs from older resets
+            if (\Schema::hasTable('songs')) {
+                \DB::table('songs')
+                    ->whereDate('competition_date', $today)
+                    ->where('title', 'Placeholder (test reset)')
+                    ->delete();
             }
         });
 
-        return redirect()->route('concurs.alege-tema.create')
+        // back to the theme picker (fresh start)
+        return redirect()
+            ->route('concurs.alege-tema.create')
             ->with('status', 'Concurs reset pentru azi. Alege o temă nouă.');
     })->name('admin.concurs.start');
 
-    // Declare winner NOW = run your real command, then return to normal flow
+    // 🏁 Declare winner NOW = run real cron logic, then show popup if you're the winner
     Route::post('/admin/concurs/declare-now', function () {
-        Artisan::call('concurs:declare-winner');
-        return redirect()->route('concurs', ['force_popup' => 1])
-            ->with('status', trim(Artisan::output()) ?: 'Câștigător recalculat acum.');
+        \Artisan::call('concurs:declare-winner');
+
+        return redirect()
+            ->route('concurs', ['force_popup' => 1])
+            ->with('status', trim(\Artisan::output()) ?: 'Câștigător recalculat acum.');
     })->name('admin.concurs.declareNow');
 });
+
+
 
 /*
 |--------------------------------------------------------------------------
@@ -517,6 +584,49 @@ Route::get('/admin/concurs/declare-winner-now', function (Request $request) {
     \App\Http\Middleware\ForceWeekdayIfTesting::class,
 ]);
 
-//Points stats
+// Admin · Declare Winner NOW (helper)
+// GET /admin/concurs/declare-winner-now
+// 🏁 Declare winner NOW = run real cron logic, then redirect with modal if needed
+Route::get('/admin/concurs/declare-winner-now', function (\Illuminate\Http\Request $request) {
+    // Run the real winner logic
+    \Artisan::call('concurs:declare-winner');
+
+    $today = now()->toDateString();
+
+    // Fetch today's winner (by contest_date or win_date)
+    $winner = \DB::table('winners')
+        ->whereDate('contest_date', $today)
+        ->orWhereDate('win_date', $today)
+        ->orderByDesc('id')
+        ->first();
+
+    $flash = ['status' => 'Winner logic executed.'];
+
+    if ($winner) {
+        $isMe       = auth()->check() && (int) auth()->id() === (int) $winner->user_id;
+        $needsTheme = (int) ($winner->theme_chosen ?? 0) === 0;
+
+        if ($isMe && $needsTheme) {
+            // Tell Blade to open the modal
+            $flash['ap_show_theme_modal'] = true;
+        }
+
+        $flash['status'] = "Winner today is user #{$winner->user_id}, song #{$winner->song_id} ({$winner->vote_count} votes).";
+    }
+
+    return redirect()->route('concurs')->with($flash);
+})
+->name('admin.concurs.declare-winner-now')
+->middleware([
+    'auth',
+    \App\Http\Middleware\AdminOnly::class,
+    \App\Http\Middleware\ForceWeekdayIfTesting::class,
+]);
+
+// 🔗 Alias so route('admin.concurs.declare-now') still works in Blade
+Route::get('/admin/concurs/declare-now', function () {
+    return redirect()->route('admin.concurs.declare-winner-now');
+})->name('admin.concurs.declare-now');
+
 
 

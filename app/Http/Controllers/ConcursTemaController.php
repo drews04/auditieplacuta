@@ -24,34 +24,61 @@ class ConcursTemaController extends Controller
     }
 
     // Handle submit
-    public function store(Request $request)
+    public function store(\Illuminate\Http\Request $request)
 {
-        $data = $request->validate([
-            'category' => 'required|in:CSD,ITC,Artiști,Genuri',
-            'theme'    => 'required|string|min:2|max:80',
-        ]);
+    $today = \Carbon\Carbon::today();
+    $now   = \Carbon\Carbon::now();
 
-        // 1) determine next contest day (skip weekend)
-        $appliesOn = $this->nextContestDate(); // Y-m-d string
-
-        // 2) persist (upsert) tomorrow’s theme
-        CompetitionTheme::updateOrCreate(
-            ['applies_on' => $appliesOn],
-            [
-                'category_code' => $data['category'],
-                'title'         => trim($data['theme']),
-                'chosen_by'     => Auth::id(),
-                'chosen_at'     => now(),
-            ]
-        );
-
-        // TODO: mark the winner record as theme_chosen = true (when you expose that model/table)
-
-        // 3) redirect back to Concurs with success flag (popup)
-        return redirect()
-            ->route('concurs')              // existing route in your app
-            ->with('tema_success', true);
+    // must be today's winner
+    $winner = \App\Models\Winner::whereDate('contest_date', $today)->first();
+    if (!$winner || !auth()->check() || (int)$winner->user_id !== (int)auth()->id()) {
+        return redirect()->route('concurs')->with('status', 'Nu ai permisiunea să alegi tema.');
     }
+
+    // only before 21:00
+    if ($now->gte($today->copy()->setTime(21, 0))) {
+        return redirect()->route('concurs')->with('status', 'Fereastra s-a închis. Fallback-ul va alege tema.');
+    }
+
+    // validate JUST your two inputs
+    $data = $request->validate([
+        'category' => ['required','string','max:40'],
+        'theme'    => ['required','string','max:120'],
+    ]);
+
+    // next weekday (skip weekend)
+    $next = $today->copy();
+    do { $next->addDay(); } while (in_array($next->dayOfWeekIso, [6, 7]));
+
+    // if already set, succeed idempotently
+    if (\App\Models\ContestTheme::whereDate('contest_date', $next->toDateString())->exists()) {
+        session()->forget('ap_show_theme_modal');
+        return redirect()->route('concurs')->with('tema_success', true);
+    }
+
+    // ensure a ThemePool row exists for this manual choice (creates if missing)
+    $pool = \App\Models\ThemePool::firstOrCreate(
+        ['name' => trim($data['theme']), 'category' => trim($data['category'])],
+        ['active' => true]
+    );
+
+    // write the theme the Concurs page reads
+    \App\Models\ContestTheme::create([
+        'contest_date'     => $next->toDateString(),
+        'theme_pool_id'    => (int)$pool->id,
+        'picked_by_winner' => true,
+    ]);
+
+    // mark winner + stop reopening the modal
+    $winner->theme_chosen = 1;
+    $winner->save();
+    session()->forget('ap_show_theme_modal');
+
+    // success toast; Concurs page will now HIDE the list & SHOW upload for tomorrow
+    return redirect()->route('concurs')->with('tema_success', true);
+}
+
+    
 
 /**
  * Returns next contest date (Mon–Fri) as Y-m-d.

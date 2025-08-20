@@ -23,6 +23,7 @@
   <link rel="stylesheet" href="{{ asset('logo.css') }}" />
   <link rel="stylesheet" href="{{ asset('assets/css/winner.css') }}?v={{ time() }}">
   <link rel="stylesheet" href="{{ asset('assets/css/leaderboard.css') }}?v={{ time() }}">
+  <link rel="stylesheet" href="{{ asset('assets/css/rotating-banner.css') }}">
   <!-- Tiny layout skeleton (no header overrides here) -->
   <style>
     html, body { height: 100%; margin: 0; }

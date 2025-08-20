@@ -67,29 +67,35 @@ class AwardPoints
      * - no DQ filter (column not present in your schema)
      */
     protected function dailyPositions(string $contestDate)
-    {
-        $rows = DB::table('songs')
-            ->leftJoin('votes', function ($join) use ($contestDate) {
-                $join->on('votes.song_id', '=', 'songs.id')
-                     ->whereDate('votes.vote_date', $contestDate);
-            })
-            ->whereDate('songs.created_at', $contestDate)
-            ->groupBy('songs.id', 'songs.user_id')
-            ->selectRaw('
-                songs.id      as song_id,
-                songs.user_id as user_id,
-                COUNT(votes.id) as vote_count
-            ')
-            ->orderByDesc('vote_count')
-            ->orderBy('songs.id') // stable tie-break
-            ->limit(10)
-            ->get();
+{
+    // Prefer songs.competition_date if present; else fallback to created_at
+    $dateCol = \Schema::hasColumn('songs', 'competition_date')
+        ? 'songs.competition_date'
+        : 'songs.created_at';
 
-        // annotate 1..10
-        return $rows->map(function ($r, $i) {
-            $r->position = $i + 1;
-            return $r;
-        });
-    }
+    $rows = \DB::table('songs')
+        ->leftJoin('votes', function ($join) use ($contestDate) {
+            $join->on('votes.song_id', '=', 'songs.id')
+                 ->whereDate('votes.vote_date', $contestDate);
+        })
+        ->whereDate($dateCol, $contestDate)
+        ->groupBy('songs.id', 'songs.user_id')
+        ->selectRaw('
+            songs.id      AS song_id,
+            songs.user_id AS user_id,
+            COUNT(votes.id) AS vote_count
+        ')
+        ->orderByDesc('vote_count')
+        ->orderBy('songs.id') // stable tie-break
+        ->limit(10)
+        ->get();
+
+    // annotate positions 1..10
+    return $rows->map(function ($r, $i) {
+        $r->position = $i + 1;
+        return $r;
+    });
+}
+    
 }
 

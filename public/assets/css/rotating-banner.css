@@ -1,0 +1,36 @@
+.ap-winner-banner{
+    margin: 16px auto 18px;
+    max-width: 980px;
+    border: 2px solid #07fff2;
+    border-radius: 16px;
+    background: radial-gradient(1200px 220px at 50% -40px, rgba(7,255,242,0.15), rgba(0,0,0,0.6) 70%), #0f1114;
+    box-shadow: 0 0 18px rgba(7,255,242,0.18), inset 0 0 8px rgba(7,255,242,0.1);
+  }
+  .ap-winner-inner{
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    justify-content: center;
+    padding: 12px 16px;
+    font-size: 1.05rem;         /* bigger text */
+    line-height: 1.5;
+    color: #9ffcff;              /* cyan text tone */
+    font-weight: 700;
+    letter-spacing: .2px;
+    text-align: center;
+  }
+  .ap-winner-inner .cup{ font-size: 1.2rem; margin-right: 6px; }
+  .ap-winner-inner .label{ color:#b6fff9; text-transform: uppercase; margin-right: 6px; }
+  .ap-winner-inner .song{
+    color:#07fff2;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    font-weight: 800;
+  }
+  .ap-winner-inner .by{ color:#cfe9ef; margin: 0 6px; font-weight:600; }
+  .ap-winner-inner .user{
+    color:#fff; text-shadow: 0 0 6px rgba(7,255,242,.25);
+  }
+
+  /* keep good spacing vs. the theme row and uploader */
+  .ap-theme-row{ margin-top: 10px; }

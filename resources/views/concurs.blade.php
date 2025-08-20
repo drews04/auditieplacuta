@@ -59,9 +59,12 @@
     // tomorrow theme exists?
     $tomorrowPicked = isset($tomorrowTheme) && $tomorrowTheme;
 
-    // allow upload if weekday AND either today's theme exists OR tomorrow's was set (for now)
-    $canUpload = $isWeekday && ($theme || $tomorrowPicked);
+    // ✅ Correct rule:
+    // Show upload when we are within TODAY's submission window,
+    // OR when tomorrow's theme exists and we’re prepping tomorrow.
+    $canUpload = ($submissionsOpen || ($uploadForTomorrow ?? false));
 @endphp
+
 
 <div class="container py-5">
 
@@ -108,6 +111,20 @@
   </div>
   <p class="text-center mb-4">Ascultă melodiile participante și votează-ți favorita!</p>
 
+  @if($todayWinner)
+  <div class="ap-winner-banner">
+    <div class="ap-winner-inner">
+      <span class="cup">🏆</span>
+      <span class="label">Câștigător azi:</span>
+      <span class="song">{{ $todayWinner->song->title }}</span>
+      <span class="by">de</span>
+      <span class="user">
+        {{ $todayWinner->user->name ?? ($todayWinner->song->user->name ?? 'necunoscut') }}
+      </span>
+    </div>
+  </div>
+  @endif
+
   {{-- tomorrow theme row (simple, no box) --}}
   @if($tomorrowPicked)
     <div class="ap-theme-row">
@@ -132,16 +149,10 @@
 
   {{-- upload form --}}
 @auth
-  @php
-    // allow upload when:
-    // - it's a weekday AND submissions are open
-    // - and either:
-    //     a) user hasn't uploaded for TODAY, or
-    //     b) we are in "upload for tomorrow" mode (after theme picked)
-    $allowUploadNow = $canUpload
-                      && $submissionsOpen
-                      && ( !$userHasUploadedToday || ($uploadForTomorrow ?? false) );
-  @endphp
+@php
+  $allowUploadNow = ($submissionsOpen || ($uploadForTomorrow ?? false))
+                    && ( !$userHasUploadedToday || ($uploadForTomorrow ?? false) );
+@endphp
 
   @if($allowUploadNow)
     <div class="card border-0 shadow-sm mb-4">
@@ -212,7 +223,8 @@
 </div>
 
 {{-- winner reminder overlay --}}
-@if($showWinnerPopup || session('ap_show_theme_modal') === true)
+@if( ($isWinner && !$tomorrowPicked) || $showWinnerPopup || session('ap_show_theme_modal') === true )
+
   <div id="winnerReminder" style="display:none;">
     <canvas id="confetti-bg"></canvas>
     <div class="winner-box">

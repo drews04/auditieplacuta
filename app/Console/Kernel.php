@@ -1,79 +1,54 @@
 <?php
 
-namespace App\Http;
-
-use Illuminate\Foundation\Http\Kernel as HttpKernel;
 namespace App\Console;
 
-class Kernel extends HttpKernel
+use Illuminate\Console\Scheduling\Schedule;
+use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
+use App\Console\Commands\DeclareDailyWinner;
+use App\Services\AwardPoints;
+
+class Kernel extends ConsoleKernel
 {
     /**
-     * Global middleware.
+     * Register Artisan commands.
      */
-    protected $middleware = [
-        \Illuminate\Foundation\Http\Middleware\CheckForMaintenanceMode::class,
-        \Illuminate\Foundation\Http\Middleware\ValidatePostSize::class,
-        \App\Http\Middleware\TrimStrings::class,
-        \Illuminate\Foundation\Http\Middleware\ConvertEmptyStringsToNull::class,
+    protected $commands = [
+        DeclareDailyWinner::class,
+        \App\Console\Commands\ConcursFallbackTheme::class,
     ];
 
     /**
-     * Middleware groups.
+     * Define the application's command schedule.
      */
-    protected $middlewareGroups = [
-        'web' => [
-            \App\Http\Middleware\EncryptCookies::class,
-            \Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse::class,
-            \Illuminate\Session\Middleware\StartSession::class,
-            \App\Http\Middleware\ForceWeekdayIfTesting::class,
-            // \Illuminate\Session\Middleware\AuthenticateSession::class,
-            \Illuminate\View\Middleware\ShareErrorsFromSession::class,
-            \App\Http\Middleware\VerifyCsrfToken::class,
-            \Illuminate\Routing\Middleware\SubstituteBindings::class,
-        ],
-        'api' => [
-            \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
-            'throttle:api',
-            \Illuminate\Routing\Middleware\SubstituteBindings::class,
-        ],
-    ];
+    protected function schedule(\Illuminate\Console\Scheduling\Schedule $schedule): void
+{
+    // 20:00 — declare winner (Mon–Fri)
+    $schedule->command('concurs:declare-winner')
+             ->weekdays()
+             ->dailyAt('20:00')
+             ->timezone(config('app.timezone'));
+
+    // 20:35 — award position points (Mon–Fri)
+    $schedule->call(function () {
+        app(\App\Services\AwardPoints::class)->awardForDate(now()->toDateString());
+    })
+    ->weekdays()
+    ->dailyAt('20:35')
+    ->timezone(config('app.timezone'));
+
+    // 21:00 — fallback theme (if winner didn’t pick one) (Mon–Fri)
+    $schedule->command('concurs:fallback-theme')
+             ->weekdays()
+             ->dailyAt('21:00')
+             ->timezone(config('app.timezone'));
+}
 
     /**
-     * Route middleware aliases (Laravel 12 uses this).
-     * Keeping your old $routeMiddleware below is harmless, but aliases are read from here.
+     * Register the commands for the application.
      */
-    protected $middlewareAliases = [
-        'auth' => \App\Http\Middleware\Authenticate::class,
-        'auth.basic' => \Illuminate\Auth\Middleware\AuthenticateWithBasicAuth::class,
-        'cache.headers' => \Illuminate\Http\Middleware\SetCacheHeaders::class,
-        'can' => \Illuminate\Auth\Middleware\Authorize::class,
-        'guest' => \App\Http\Middleware\RedirectIfAuthenticated::class,
-        'password.confirm' => \Illuminate\Auth\Middleware\RequirePassword::class,
-        'signed' => \Illuminate\Routing\Middleware\ValidateSignature::class,
-        'throttle' => \Illuminate\Routing\Middleware\ThrottleRequests::class,
-        'verified' => \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class,
-    
-        // ✅ here
-        'force.weekday' => \App\Http\Middleware\ForceWeekdayIfTesting::class,
-        'admin' => \App\Http\Middleware\AdminOnly::class,
-    ];
-
-    /**
-     * (Optional/legacy) Older Laravel used $routeMiddleware; leaving it won’t hurt.
-     */
-    protected $routeMiddleware = [
-        'auth' => \App\Http\Middleware\Authenticate::class,
-        'auth.basic' => \Illuminate\Auth\Middleware\AuthenticateWithBasicAuth::class,
-        'cache.headers' => \Illuminate\Http\Middleware\SetCacheHeaders::class,
-        'can' => \Illuminate\Auth\Middleware\Authorize::class,
-        'guest' => \App\Http\Middleware\RedirectIfAuthenticated::class,
-        'password.confirm' => \Illuminate\Auth\Middleware\RequirePassword::class,
-        'signed' => \Illuminate\Routing\Middleware\ValidateSignature::class,
-        'throttle' => \Illuminate\Routing\Middleware\ThrottleRequests::class,
-        'verified' => \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class,
-        'force.weekday' => \App\Http\Middleware\ForceWeekdayIfTesting::class,
-
-        // keep admin here too for compatibility
-        'admin' => \App\Http\Middleware\AdminOnly::class,
-    ];
-}   
+    protected function commands(): void
+    {
+        $this->load(__DIR__ . '/Commands');
+        require base_path('routes/console.php');
+    }
+}

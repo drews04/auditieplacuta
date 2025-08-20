@@ -4,28 +4,29 @@ namespace App\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
+use Carbon\Carbon;
 
 class ForceWeekdayIfTesting
 {
+    /**
+     * If session('ap_force_weekday') === true, pretend it's a weekday:
+     * we set Carbon::setTestNow() to a weekday date at 12:00 so all "today/now"
+     * in this request act like a weekday.
+     */
     public function handle(Request $request, Closure $next)
     {
-        $restore = false;
-
-        if ($request->session()->get('ap_force_weekday') === true) {
-            // Fake Monday 10:00 for THIS request only
-            $fake = \Carbon\Carbon::now()->next(\Carbon\Carbon::MONDAY)->setTime(10, 0, 0);
-            \Carbon\Carbon::setTestNow($fake);
-            \Illuminate\Support\Carbon::setTestNow($fake);
-            $restore = true;
+        if (session()->get('ap_force_weekday') === true) {
+            $now = Carbon::now();
+            if ($now->isWeekend()) {
+                $fake = $now->copy()->next('Monday')->setTime(12, 0, 0);
+            } else {
+                $fake = $now->copy()->setTime(12, 0, 0);
+            }
+            Carbon::setTestNow($fake);
+        } else {
+            Carbon::setTestNow(null);
         }
 
-        $response = $next($request);
-
-        if ($restore) {
-            \Carbon\Carbon::setTestNow(null);
-            \Illuminate\Support\Carbon::setTestNow(null);
-        }
-
-        return $response;
+        return $next($request);
     }
 }
