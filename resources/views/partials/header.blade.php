@@ -30,10 +30,10 @@
               <a href="{{ route('concurs') }}">Concurs</a>
               <ul class="sub-menu">
               <li><a href="{{ route('leaderboard.monthly') }}">Clasament</a></li>
-                <li><a href="{{ route('concurs.incarca-melodie') }}">Încarcă melodie</a></li>
-                <li><a href="{{ route('concurs.melodiile-zilei') }}">Melodiile zilei</a></li>
-                <li><a href="{{ route('concurs.voteaza') }}">Votează</a></li>
-                <li><a href="{{ route('concurs.rezultate') }}">Rezultate (Arhivă)</a></li>
+                <li><a href="{{ route('concurs') . '#concurs-submit' }}">Încarcă melodie</a></li>
+                <li><a href="{{ route('concurs') }}">Melodiile zilei</a></li>
+                <li><a href="{{ route('concurs') . '#concurs-vote' }}">Votează</a></li>
+                <li><a href="{{ route('concurs') }}">Rezultate (Arhivă)</a></li>
                 <li><a href="{{ route('concurs.arhiva-teme') }}">Arhivă teme</a></li>
                 <li><a href="{{ route('regulament') }}">Regulament</a></li>
               </ul>

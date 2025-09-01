@@ -15,6 +15,7 @@ class Kernel extends ConsoleKernel
     protected $commands = [
         DeclareDailyWinner::class,
         \App\Console\Commands\ConcursFallbackTheme::class,
+        \App\Console\Commands\ConcursDaySimulator::class,
     ];
 
     /**
@@ -36,11 +37,12 @@ class Kernel extends ConsoleKernel
     ->dailyAt('20:35')
     ->timezone(config('app.timezone'));
 
-    // 21:00 — fallback theme (if winner didn’t pick one) (Mon–Fri)
-    $schedule->command('concurs:fallback-theme')
-             ->weekdays()
-             ->dailyAt('21:00')
-             ->timezone(config('app.timezone'));
+    // 21:01 — fallback theme (if winner didn’t pick one) (Mon–Fri)
+$schedule->command('concurs:fallback-theme')
+->weekdays()
+->timezone('Europe/Bucharest')
+->at('21:01')
+->withoutOverlapping();
 }
 
     /**

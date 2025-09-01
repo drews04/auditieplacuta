@@ -5,9 +5,10 @@
   <meta http-equiv="x-ua-compatible" content="ie=edge" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="csrf-token" content="{{ csrf_token() }}">
+  
   <title>@yield('title', 'Auditie Placuta')</title>
 
-  <!-- Bootstrap -->
+  <!-- Bootstrap CSS -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous" />
 
   <!-- Template CSS -->
@@ -24,16 +25,22 @@
   <link rel="stylesheet" href="{{ asset('assets/css/winner.css') }}?v={{ time() }}">
   <link rel="stylesheet" href="{{ asset('assets/css/leaderboard.css') }}?v={{ time() }}">
   <link rel="stylesheet" href="{{ asset('assets/css/rotating-banner.css') }}">
-  <!-- Tiny layout skeleton (no header overrides here) -->
+  <link rel="stylesheet" href="{{ asset('assets/css/theme-like.css') }}?v={{ time() }}">
+  <link rel="stylesheet" href="{{ asset('assets/css/tema-lunii.css') }}?v={{ time() }}">
+  <link rel="stylesheet" href="{{ asset('assets/css/concurs.css') }}?v={{ time() }}">
+
+  {{-- Page-level style injections --}}
+  @stack('styles')
+
+  <!-- Tiny layout skeleton -->
   <style>
     html, body { height: 100%; margin: 0; }
     body.site { min-height: 100%; display: flex; flex-direction: column; }
     main.site-main { flex: 1 0 auto; }
   </style>
-  @stack('styles')
 </head>
-<body class="site @yield('body_class')">
 
+<body class="site @yield('body_class')">
   @include('partials.header')
 
   {{-- Pages decide if they want container or full-width --}}
@@ -43,10 +50,12 @@
 
   @include('partials.footer')
 
+  <!-- JS: load once, at the bottom -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
   <script src="{{ asset('assets/js/jquery.min.js') }}"></script>
   <script src="{{ asset('assets/js/plugins.js') }}"></script>
 
+  {{-- Page-level scripts --}}
   @stack('scripts')
 
   {{-- Login Modal (unchanged) --}}
@@ -68,7 +77,8 @@
           @if ($errors->has('email'))
             <div class="alert alert-danger d-flex align-items-center" role="alert">
               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="white" class="bi bi-exclamation-circle me-2" viewBox="0 0 16 16">
-                <path d="M8 15A7 7 0 1 0 8 1a7 7 0 0 0 0 14z"/><path d="M7.002 11a1 1 0 1 0 2 0 1 1 0 0 0-2 0zm.1-5.995a.905.905 0 0 1 1.8 0l-.35 3.5a.552.552 0 0 1-1.1 0l-.35-3.5z"/>
+                <path d="M8 15A7 7 0 1 0 8 1a7 7 0 0 0 0 14z"/>
+                <path d="M7.002 11a1 1 0 1 0 2 0 1 1 0 0 0-2 0zm.1-5.995a.905.905 0 0 1 1.8 0l-.35 3.5a.552.552 0 0 1-1.1 0l-.35-3.5z"/>
               </svg>
               <div>{{ $errors->first('email') }}</div>
             </div>
@@ -120,22 +130,21 @@
           if (!dropdown.contains(e.target)) dropdown.classList.add('hidden');
         });
       }
+
+      // YouTube modal wiring (kept from your push-block; in layout now)
+      const youtubeModal = document.getElementById('youtubeModal');
+      const youtubeIframe = document.getElementById('youtubeIframe');
+      if (youtubeModal && youtubeIframe) {
+        youtubeModal.addEventListener('show.bs.modal', function (event) {
+          const btn = event.relatedTarget;
+          const id = btn?.getAttribute('data-video-id');
+          youtubeIframe.src = 'https://www.youtube.com/embed/' + id + '?autoplay=1';
+        });
+        youtubeModal.addEventListener('hidden.bs.modal', function () {
+          youtubeIframe.src = '';
+        });
+      }
     });
   </script>
-
-  @push('scripts')
-  <script>
-    const youtubeModal = document.getElementById('youtubeModal');
-    const youtubeIframe = document.getElementById('youtubeIframe');
-    if (youtubeModal && youtubeIframe) {
-      youtubeModal.addEventListener('show.bs.modal', function (event) {
-        const btn = event.relatedTarget;
-        const id = btn?.getAttribute('data-video-id');
-        youtubeIframe.src = 'https://www.youtube.com/embed/' + id + '?autoplay=1';
-      });
-      youtubeModal.addEventListener('hidden.bs.modal', function () { youtubeIframe.src = ''; });
-    }
-  </script>
-  @endpush
 </body>
 </html>

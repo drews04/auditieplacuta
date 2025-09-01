@@ -16,6 +16,7 @@ class Song extends Model
         'votes',
         'is_winner',
         'theme_id',         // FK → contest_themes.id
+        'cycle_id',         // FK → contest_cycles.id
     ];
 
     protected $casts = [
@@ -40,5 +41,10 @@ class Song extends Model
     {
         // Correct relation: Song.theme_id → ContestTheme.id
         return $this->belongsTo(ContestTheme::class, 'theme_id');
+    }
+
+    public function cycle()
+    {
+        return $this->belongsTo(ContestCycle::class, 'cycle_id');
     }
 }

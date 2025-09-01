@@ -19,6 +19,18 @@ class Winner extends Model
         'theme_chosen' => 'boolean',
     ];
 
+    protected $fillable = [
+        'cycle_id',
+        'user_id',
+        'song_id',
+        'vote_count',
+        'was_tie',
+        'theme_chosen',
+        'contest_date',
+        'win_date',
+        'competition_theme_id',
+    ];
+
     // Eager-load so Blade can do $todayWinner->song->title and ->user->name safely
     protected $with = ['song', 'user', 'theme'];
 
@@ -41,5 +53,10 @@ class Winner extends Model
     public function theme()
     {
         return $this->belongsTo(ContestTheme::class, 'competition_theme_id');
+    }
+
+    public function cycle()
+    {
+        return $this->belongsTo(ContestCycle::class, 'cycle_id');
     }
 }

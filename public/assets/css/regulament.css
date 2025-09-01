@@ -1,0 +1,100 @@
+/* ============================================================
+   Regulament page — neon vibe like Concurs
+   ============================================================ */
+
+   .ap-regulament { color:#e6f1fb }
+   .ap-regulament a{ color:#16f1d3; text-decoration:none }
+   .ap-regulament a:hover{ text-decoration:underline }
+   
+   /* Headings */
+   .ap-regulament h1{
+     font-weight:800; letter-spacing:1px; margin:0 0 1rem;
+     color:#16f1d3; text-shadow:0 0 10px rgba(22,241,211,.55), 0 0 22px rgba(22,241,211,.2);
+   }
+   .ap-regulament h2{
+     font-weight:800; letter-spacing:.6px; text-transform:uppercase;
+     font-size:1.05rem; margin:0 0 .75rem;
+     color:#16f1d3 !important;
+     text-shadow:0 0 8px rgba(22,241,211,.55), 0 0 18px rgba(22,241,211,.2);
+   }
+   
+   /* Neon cards */
+   .ap-regulament .card{
+     /* vivid neon like Concurs */
+     background:
+       radial-gradient(140% 140% at 0% 0%, rgba(22,241,211,.10) 0%, rgba(22,241,211,0) 40%),
+       linear-gradient(180deg,#0c1320 0%, #0a0f18 100%) !important;
+     border:1px solid rgba(22,241,211,.45) !important;
+     border-radius:18px !important;
+     box-shadow:
+       inset 0 0 0 1px rgba(22,241,211,.22),
+       0 0 32px rgba(22,241,211,.25) !important;
+   }
+   .ap-regulament .card+.card{ margin-top:16px }
+   .ap-regulament .card-body{ padding:18px 20px }
+   
+   /* Ensure readable body copy inside cards */
+   .ap-regulament .card,
+   .ap-regulament .card p,
+   .ap-regulament .card li,
+   .ap-regulament .card ul,
+   .ap-regulament .card small{
+     color:#e6f1fb !important; opacity:1 !important;
+   }
+   .ap-regulament .card strong{ color:#ffffff !important }
+   .ap-regulament .card em{ color:#cfe3f7 !important; opacity:1 !important }
+   .ap-regulament .card-body > ul > li{ line-height:1.6 }
+   
+   /* Soft badge like theme pills */
+   .ap-regulament .badge-soft{
+     display:inline-block; padding:.18rem .55rem; border-radius:9999px;
+     background:rgba(0,255,255,.10);
+     border:1px solid rgba(0,255,255,.25);
+     color:#b8fbff; font-weight:700; font-size:.78rem; letter-spacing:.2px;
+   }
+   
+   /* Lists */
+   .ap-regulament ul{ margin:0; padding-left:1.15rem }
+   .ap-regulament li{ margin:.28rem 0 }
+   .ap-regulament em{ opacity:.8 }
+   
+   /* Hover accent */
+   .ap-regulament .card:hover{
+     box-shadow:
+       inset 0 0 0 1px rgba(0,255,255,.18),
+       0 0 38px rgba(0,255,255,.12);
+     border-color:rgba(0,255,255,.28);
+   }
+/* Back button — match neon vibe (override Bootstrap blue) */
+.ap-regulament .btn-primary{
+    display:inline-flex; align-items:center; justify-content:center;
+    width:auto; padding:.55rem 1rem; font-weight:800; letter-spacing:.4px;
+    background:transparent !important;
+    color:#16f1d3 !important;
+    border:1px solid #16f1d3 !important;
+    border-radius:12px;
+    box-shadow:0 0 16px rgba(22,241,211,.18);
+    text-transform:uppercase;
+  }
+  .ap-regulament .btn-primary:hover{
+    background:rgba(22,241,211,.10) !important;
+    box-shadow:0 0 26px rgba(22,241,211,.28);
+    color:#a9fff2 !important;
+  }
+/* Clear the navbar overlap on this page */
+.page-regulament .ap-regulament {
+    margin-top: 72px !important;   /* push content down */
+    padding-top: 0 !important;      /* ignore Bootstrap py-5 if needed */
+  }
+  body.page-regulament main.site-main { padding-top: 196px !important; }
+  /* Space under the navbar for this page's big H1 */
+
+  /* Center the big title (and its subtitle) */
+.page-regulament .ap-regulament h1{
+    text-align:center !important;
+    margin-left:auto; margin-right:auto;
+  }
+  
+  .page-regulament .ap-regulament > p:first-of-type{
+    text-align:center; max-width:820px; margin:.5rem auto 2rem;
+  }

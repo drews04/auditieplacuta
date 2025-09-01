@@ -12805,3 +12805,47 @@ body.guest-body {
   display: none;
 }
 
+/* Fix fuzzy submenu text (remove glow/blur, force crisp) */
+.menu-area .sub-menu li a,
+.main-menu .sub-menu li a,
+.header .sub-menu li a {
+  text-shadow: none !important;
+  filter: none !important;
+  -webkit-filter: none !important;
+  color: #e8feff !important;
+  font-weight: 800;
+  letter-spacing: .3px;
+  transform: none !important;
+  opacity: 1 !important;
+}
+
+/* Center the ARENA mega dropdown (4th top menu item) */
+.header .main-menu > li:nth-child(4),
+.menu-area .main-menu > li:nth-child(4) { position: relative; }
+
+.header .main-menu > li:nth-child(4) > .sub-menu,
+.menu-area .main-menu > li:nth-child(4) > .sub-menu {
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+  right: auto !important;
+  width: auto !important;
+  min-width: 900px;                 /* tweak if needed */
+  display: grid !important;
+  grid-template-columns: repeat(4, 220px);
+  gap: 0 40px;
+  justify-content: center;
+}
+
+/* columns inside */
+.header .main-menu > li:nth-child(4) > .sub-menu > li,
+.menu-area .main-menu > li:nth-child(4) > .sub-menu > li { width: 220px; list-style: none; }
+
+.header .main-menu > li:nth-child(4) > .sub-menu > li > a,
+.menu-area .main-menu > li:nth-child(4) > .sub-menu > li > a {
+  display: block; text-align: center; font-weight: 800; margin: 0 0 8px;
+}
+
+.header .main-menu > li:nth-child(4) > .sub-menu > li ul li a,
+.menu-area .main-menu > li:nth-child(4) > .sub-menu > li ul li a {
+  display: block; text-align: center; padding: 4px 0;
+}

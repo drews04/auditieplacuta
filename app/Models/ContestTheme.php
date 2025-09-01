@@ -3,22 +3,44 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 class ContestTheme extends Model
 {
+    protected $table = 'contest_themes';
+
     protected $fillable = [
-        'contest_date',
-        'theme_pool_id',
-        'picked_by_winner',
+        'contest_cycle_id',
+        'category',
+        'name',
+        'active',
     ];
 
     protected $casts = [
-        'contest_date'     => 'date',
-        'picked_by_winner' => 'boolean',
+        'active' => 'boolean',
     ];
 
-    public function pool()
+    /* Likes (polymorphic) */
+    public function likes(): MorphMany
     {
-        return $this->belongsTo(ThemePool::class, 'theme_pool_id');
+        return $this->morphMany(\App\Models\ThemeLike::class, 'likeable');
+    }
+
+    /* Helpers */
+    public function scopeWithLikesCount($q)
+    {
+        return $q->withCount('likes');
+    }
+
+    public function likedByUserId(?int $userId): bool
+    {
+        if (!$userId) return false;
+        return $this->likes()->where('user_id', $userId)->exists();
+    }
+
+    /* Relations */
+    public function cycle()
+    {
+        return $this->belongsTo(ContestCycle::class, 'contest_cycle_id');
     }
 }

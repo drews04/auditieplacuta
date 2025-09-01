@@ -1,0 +1,48 @@
+/* Neon card */
+.ap-neon-card{
+    background: radial-gradient(120% 120% at 0% 0%, #0b1324 0%, #0a0f1e 60%, #090f1a 100%);
+    border-radius: 16px;
+    border: 1px solid rgba(22, 241, 211, .18);
+    box-shadow: 0 0 0 1px rgba(22,241,211,.05), 0 0 24px rgba(22,241,211,.08) inset;
+    color:#e6f1fb;
+  }
+  
+  /* Soft + dark badges */
+  .ap-badge{ display:inline-flex; align-items:center; gap:.4rem; padding:.25rem .6rem; border-radius:999px; font-weight:600; }
+  .ap-badge-soft{ background: rgba(22,241,211,.12); color:#16f1d3; border:1px solid rgba(22,241,211,.25); }
+  .ap-badge-dark{ background:#0f172a; color:#e6f1fb; border:1px solid rgba(255,255,255,.08); }
+  
+  /* Neon button (you already added) */
+  .ap-btn-neon{
+    background: linear-gradient(90deg,#16f1d3,#0ea5e9);
+    border:none; color:#fff; font-weight:600;
+    padding:6px 14px; border-radius:10px;
+    transition:all .3s ease; text-decoration:none; display:inline-block;
+  }
+  .ap-btn-neon:hover{ opacity:.9; transform:translateY(-1px); }
+/* readable muted text on dark neon cards */
+.ap-muted{
+    color: rgba(230,241,251,.78); /* light teal-white */
+    font-style: italic;
+  }  
+  .ap-btn-neon {
+    background: linear-gradient(90deg,#16f1d3,#0ea5e9);
+    border: none;
+    color: #fff !important;
+    font-weight: 600;
+    padding: 8px 20px;
+    border-radius: 12px;
+    transition: all .3s ease;
+    text-decoration: none;
+    display: inline-block;
+    box-shadow: 0 0 8px rgba(22,241,211,.6);
+  }
+  .ap-btn-neon:hover {
+    opacity: 0.9;
+    transform: translateY(-1px);
+    box-shadow: 0 0 14px rgba(22,241,211,.9);
+  }
+  .tema-lunii-nav {
+    margin-top: 40px;   
+    margin-bottom: 40px;
+  }

@@ -1,64 +1,51 @@
 <?php
 
-use Illuminate\Support\Facades\Auth;
-
-Route::post('/logout', function () {
-    Auth::logout();
-    return redirect('/');
-})->name('logout');
-
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Header\Acasa\AcasaController;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Mail;
 
-Route::get('/', [AcasaController::class, 'index'])->name('home');
-//Acasa
+// ───────────────────────────────────────────────────────────────────────────────
+// Controllers (grouped to avoid scatter)
+// ───────────────────────────────────────────────────────────────────────────────
+use App\Http\Controllers\Header\Acasa\AcasaController;
 use App\Http\Controllers\Header\Acasa\ClasamentLunarController;
 use App\Http\Controllers\Header\Acasa\EvenimenteController;
 use App\Http\Controllers\Header\Acasa\RegulamentController;
-//Arena
+
 use App\Http\Controllers\Header\Arena\ArenaController;
 use App\Http\Controllers\Header\Arena\AbilitatiController;
 use App\Http\Controllers\Header\Arena\CooldownController;
 use App\Http\Controllers\Header\Arena\FolosesteAbilitateController;
 use App\Http\Controllers\Header\Arena\AbilitatiDisponibileController;
-//Clasamente 
+
 use App\Http\Controllers\Header\Clasamente\ClasamenteController;
 use App\Http\Controllers\Header\Clasamente\ClasamentGeneralController;
 use App\Http\Controllers\Header\Clasamente\JucatoriDeTopController;
 use App\Http\Controllers\Header\Clasamente\JucatoriTriviaDeTopController;
 use App\Http\Controllers\Header\Clasamente\TemaLuniiController;
-//Concurs
+
 use App\Http\Controllers\Header\Concurs\ConcursController;
 use App\Http\Controllers\Header\Concurs\ArhivaTemeController;
 use App\Http\Controllers\Header\Concurs\IncarcaMelodieController;
 use App\Http\Controllers\Header\Concurs\MelodiileZileiController;
 use App\Http\Controllers\Header\Concurs\RezultateController;
 use App\Http\Controllers\Header\Concurs\VoteazaController;
-//Magazin
-use App\Http\Controllers\Header\Magazin\MagazinController;
-use App\Http\Controllers\Header\Magazin\PremiumController;
-use App\Http\Controllers\Header\Magazin\ProduseDisponibileController;
-use App\Http\Controllers\Header\Magazin\CumparaApbucksiController;
-//Misiuni
-use App\Http\Controllers\Header\Misiuni\MisiuniController;
-use App\Http\Controllers\Header\Misiuni\GhicesteMelodiaController;
-use App\Http\Controllers\Header\Misiuni\MisiuniZilniceController;
-use App\Http\Controllers\Header\Misiuni\ProvocariSaptamanaleController;
-use App\Http\Controllers\Header\Misiuni\RecompenseController;
-//Muzica
+
 use App\Http\Controllers\Header\Muzica\MuzicaController;
 use App\Http\Controllers\Header\Muzica\ArtistiController;
 use App\Http\Controllers\Header\Muzica\GenuriMuzicaleController;
 use App\Http\Controllers\Header\Muzica\NoutatiInMuzicaController;
 use App\Http\Controllers\Header\Muzica\PlaylistsController;
-//Trivia
+
+use App\Http\Controllers\Header\Misiuni\MisiuniController;
+use App\Http\Controllers\Header\Misiuni\GhicesteMelodiaController;
+use App\Http\Controllers\Header\Misiuni\MisiuniZilniceController;
+use App\Http\Controllers\Header\Misiuni\ProvocariSaptamanaleController;
+use App\Http\Controllers\Header\Misiuni\RecompenseController;
 
 use App\Http\Controllers\Header\Trivia\IstoricTriviaController;
 use App\Http\Controllers\Header\Trivia\JoacaTriviaController;
 use App\Http\Controllers\Header\Trivia\RegulamentTriviaController;
-
-
-//User
 
 use App\Http\Controllers\User\UserProfileController;
 use App\Http\Controllers\User\UserStatisticsController;
@@ -69,564 +56,250 @@ use App\Http\Controllers\User\UserVotesController;
 use App\Http\Controllers\User\UserSettingsController;
 use App\Http\Controllers\User\DisconnectController;
 
-//Ablitati disponibile
 use App\Http\Controllers\AbilityController;
 
-//Concurs 
 use App\Http\Controllers\SongController;
-
-//Concurs - algege tema
 use App\Http\Controllers\ConcursTemaController;
 
-//Leaderbords
 use App\Http\Controllers\LeaderboardController;
 
-// Home Controller
-use App\Http\Controllers\HomeController;
-// Admin controller for testing the competition
-use App\Http\Controllers\Admin\ConcursTestController;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Schema;
-use Carbon\Carbon;
+use App\Http\Controllers\Admin\ConcursAdminController;
+use App\Http\Middleware\AdminOnly;
 
-//Acasa - Routes
-Route::get('/clasament-lunar', [ClasamentLunarController::class, 'index'])->name('clasament-lunar');
-Route::get('/evenimente', [EvenimenteController::class, 'index'])->name('evenimente');
-Route::get('/regulament', [RegulamentController::class, 'index'])->name('regulament');
-//Arena
-Route::get('/arena', [ArenaController::class, 'index'])->name('arena');
-Route::get('/abilitati', [AbilitatiController::class, 'index'])->name('abilitati');
-Route::get('/cooldown', [CooldownController::class, 'index'])->name('cooldown');
-Route::get('/foloseste-abilitate', [FolosesteAbilitateController::class, 'index'])->name('foloseste-abilitate');
-Route::get('/abilitati-disponibile', [AbilitatiDisponibileController::class, 'index'])->name('abilitati-disponibile');
-
-//Trivia - Routes
-Route::get('/joaca-trivia', [JoacaTriviaController::class, 'index'])->name('arena.trivia.joaca-trivia');
-Route::get('/regulament-trivia', [RegulamentTriviaController::class, 'index'])->name('arena.trivia.regulament-trivia');
-Route::get('/istoric-trivia', [IstoricTriviaController::class, 'index'])->name('arena.trivia.istoric-trivia');
-
-//Misiuni
-Route::get('/ghiceste-melodia', [GhicesteMelodiaController::class, 'index'])->name('arena.misiuni.ghiceste-melodia');
-Route::get('/misiuni-zilnice', [MisiuniZilniceController::class, 'index'])->name('arena.misiuni.misiuni-zilnice');
-Route::get('/provocari', [ProvocariSaptamanaleController::class, 'index'])->name('arena.misiuni.provocari');
-Route::get('/recompense', [RecompenseController::class, 'index'])->name('arena.misiuni.recompense');
-Route::get('/misiuni', function () {
-    return view('misiuni.misiuni'); // or whatever your file is
-})->name('arena.misiuni.index');
-
-//Clasamente
-Route::get('/clasamente', [ClasamenteController::class, 'index'])->name('clasamente.index');
-Route::get('/clasament-general', [ClasamentGeneralController::class, 'index'])->name('arena.clasamente.clasament-general');
-Route::get('/jucatori-de-top', [JucatoriDeTopController::class, 'index'])->name('arena.clasamente.jucatori-de-top');
-Route::get('/jucatori-trivia', [JucatoriTriviaDeTopController::class, 'index'])->name('arena.clasamente.jucatori-trivia');
-Route::get('/tema-lunii', [TemaLuniiController::class, 'index'])->name('arena.clasamente.tema-lunii');
-
-//Concurs
-Route::get('/concurs', [ConcursController::class, 'index'])->name('concurs.index');
-Route::get('/concurs/incarca-melodie', [IncarcaMelodieController::class, 'index'])->name('concurs.incarca-melodie');
-Route::get('/concurs/melodiile-zilei', [MelodiileZileiController::class, 'index'])->name('concurs.melodiile-zilei');
-Route::get('/concurs/voteaza', [VoteazaController::class, 'index'])->name('concurs.voteaza');
-Route::get('/concurs/rezultate', [RezultateController::class, 'index'])->name('concurs.rezultate');
-Route::get('/concurs/arhiva-teme', [ArhivaTemeController::class, 'index'])->name('concurs.arhiva-teme');
-
-//Muzica
-Route::get('/muzica', [MuzicaController::class, 'index'])->name('muzica');
-Route::get('/muzica/noutati', [NoutatiInMuzicaController::class, 'index'])->name('muzica.noutati');
-Route::get('/muzica/artisti', [ArtistiController::class, 'index'])->name('muzica.artisti');
-Route::get('/muzica/genuri', [GenuriMuzicaleController::class, 'index'])->name('muzica.genuri');
-Route::get('/muzica/playlists', [PlaylistsController::class, 'index'])->name('muzica.playlists');
-
-//Magazin 
-Route::get('/magazin', [MagazinController::class, 'index'])->name('magazin.index');
-Route::get('/magazin/premium', [PremiumController::class, 'index'])->name('magazin.premium');
-Route::get('/magazin/produse-disponibile', [ProduseDisponibileController::class, 'index'])->name('magazin.produse-disponibile');
-Route::get('/magazin/cumpara-apbucksi', [CumparaApbucksiController::class, 'index'])->name('magazin.cumpara-apbucksi');
-
-// Auth Routes
 use App\Http\Controllers\CustomAuthController;
 
-Route::get('/login', [CustomAuthController::class, 'showLoginForm'])->name('login.form');
-Route::post('/login', [CustomAuthController::class, 'login'])->name('login');
+use App\Http\Controllers\User\UserWinsController;
 
-Route::get('/register', [CustomAuthController::class, 'showRegistrationForm'])->name('register.form');
+// ───────────────────────────────────────────────────────────────────────────────
+// Home
+// ───────────────────────────────────────────────────────────────────────────────
+Route::get('/', [AcasaController::class, 'index'])->name('home');
+
+// ───────────────────────────────────────────────────────────────────────────────
+// Acasa
+// ───────────────────────────────────────────────────────────────────────────────
+Route::get('/clasament-lunar', [ClasamentLunarController::class, 'index'])->name('clasament-lunar');
+Route::get('/evenimente',      [EvenimenteController::class, 'index'])->name('evenimente');
+Route::get('/regulament',      [RegulamentController::class, 'index'])->name('regulament');
+
+// ───────────────────────────────────────────────────────────────────────────────
+// Arena
+// ───────────────────────────────────────────────────────────────────────────────
+Route::get('/arena',                  [ArenaController::class, 'index'])->name('arena');
+Route::get('/abilitati',              [AbilitatiController::class, 'index'])->name('abilitati');
+Route::get('/cooldown',               [CooldownController::class, 'index'])->name('cooldown');
+Route::get('/foloseste-abilitate',    [FolosesteAbilitateController::class, 'index'])->name('foloseste-abilitate');
+Route::get('/abilitati-disponibile',  [AbilitatiDisponibileController::class, 'index'])->name('abilitati-disponibile');
+
+// ───────────────────────────────────────────────────────────────────────────────
+// Trivia
+// ───────────────────────────────────────────────────────────────────────────────
+Route::get('/joaca-trivia',        [JoacaTriviaController::class, 'index'])->name('arena.trivia.joaca-trivia');
+Route::get('/regulament-trivia',   [RegulamentTriviaController::class, 'index'])->name('arena.trivia.regulament-trivia');
+Route::get('/istoric-trivia',      [IstoricTriviaController::class, 'index'])->name('arena.trivia.istoric-trivia');
+
+// ───────────────────────────────────────────────────────────────────────────────
+Route::get('/ghiceste-melodia', [GhicesteMelodiaController::class, 'index'])->name('arena.misiuni.ghiceste-melodia');
+Route::get('/misiuni-zilnice',  [MisiuniZilniceController::class, 'index'])->name('arena.misiuni.misiuni-zilnice');
+Route::get('/provocari',        [ProvocariSaptamanaleController::class, 'index'])->name('arena.misiuni.provocari');
+Route::get('/recompense',       [RecompenseController::class, 'index'])->name('arena.misiuni.recompense');
+Route::get('/misiuni', fn () => view('misiuni.misiuni'))->name('arena.misiuni.index');
+
+// ───────────────────────────────────────────────────────────────────────────────
+// Clasamente
+// ───────────────────────────────────────────────────────────────────────────────
+Route::get('/clasamente',        [ClasamenteController::class, 'index'])->name('clasamente.index');
+Route::get('/clasament-general', [ClasamentGeneralController::class, 'index'])->name('arena.clasamente.clasament-general');
+Route::get('/jucatori-de-top',   [JucatoriDeTopController::class, 'index'])->name('arena.clasamente.jucatori-de-top');
+Route::get('/jucatori-trivia',   [JucatoriTriviaDeTopController::class, 'index'])->name('arena.clasamente.jucatori-trivia');
+Route::get('/tema-lunii', [TemaLuniiController::class, 'index'])->name('arena.clasamente.tema-lunii');
+
+// ───────────────────────────────────────────────────────────────────────────────
+// Muzica
+// ───────────────────────────────────────────────────────────────────────────────
+Route::get('/muzica',          [MuzicaController::class, 'index'])->name('muzica');
+Route::get('/muzica/noutati',  [NoutatiInMuzicaController::class, 'index'])->name('muzica.noutati');
+Route::get('/muzica/artisti',  [ArtistiController::class, 'index'])->name('muzica.artisti');
+Route::get('/muzica/genuri',   [GenuriMuzicaleController::class, 'index'])->name('muzica.genuri');
+Route::get('/muzica/playlists',[PlaylistsController::class, 'index'])->name('muzica.playlists');
+
+// ───────────────────────────────────────────────────────────────────────────────
+// Magazin
+// ───────────────────────────────────────────────────────────────────────────────
+Route::get('/magazin',                   [\App\Http\Controllers\Header\Magazin\MagazinController::class, 'index'])->name('magazin.index');
+Route::get('/magazin/premium',           [\App\Http\Controllers\Header\Magazin\PremiumController::class, 'index'])->name('magazin.premium');
+Route::get('/magazin/produse-disponibile', [\App\Http\Controllers\Header\Magazin\ProduseDisponibileController::class, 'index'])->name('magazin.produse-disponibile');
+Route::get('/magazin/cumpara-apbucksi',  [\App\Http\Controllers\Header\Magazin\CumparaApbucksiController::class, 'index'])->name('magazin.cumpara-apbucksi');
+
+// ───────────────────────────────────────────────────────────────────────────────
+// Auth
+// ───────────────────────────────────────────────────────────────────────────────
+Route::get('/login',  [CustomAuthController::class, 'showLoginForm'])->name('login');
+Route::post('/login', [CustomAuthController::class, 'login'])->middleware('throttle:5,1')->name('login.attempt');
+
+Route::get('/register',  [CustomAuthController::class, 'showRegistrationForm'])->name('register');
 Route::post('/register', [CustomAuthController::class, 'register'])->name('register');
-//User
 
+Route::get('/verify',  [CustomAuthController::class, 'showVerifyForm'])->name('verify.view');
+Route::post('/verify', [CustomAuthController::class, 'verify'])->name('verify.code');
 
-Route::middleware('auth')->prefix('contul-meu')->group(function () {
-    Route::get('/profil', [UserProfileController::class, 'index'])->name('user.user_profile');
-    Route::get('/statistici', [UserStatisticsController::class, 'index'])->name('user.statistics');
-    Route::get('/melodii', [UserSongsController::class, 'index'])->name('user.songs');
-    Route::get('/trivia', [UserTriviaController::class, 'index'])->name('user.user-trivia');
-    Route::get('/abilitati', [UserAbilitiesController::class, 'index'])->name('user.abilities');
-    Route::get('/voturi', [UserVotesController::class, 'index'])->name('user.votes');
-    Route::get('/setari', [UserSettingsController::class, 'index'])->name('user.settings');
-    Route::get('/deconectare', [DisconnectController::class, 'index'])->name('user.disconnect');
-    Route::get('/profil', [UserProfileController::class, 'index'])->name('user.user_profile');
-});
+Route::get('/password/change',  [CustomAuthController::class, 'showChangePasswordForm'])->middleware('auth')->name('password.change.form');
+Route::post('/password/change', [CustomAuthController::class, 'changePassword'])->middleware('auth')->name('password.change');
 
-//Log-out 
+Route::get('/forgot-password',  [CustomAuthController::class, 'showForgotPasswordForm'])->name('password.request');
+Route::post('/forgot-password', [CustomAuthController::class, 'sendResetCode'])->name('password.email');
 
+Route::get('/reset-password',  [CustomAuthController::class, 'showResetForm'])->name('password.reset.view');
+Route::post('/reset-password', [CustomAuthController::class, 'resetPassword'])->name('password.update');
 
+Route::post('/password/send-code', [CustomAuthController::class, 'sendResetCode'])->name('password.send.code');
+
+Route::view('/register-success', 'auth.register-success')->name('register.success');
+
+// logout (single definition)
 Route::post('/logout', function () {
     Auth::logout();
     return redirect('/');
 })->name('logout');
 
-//Brevo test route
-use Illuminate\Support\Facades\Mail;
-
-
-Route::get('/test-mail', function () {
-    Mail::raw('This is a test email from Brevo SMTP.', function ($message) {
-        $message->to('tiagomota121@yahoo.com')
-                ->subject('Brevo SMTP Test');
-    });
-
-    return 'Test email sent!';
+// ───────────────────────────────────────────────────────────────────────────────
+// User area
+// ───────────────────────────────────────────────────────────────────────────────
+Route::middleware('auth')->prefix('contul-meu')->group(function () {
+    Route::get('/profil',     [UserProfileController::class, 'index'])->name('user.user_profile');
+    Route::get('/statistici', [UserStatisticsController::class, 'index'])->name('user.statistics');
+    Route::get('/melodii',    [UserSongsController::class, 'index'])->name('user.songs');
+    Route::get('/trivia',     [UserTriviaController::class, 'index'])->name('user.user-trivia');
+    Route::get('/abilitati',  [UserAbilitiesController::class, 'index'])->name('user.abilities');
+    Route::get('/voturi',     [UserVotesController::class, 'index'])->name('user.votes');
+    Route::get('/setari',     [UserSettingsController::class, 'index'])->name('user.settings');
+    Route::get('/deconectare',[DisconnectController::class, 'index'])->name('user.disconnect');
 });
 
-//Verify 
-Route::post('/verify', [CustomAuthController::class, 'verify'])->name('verify.code');
-
-// ✅ Show verify form again (after wrong code)
-Route::get('/verify', function () {
-    $email = session('registration_data.email') ?? null;
-    return view('auth.verify', ['email' => $email]);
-})->name('verify.view');
-
-// ==================== AUTENTIFICARE ====================
-// ✅ Show login form
-Route::get('/login', [CustomAuthController::class, 'showLoginForm'])->name('login');
-
-// ✅ Handle login with rate limiting: 5 tries per minute
-Route::post('/login', [CustomAuthController::class, 'login'])
-    ->middleware('throttle:5,1')
-    ->name('login.attempt');
-
-// ==================== INREGISTRARE ====================
-Route::get('/register', [CustomAuthController::class, 'showRegistrationForm'])->name('register');
-Route::post('/register', [CustomAuthController::class, 'register']);
-
-// ==================== VERIFICARE COD ====================
-Route::post('/verify', [CustomAuthController::class, 'verify'])->name('verify.code');
-Route::get('/verify', [CustomAuthController::class, 'showVerifyForm'])->name('verify.view');
-
-//Change password
-Route::get('/password/change', [CustomAuthController::class, 'showChangePasswordForm'])
-    ->middleware('auth')
-    ->name('password.change.form');
-Route::post('/password/change', [CustomAuthController::class, 'changePassword'])
-    ->middleware('auth')
-    ->name('password.change');
-
-// ✅ Show the password change form (GET request)
-Route::view('/password/change', 'auth.password') 
-    ->middleware('auth') 
-    ->name('password.view');
-
-// ✅ Handle the password change form submission (POST request)
-Route::post('/password/change', [CustomAuthController::class, 'changePassword']) 
-    ->middleware('auth') 
-    ->name('password.change');
-
-// Show the forgot password form
-Route::get('/forgot-password', [CustomAuthController::class, 'showForgotPasswordForm'])->name('password.request');
-
-// Handle forgot password submission (send code via email)
-Route::post('/forgot-password', [CustomAuthController::class, 'sendResetCode'])->name('password.email');
-
-// Show the reset form (with code input)
-Route::get('/reset-password', [CustomAuthController::class, 'showResetForm'])->name('password.reset.view');
-
-// Handle the final reset
-Route::post('/reset-password', [CustomAuthController::class, 'resetPassword'])->name('password.update');
-Route::post('/password/send-code', [CustomAuthController::class, 'sendResetCode'])->name('password.send.code');
-Route::view('/register-success', 'auth.register-success')->name('register.success');
-
-
-// Display all available abilities to the user (view: user/abilities.blade.php)
-Route::get('/abilitati', [AbilityController::class, 'index'])->name('abilities.index');
-
-//Settings page
-Route::post('/setari/email', [UserSettingsController::class, 'updateEmail'])->name('user.settings.updateEmail');
+// settings POSTs
+Route::post('/setari/email',  [UserSettingsController::class, 'updateEmail'])->name('user.settings.updateEmail');
 Route::post('/setari/parola', [UserSettingsController::class, 'updatePassword'])->name('user.settings.updatePassword');
 
-/*
-|/*
-|--------------------------------------------------------------------------
-| Concurs Routes 🎵
-|--------------------------------------------------------------------------
-|
-| These routes handle the daily music competition:
-| - Uploading a song (1 per day)
-| - Anonymous song list
-| - Voting system
-| - Winner selection
-|
-*/
-// 📅 Show today's uploaded songs anonymously
+// abilities list
+Route::get('/abilitati', [AbilityController::class, 'index'])->name('abilities.index');
+
+// ───────────────────────────────────────────────────────────────────────────────
+// Concurs — core routes (dual-cycle) + legacy aliases
+// ───────────────────────────────────────────────────────────────────────────────
 Route::get('/concurs', [SongController::class, 'showTodaySongs'])
     ->name('concurs')
     ->middleware(\App\Http\Middleware\ForceWeekdayIfTesting::class);
 
-// 🔒 Upload a song (must be logged in)
-Route::post('/concurs/upload', [SongController::class, 'uploadSong'])
-    ->name('concurs.upload')
-    ->middleware(['auth', \App\Http\Middleware\ForceWeekdayIfTesting::class]);
-
-// ✅ Voting (requires login)
-Route::post('/vote/{songId}', [SongController::class, 'voteForSong'])
-    ->name('vote.song')
-    ->middleware(['auth', \App\Http\Middleware\ForceWeekdayIfTesting::class]);
-
-// 🔄 Return today's songs HTML (for AJAX refresh after upload)
 Route::get('/concurs/songs/today', [SongController::class, 'todayList'])
     ->name('concurs.songs.today')
     ->middleware(\App\Http\Middleware\ForceWeekdayIfTesting::class);
 
-// Concurs – Choose next theme
-Route::middleware(['auth', \App\Http\Middleware\ForceWeekdayIfTesting::class])->group(function () {
-    Route::get('/concurs/alege-tema', [ConcursTemaController::class, 'create'])
-        ->name('concurs.alege-tema.create');
-    Route::post('/concurs/alege-tema', [ConcursTemaController::class, 'store'])
-        ->name('concurs.alege-tema.store');
-});
+Route::post('/concurs/upload', [SongController::class, 'uploadSong'])
+    ->name('concurs.upload')
+    ->middleware(['auth', \App\Http\Middleware\ForceWeekdayIfTesting::class]);
 
-// Redirect to Versus Page
+Route::post('/concurs/vote', [SongController::class, 'voteForSong'])
+    ->name('concurs.vote')
+    ->middleware(['auth', \App\Http\Middleware\ForceWeekdayIfTesting::class]);
+
 Route::get('/concurs/versus', [SongController::class, 'versus'])
     ->name('concurs.versus')
     ->middleware(\App\Http\Middleware\ForceWeekdayIfTesting::class);
 
-/*
-|--------------------------------------------------------------------------
-| Leaderboard Routes
-|--------------------------------------------------------------------------
-|
-| 1) Home partial (weekly top-3 podium on the homepage loads this internally)
-| 2) Full leaderboard page with tabs
-|
-| /clasament accepts:
-|   ?scope=alltime|weekly|monthly|yearly   (default = alltime)
-|   weekly  → &week=YYYY-Www  and/or  &ws=YYYY-MM-DD (Monday of week)
-|   monthly → &ym=YYYY-MM
-|   yearly  → &y=YYYY
-*/
+// Winner picks theme
+Route::middleware(['auth', \App\Http\Middleware\ForceWeekdayIfTesting::class])->group(function () {
+    Route::get('/concurs/alege-tema',  [ConcursTemaController::class, 'create'])->name('concurs.alege-tema.create');
+    Route::post('/concurs/alege-tema', [ConcursTemaController::class, 'store'])->name('concurs.alege-tema.store');
+});
 
-Route::get('/leaderboard/home', [LeaderboardController::class, 'home'])
-    ->name('leaderboard.home');
+// Admin (dashboard + Start)
+Route::middleware(['auth', AdminOnly::class])->group(function () {
+    Route::get('/admin/concurs',  [ConcursAdminController::class, 'dashboard'])->name('admin.concurs');
+    Route::post('/concurs/start', [ConcursAdminController::class, 'start'])->name('concurs.start');
 
-Route::get('/clasament', [LeaderboardController::class, 'index'])
-    ->name('leaderboard.index');
+    // optional admin theme picker page:
+    Route::get('/admin/concurs/alege-tema', [ConcursAdminController::class, 'pickTheme'])->name('admin.concurs.pick');
+});
 
-   
+// Legacy aliases so existing menu links still resolve
+Route::get('/concurs/incarca-melodie', fn () => redirect()->to(route('concurs') . '#concurs-submit'))
+    ->name('concurs.incarca-melodie');
 
-    
+Route::get('/concurs/melodiile-zilei', fn () => redirect()->route('concurs'))
+    ->name('concurs.melodiile-zilei');
 
-//personal stats
-use App\Http\Controllers\User\UserWinsController;
+Route::get('/concurs/voteaza', fn () => redirect()->to(route('concurs') . '#concurs-vote'))
+    ->name('concurs.voteaza');
 
+Route::get('/concurs/rezultate', fn () => redirect()->route('concurs'))
+    ->name('concurs.rezultate');
+
+// Arhivă teme page (kept)
+Route::get('/concurs/arhiva-teme', [ArhivaTemeController::class, 'index'])->name('concurs.arhiva-teme');
+
+// ───────────────────────────────────────────────────────────────────────────────
+// Leaderboards
+// ───────────────────────────────────────────────────────────────────────────────
+Route::get('/leaderboard/home', [LeaderboardController::class, 'home'])->name('leaderboard.home');
+Route::get('/clasament',        [LeaderboardController::class, 'index'])->name('leaderboard.index');
+
+Route::get('/clasament/positions', fn () => redirect()->route('leaderboard.index', ['scope' => 'positions']))->name('leaderboard.positions');
+Route::get('/clasament/all-time', fn () => redirect()->route('leaderboard.index', ['scope' => 'alltime']))->name('leaderboard.alltime');
+Route::get('/clasament/monthly', fn () => redirect()->route('leaderboard.index', ['scope' => 'monthly']))->name('leaderboard.monthly');
+Route::get('/clasament/yearly',  fn () => redirect()->route('leaderboard.index', ['scope' => 'yearly'])) ->name('leaderboard.yearly');
+
+// ───────────────────────────────────────────────────────────────────────────────
+// Personal stats
+// ───────────────────────────────────────────────────────────────────────────────
 Route::middleware('auth')->group(function () {
-    Route::get('/me/wins', [UserWinsController::class, 'index'])->name('me.wins');
+    Route::get('/me/wins',             [UserWinsController::class, 'index'])->name('me.wins');
     Route::get('/users/{userId}/wins', [UserWinsController::class, 'index'])->name('users.wins');
 });
-// Canonical with query stays:
 
-
-// Pretty aliases that redirect to the canonical route with scope:
-Route::get('/clasament/positions', fn() =>
-    redirect()->route('leaderboard.index', ['scope' => 'positions'])
-)->name('leaderboard.positions');
-
-Route::get('/clasament/all-time', fn() =>
-    redirect()->route('leaderboard.index', ['scope' => 'alltime'])
-)->name('leaderboard.alltime');
-
-Route::get('/clasament/monthly', fn() =>
-    redirect()->route('leaderboard.index', ['scope' => 'monthly'])
-)->name('leaderboard.monthly');
-
-Route::get('/clasament/yearly', fn() =>
-    redirect()->route('leaderboard.index', ['scope' => 'yearly'])
-)->name('leaderboard.yearly');
-
-use Illuminate\Support\Facades\Artisan;
-
-
-// Admin-only routes for Concurs
-use App\Http\Middleware\AdminOnly;
-
-// Admin: go straight to the theme picker
-Route::middleware(['auth', AdminOnly::class])->group(function () {
-    Route::get('/admin/concurs/start', function () {
-        $today = now()->toDateString();
-
-        DB::transaction(function () use ($today) {
-            // 1) Delete TODAY’s votes (only for songs from today)
-            if (Schema::hasTable('votes') && Schema::hasTable('songs')) {
-                // find today song IDs
-                $songIds = DB::table('songs')
-                    ->whereDate('competition_date', $today)   // << use your real date column
-                    ->pluck('id');
-
-                if ($songIds->isNotEmpty()) {
-                    DB::table('votes')->whereIn('song_id', $songIds)->delete();
-                }
-            }
-
-            // 2) Delete TODAY’s songs
-            if (Schema::hasTable('songs')) {
-                DB::table('songs')->whereDate('competition_date', $today)->delete();
-            }
-
-            // 3) Delete TODAY’s winner (if stored per day)
-            if (Schema::hasTable('winners')) {
-                // try common columns; keep the one you actually use
-                if (Schema::hasColumn('winners','competition_date')) {
-                    DB::table('winners')->whereDate('competition_date', $today)->delete();
-                } elseif (Schema::hasColumn('winners','for_date')) {
-                    DB::table('winners')->whereDate('for_date', $today)->delete();
-                }
-            }
-
-           
-            /// 4) Clear TODAY & NEXT contest themes (new table: contest_themes)
-            if (\Schema::hasTable('contest_themes')) {
-                \DB::table('contest_themes')->whereDate('contest_date', $today)->delete();
-
-                // also clear the next contest day (skip weekend), so you truly restart
-                $tomorrow = \Carbon\Carbon::parse($today)->addDay();
-                while (in_array($tomorrow->dayOfWeekIso, [6, 7])) { $tomorrow->addDay(); }
-
-                \DB::table('contest_themes')->whereDate('contest_date', $tomorrow->toDateString())->delete();
-            }
-        });
-
-        // back to the theme picker (fresh start)
-        return redirect()
-            ->route('concurs.alege-tema.create')
-            ->with('status', 'Concurs reset pentru azi. Alege o temă nouă.');
-    })->name('admin.concurs.start');
+// ───────────────────────────────────────────────────────────────────────────────
+// Misc
+// ───────────────────────────────────────────────────────────────────────────────
+Route::get('/test-mail', function () {
+    Mail::raw('This is a test email from Brevo SMTP.', function ($message) {
+        $message->to('tiagomota121@yahoo.com')->subject('Brevo SMTP Test');
+    });
+    return 'Test email sent!';
 });
 
-// Admin to force a winner on the current stats 
+//Arhiva Concursuri
+use App\Http\Controllers\ConcursArchiveController;
 
-use App\Http\Middleware\ForceWeekdayIfTesting;
+Route::get('/concurs/arhiva', [ConcursArchiveController::class, 'index'])
+    ->name('concurs.arhiva');
 
+Route::get('/concurs/arhiva/{date}', [ConcursArchiveController::class, 'show'])
+    ->where('date', '\d{4}-\d{2}-\d{2}')
+    ->name('concurs.arhiva.show');
+   
 
-// Admin testing toggles (no time travel until you turn it ON)
-Route::middleware(['auth', AdminOnly::class])->group(function () {
-    // Turn ON: pretend it's a weekday for admin requests (stored in session)
-    Route::get('/admin/testing/weekday/on', function () {
-        session(['ap_force_weekday' => true]);
-        return back()->with('status', 'Test Mode ON — weekday forced for this session.');
-    })->name('admin.test.forceWeekdayOn');
+Route::get('/concurs/arhiva/{date}/voters/{song}', [ConcursArchiveController::class, 'votersJson'])
+    ->where(['date' => '\d{4}-\d{2}-\d{2}', 'song' => '\d+'])
+    ->name('concurs.arhiva.voters');
 
-    // Turn OFF: go back to real time; clear Carbon test clock
-    Route::get('/admin/testing/weekday/off', function () {
-        session()->forget('ap_force_weekday');
-        Carbon::setTestNow(null);
-        return back()->with('status', 'Test Mode OFF — real dates restored.');
-    })->name('admin.test.forceWeekdayOff');
-});
+//Molodii Castigatoare
+use App\Http\Controllers\Header\Concurs\MelodiiCastigatoareController;
 
-// Concurs admin tools (these inherit the fake weekday when ON)
-Route::middleware(['auth', \App\Http\Middleware\AdminOnly::class, \App\Http\Middleware\ForceWeekdayIfTesting::class])->group(function () {
-    // 🚀 Start Concurs Test = hard reset TODAY + NEXT theme, then go pick a new theme
-    Route::get('/admin/concurs/start', function () {
-        $today = now()->toDateString();
+Route::get('/concurs/melodii-castigatoare', [MelodiiCastigatoareController::class, 'index'])
+    ->name('concurs.melodii-castigatoare');
 
-        \DB::transaction(function () use ($today) {
-            // 1) Delete TODAY’s votes (only for songs from today)
-            if (\Schema::hasTable('votes') && \Schema::hasTable('songs')) {
-                $songIds = \DB::table('songs')
-                    ->whereDate('competition_date', $today)
-                    ->pluck('id');
+    use App\Http\Controllers\ThemeLikeController;
+    use App\Http\Middleware\VerifyCsrfToken;
+    
+    Route::post('/themes/like/toggle', [ThemeLikeController::class, 'toggle'])
+    ->name('themes.like.toggle')
+    ->middleware(['auth', 'throttle:20,1']);
 
-                if ($songIds->isNotEmpty()) {
-                    \DB::table('votes')->whereIn('song_id', $songIds)->delete();
-                }
-            }
-
-            // 2) Delete TODAY’s songs
-            if (\Schema::hasTable('songs')) {
-                \DB::table('songs')->whereDate('competition_date', $today)->delete();
-            }
-
-            // 3) Delete TODAY’s winner (any column variant)
-            if (\Schema::hasTable('winners')) {
-                \DB::table('winners')->whereDate('contest_date', $today)->delete();
-                \DB::table('winners')->whereDate('win_date', $today)->delete();
-            }
-
-            // 4) Clear TODAY & NEXT contest themes (new table: contest_themes)
-            if (\Schema::hasTable('contest_themes')) {
-                \DB::table('contest_themes')->whereDate('contest_date', $today)->delete();
-
-                // also clear the next contest day (skip weekend)
-                $tomorrow = \Carbon\Carbon::parse($today)->addDay();
-                while (in_array($tomorrow->dayOfWeekIso, [6, 7])) { 
-                    $tomorrow->addDay(); 
-                }
-
-                \DB::table('contest_themes')
-                    ->whereDate('contest_date', $tomorrow->toDateString())
-                    ->delete();
-            }
-
-            // 5) Ensure a WINNER row for TODAY so the current admin can choose the theme,
-//    create a DUMMY song to satisfy the FK (we'll ignore this in app logic).
-if (\Schema::hasTable('winners') && \Schema::hasTable('songs')) {
-    $me = auth()->id();
-    $exists = \DB::table('winners')->whereDate('contest_date', $today)->exists();
-
-    if (!$exists && $me) {
-        // create dummy song (won't be shown; title marks it)
-        $dummySongId = \DB::table('songs')->insertGetId([
-            'user_id'          => $me,
-            'youtube_url'      => 'https://youtu.be/dQw4w9WgXcQ',
-            'title'            => '__AP_DUMMY__',
-            'competition_date' => $today,
-            'votes'            => 0,
-            'is_winner'        => 0,
-            'theme_id'         => null,
-            'created_at'       => now(),
-            'updated_at'       => now(),
-        ]);
-
-        \DB::table('winners')->insert([
-            'contest_date'         => $today,
-            'win_date'             => $today,
-            'user_id'              => $me,
-            'song_id'              => $dummySongId,  // ✅ valid FK
-            'competition_theme_id' => null,
-            'vote_count'           => 0,
-            'was_tie'              => 0,
-            'theme_chosen'         => 0,
-            'created_at'           => now(),
-            'updated_at'           => now(),
-        ]);
-    }
-}
-
-            // 6) Safety: remove any leftover placeholder songs from older resets
-            if (\Schema::hasTable('songs')) {
-                \DB::table('songs')
-                    ->whereDate('competition_date', $today)
-                    ->where('title', 'Placeholder (test reset)')
-                    ->delete();
-            }
-        });
-
-        // back to the theme picker (fresh start)
-        return redirect()
-            ->route('concurs.alege-tema.create')
-            ->with('status', 'Concurs reset pentru azi. Alege o temă nouă.');
-    })->name('admin.concurs.start');
-
-    // 🏁 Declare winner NOW = run real cron logic, then show popup if you're the winner
-    Route::post('/admin/concurs/declare-now', function () {
-        \Artisan::call('concurs:declare-winner');
-
-        return redirect()
-            ->route('concurs', ['force_popup' => 1])
-            ->with('status', trim(\Artisan::output()) ?: 'Câștigător recalculat acum.');
-    })->name('admin.concurs.declareNow');
-});
+// Static page: Regulament
+Route::view('/regulament', 'concurs.regulament')->name('regulament');
 
 
 
-/*
-|--------------------------------------------------------------------------
-| Admin · Declare Winner NOW (test helper)
-|--------------------------------------------------------------------------
-| What this does:
-| 1) Runs the same cron logic as at 20:00 → `concurs:declare-winner`.
-| 2) Respects the ForceWeekday test mode (so you can run on weekends).
-| 3) After computing the winner, if *you* are the winner and the theme
-|    is not chosen yet, it flashes `ap_show_theme_modal = true`.
-| 4) Redirects back to /concurs where the normal winner→pick-theme modal
-|    will auto-open (Step 2 will add the Blade hook).
-|
-| Requirements: must be logged in AND admin.
-*/
-Route::get('/admin/concurs/declare-winner-now', function (Request $request) {
-    Artisan::call('concurs:declare-winner');        // run the real winner logic
 
-    $d = now()->toDateString();
-
-    // Find today's winner (works with either column)
-    $winner = DB::table('winners')
-        ->whereDate('contest_date', $d)
-        ->orWhereDate('win_date', $d)
-        ->orderByDesc('id')
-        ->first();
-
-    $flash = ['status' => 'Winner logic executed.'];
-
-    if ($winner) {
-        $isMe = auth()->id() === (int) $winner->user_id;
-        $needsTheme = (int) ($winner->theme_chosen ?? 0) === 0;
-
-        if ($isMe && $needsTheme) {
-            $flash['ap_show_theme_modal'] = true;   // tell Blade to open the modal NOW
-        }
-
-        $flash['status'] = "Winner today is user #{$winner->user_id}, song #{$winner->song_id} ({$winner->vote_count} votes).";
-    }
-
-    return redirect()->route('concurs')->with($flash);
-})
-->name('admin.concurs.declare-now')
-->middleware([
-    'auth',
-    \App\Http\Middleware\AdminOnly::class,
-    \App\Http\Middleware\ForceWeekdayIfTesting::class,
-]);
-
-// Admin · Declare Winner NOW (helper)
-// GET /admin/concurs/declare-winner-now
-// 🏁 Declare winner NOW = run real cron logic, then redirect with modal if needed
-Route::get('/admin/concurs/declare-winner-now', function (\Illuminate\Http\Request $request) {
-    // Run the real winner logic
-    \Artisan::call('concurs:declare-winner');
-
-    $today = now()->toDateString();
-
-    // Fetch today's winner (by contest_date or win_date)
-    $winner = \DB::table('winners')
-        ->whereDate('contest_date', $today)
-        ->orWhereDate('win_date', $today)
-        ->orderByDesc('id')
-        ->first();
-
-    $flash = ['status' => 'Winner logic executed.'];
-
-    if ($winner) {
-        $isMe       = auth()->check() && (int) auth()->id() === (int) $winner->user_id;
-        $needsTheme = (int) ($winner->theme_chosen ?? 0) === 0;
-
-        if ($isMe && $needsTheme) {
-            // Tell Blade to open the modal
-            $flash['ap_show_theme_modal'] = true;
-        }
-
-        $flash['status'] = "Winner today is user #{$winner->user_id}, song #{$winner->song_id} ({$winner->vote_count} votes).";
-    }
-
-    return redirect()->route('concurs')->with($flash);
-})
-->name('admin.concurs.declare-winner-now')
-->middleware([
-    'auth',
-    \App\Http\Middleware\AdminOnly::class,
-    \App\Http\Middleware\ForceWeekdayIfTesting::class,
-]);
-
-// 🔗 Alias so route('admin.concurs.declare-now') still works in Blade
-Route::get('/admin/concurs/declare-now', function () {
-    return redirect()->route('admin.concurs.declare-winner-now');
-})->name('admin.concurs.declare-now');
 
 
 
