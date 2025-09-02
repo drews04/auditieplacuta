@@ -297,6 +297,28 @@ Route::get('/concurs/melodii-castigatoare', [MelodiiCastigatoareController::clas
 // Static page: Regulament
 Route::view('/regulament', 'concurs.regulament')->name('regulament');
 
+// ───────────────────────────────────────────────────────────────────────────────
+// Forum Routes
+// ───────────────────────────────────────────────────────────────────────────────
+use App\Http\Controllers\Forum\CategoryController;
+use App\Http\Controllers\Forum\ThreadController;
+use App\Http\Controllers\Forum\PostController;
+
+Route::prefix('forum')->name('forum.')->group(function () {
+    Route::get('/', [CategoryController::class, 'index'])->name('home');
+    
+    Route::get('/threads', [ThreadController::class, 'index'])->name('threads.index');
+    Route::get('/c/{category:slug}', [ThreadController::class, 'index'])->name('categories.show');
+    
+    Route::middleware(['auth', 'throttle:20,1'])->group(function () {
+        Route::get('/threads/create', [ThreadController::class, 'create'])->name('threads.create');
+        Route::post('/threads', [ThreadController::class, 'store'])->name('threads.store');
+        Route::post('/posts', [PostController::class, 'store'])->name('posts.store');
+    });
+    
+    Route::get('/t/{thread}', [ThreadController::class, 'show'])->name('threads.show');
+});
+
 
 
 

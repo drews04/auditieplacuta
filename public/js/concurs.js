@@ -199,23 +199,17 @@
 /* Dust vanish using your CSS var --vanish-delay + remove from DOM after */
 /* EXACT dust stagger your CSS expects: uses --vanish-delay + .vanish.
    Targets only the active vote buttons in the VOTE section. */
-   function apStaggerVanishVoteButtons() {
-    const voteSection = document.getElementById('concurs-vote');
-    const scope = voteSection ? voteSection.closest('.card') || document : document;
-  
-    // Only buttons that are enabled (active voting)
-    const buttons = Array.from(scope.querySelectorAll('.vote-btn:not([disabled])'));
-  
-    // Stagger: match your CSS var; keep timing snappy like before
-    const step = 0.18; // seconds between buttons (tweak if you want)
-    buttons.forEach((btn, i) => {
-      btn.disabled = true;
-      btn.style.setProperty('--vanish-delay', `${i * step}s`);
-      // reflow to ensure the var is applied before we add the class
-      void btn.offsetWidth;
-      btn.classList.add('vanish'); // triggers .vote-btn.vanish { animation: apDustVanish ...; animation-delay: var(--vanish-delay) }
-    });
-  }
+   // after successful vote
+function apStaggerVanishVoteButtons() {
+  const buttons = Array.from(document.querySelectorAll('.vote-btn')); // all vote buttons
+  const stepSec = 0.18;
+  buttons.forEach((btn, i) => {
+    btn.disabled = true;
+    btn.style.setProperty('--vanish-delay', `${i * stepSec}s`);
+    void btn.offsetWidth;        // ensure delay is applied before class
+    btn.classList.add('vanish'); // trigger CSS animation
+  });
+}
   
   /* --------------------------------------------------------------------------
    VOTING (AJAX) — posts JSON to route('concurs.vote')

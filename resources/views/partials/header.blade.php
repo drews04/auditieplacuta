@@ -21,6 +21,7 @@
               <ul class="sub-menu">
                 
                 <li><a href="{{ route('evenimente') }}">Evenimente</a></li>
+                <li><a href="{{ route('forum.home') }}">Forum</a></li>
                 
               </ul>
             </li>
