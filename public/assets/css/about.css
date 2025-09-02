@@ -1,0 +1,84 @@
+.page-about {
+    background: linear-gradient(180deg, #061016, #0b1220 60%, #0a111b);
+    min-height: 100vh;
+}
+
+.page-about .about-container { 
+    color: #e6f1fb; 
+    margin-top: 180px; /* More space between navbar and content */
+}
+
+.about-hero {
+    text-align: center; /* Center the hero section */
+}
+
+.about-hero h1 {
+    text-align: center; /* Ensure title is centered */
+}
+
+.neon-card {
+  background: radial-gradient(120% 120% at 10% 10%, rgba(22,241,211,0.06) 0%, rgba(0,0,0,0) 40%) ,
+              linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0));
+  border: 1px solid rgba(22,241,211,0.35);
+  border-radius: 18px;
+  box-shadow: 0 0 24px rgba(22,241,211,0.12);
+}
+
+.text-neon { 
+    color: #e6f1fb; 
+    text-shadow: 0 0 18px rgba(22,241,211,0.35); 
+}
+
+.neon-divider { 
+    height: 1px; 
+    background: linear-gradient(90deg, transparent, #16f1d3, transparent); 
+    opacity: .6; 
+}
+
+.about-list { 
+    list-style: none; 
+    padding-left: 0; 
+}
+
+.about-list li { 
+    margin-bottom: .5rem; 
+    opacity:.95; 
+}
+
+.about-list li span { 
+    color: #16f1d3; 
+    font-weight: 700; 
+}
+
+.btn-neon {
+  border: 1px solid #16f1d3; 
+  color: #021819; 
+  background: rgba(22,241,211,0.1);
+  border-radius: 14px; 
+  font-weight: 700;
+  box-shadow: 0 0 18px rgba(22,241,211,0.18), inset 0 0 8px rgba(22,241,211,0.15);
+  transition: all 0.3s ease;
+}
+
+.btn-neon:hover { 
+    transform: translateY(-1px); 
+    box-shadow: 0 10px 24px rgba(22,241,211,0.25); 
+    color:#e6f1fb; 
+    background: rgba(22,241,211,0.2);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .page-about .about-container {
+        margin-top: 100px;
+        padding: 2rem 1rem;
+    }
+    
+    .neon-card {
+        margin-bottom: 1.5rem;
+    }
+    
+    .about-hero h1 {
+        font-size: 2.5rem;
+    }
+}

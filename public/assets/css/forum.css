@@ -423,11 +423,18 @@
     background: linear-gradient(180deg, #0a1a22, #0f1e28);
     border: 2px solid var(--forum-border);
     border-radius: 12px;
-    color: var(--forum-text);
+    color: var(--forum-text) !important; /* Force white text */
     padding: 0.75rem 1rem;
     font-size: 1rem;
     width: 100%;
     transition: all 0.3s ease;
+}
+
+/* Placeholder text color */
+.forum-input::placeholder,
+.forum-textarea::placeholder {
+    color: var(--forum-dim) !important; /* Muted white for placeholder */
+    opacity: 1; /* Ensure consistent opacity across browsers */
 }
 
 .forum-select:focus,
@@ -455,11 +462,25 @@
     display: inline-flex;
     align-items: center;
     color: var(--forum-text);
+    cursor: pointer;
+    position: relative;
+    z-index: 1;
 }
 
 .forum-category-pill:hover {
     color: var(--forum-text);
     text-decoration: none;
+}
+
+/* Ensure the entire pill area is clickable */
+.forum-category-pill::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: -1;
 }
 
 .forum-category-pill .badge {

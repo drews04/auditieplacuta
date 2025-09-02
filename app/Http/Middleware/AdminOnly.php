@@ -4,24 +4,18 @@ namespace App\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
-use Symfony\Component\HttpFoundation\Response;
 
 class AdminOnly
 {
-    public function handle(Request $request, Closure $next): Response
+    public function handle(Request $request, Closure $next)
     {
         $user = $request->user();
 
-        // Check if logged in and admin
-        if ($user && ($user->is_admin ?? false)) {
-            return $next($request);
+        // Only allow authenticated admins
+        if (!$user || !(bool) ($user->is_admin ?? 0)) {
+            abort(403, 'ADMIN ACCESS REQUIRED');
         }
 
-        // TEMP: allow user with ID = 1 for testing
-        if ($user && (int)$user->id === 1) {
-            return $next($request);
-        }
-
-        abort(403, 'Admins only.');
+        return $next($request);
     }
 }

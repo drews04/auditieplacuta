@@ -319,9 +319,24 @@ Route::prefix('forum')->name('forum.')->group(function () {
     Route::get('/t/{thread}', [ThreadController::class, 'show'])->name('threads.show');
 });
 
+// ───────────────────────────────────────────────────────────────────────────────
+// Static Pages
+// ───────────────────────────────────────────────────────────────────────────────
+use App\Http\Controllers\Static\AboutController;
+Route::get('/despre-noi', [AboutController::class, 'index'])->name('about');
 
+// ───────────────────────────────────────────────────────────────────────────────
+// Events Routes
+// ───────────────────────────────────────────────────────────────────────────────
+use App\Http\Controllers\Events\EventsController;
 
-
+Route::prefix('evenimente')->as('events.')->group(function () {
+    Route::get('/', [EventsController::class, 'index'])->name('index');           // list events (public)
+    Route::middleware('auth')->group(function () {
+        Route::get('/create', [EventsController::class, 'create'])->name('create');  // form (admin/editor later)
+        Route::post('/', [EventsController::class, 'store'])->name('store');         // save
+    });
+});
 
 
 

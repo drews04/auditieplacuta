@@ -1,3 +1,11 @@
+@php
+  $latestEventId = cache()->get('events_latest_id'); // set on store()
+  $seenId = session('events_last_seen_id');          // set when user visits /evenimente
+  $hasNewEvents = $latestEventId && (!$seenId || $latestEventId > $seenId);
+@endphp
+
+<link rel="stylesheet" href="{{ asset('assets/css/nav-new.css') }}">
+
 <header id="gamfi-header" class="gamfi-header-section transparent-header">
   <div class="menu-area menu-sticky">
     <div class="container">
@@ -16,12 +24,23 @@
         <div class="header-menu">
           <ul class="nav-menu d-flex align-items-center">
             {{-- Acasa --}}
-            <li>
-              <a href="{{ route('home') }}">Acasa</a>
+            <li class="position-relative">
+              <a href="{{ route('home') }}" class="nav-new-anchor">Acasa
+                @if($hasNewEvents)
+                  <span class="nav-new-badge">NEW</span>
+                @endif
+              </a>
               <ul class="sub-menu">
                 
-                <li><a href="{{ route('evenimente') }}">Evenimente</a></li>
+                <li class="position-relative">
+                  <a class="dropdown-item nav-new-anchor pe-4" href="{{ route('events.index') }}">Evenimente
+                    @if($hasNewEvents)
+                      <span class="nav-new-badge">NEW</span>
+                    @endif
+                  </a>
+                </li>
                 <li><a href="{{ route('forum.home') }}">Forum</a></li>
+                <li><a href="{{ route('about') }}">Despre noi</a></li>
                 
               </ul>
             </li>

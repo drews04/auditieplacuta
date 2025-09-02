@@ -39,7 +39,7 @@
         <li><a href="{{ route('clasamente.index') }}">Clasamente</a></li>
         <li><a href="{{ route('muzica') }}">Descoperă muzică</a></li>
         <li><a href="{{ route('regulament') }}">Regulament</a></li>
-        <li><a href="{{ route('evenimente') }}">Evenimente</a></li>
+                        <li><a href="{{ route('events.index') }}">Evenimente</a></li>
       </ul>
     </div>
 

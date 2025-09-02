@@ -292,11 +292,17 @@ class SongController extends Controller
             $name = trim($m[2] ?? $raw);
         }
 
-        // Use ONLY columns that exist in your DB (name, active).
-        $ct = \App\Models\ContestTheme::create([
-            'name'   => ($name !== '' ? $name : 'Tema'),
-            'active' => true,
-        ]);
+       // Ensure only one theme per contest_date
+$contestDay = optional($cycleSubmit->submit_end_at)->toDateString() ?? now()->toDateString();
+
+$ct = \App\Models\ContestTheme::firstOrCreate(
+    ['contest_date' => $contestDay],
+    [
+        'name'              => ($name !== '' ? $name : 'Tema'),
+        'active'            => true,
+        'chosen_by_user_id' => auth()->id(),
+    ]
+);
 
         $cycleSubmit->contest_theme_id = $ct->id;
         $cycleSubmit->save();

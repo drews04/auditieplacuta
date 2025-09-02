@@ -1,0 +1,44 @@
+/* Anchor wrapper so badge positions relative to the text */
+.nav-new-anchor { 
+    position: relative; 
+    display: inline-block; 
+}
+
+/* Small corner badge */
+.nav-new-badge{
+  position: absolute;
+  top: -6px;      /* overlap a bit above the text */
+  right: -10px;   /* stick out to the right corner */
+  padding: 1px 6px;
+  font-size: 10px;
+  line-height: 1.1;
+  font-weight: 800;
+  letter-spacing: .6px;
+  color: #021819;
+  background: #16f1d3;
+  border-radius: 10px;
+  z-index: 5;
+  box-shadow: 0 0 10px rgba(22,241,211,.8), 0 0 22px rgba(22,241,211,.6);
+  animation: neonBreath 1.25s ease-in-out infinite;
+}
+
+/* Dropdown item variant: sits inside the menu item, top-right corner */
+.dropdown-item .nav-new-badge{
+  top: -3px;
+  right: 6px;
+}
+
+.dropdown-item.nav-new-anchor { 
+    padding-right: 2rem; /* room for badge */
+}
+
+@keyframes neonBreath{
+  0%,100% { 
+      opacity: 1; 
+      box-shadow: 0 0 8px rgba(22,241,211,.7), 0 0 16px rgba(22,241,211,.45); 
+  }
+  50% { 
+      opacity: .55; 
+      box-shadow: 0 0 18px rgba(22,241,211,1), 0 0 36px rgba(22,241,211,.85); 
+  }
+}
