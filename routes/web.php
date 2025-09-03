@@ -344,30 +344,43 @@ Route::prefix('evenimente')->as('events.')->group(function () {
     });
 });
 
-// threads.edit    — Show edit form (owner or admin) → policy: update
-// threads.update  — Save edits to title/body → policy: update
-// threads.destroy — Soft-delete thread + its posts → policy: delete (owner or admin)
+// ---------------------------------------
+// Forum routes
+// ---------------------------------------
 
-// posts.edit      — Show edit form (owner within 30m or admin) → policy: update
-// posts.update    — Save edits; set edited_at timestamp → policy: update
-// posts.destroy   — Delete post; if top-level also delete its children → policy: delete
+
+
+
+
 Route::prefix('forum')->name('forum.')->group(function () {
-    // … your existing routes …
+    // Home & listing
+    Route::get('/',                 [CategoryController::class, 'index'])->name('home');
+    Route::get('/threads',          [ThreadController::class, 'index'])->name('threads.index');
+    Route::get('/c/{category:slug}',[ThreadController::class, 'index'])->name('categories.show');
 
+    // Public thread show (slug)
+    Route::get('/t/{thread:slug}',  [ThreadController::class, 'show'])->name('threads.show');
+
+    // Auth-only actions
     Route::middleware(['auth', 'throttle:30,1'])->group(function () {
-        // existing create/store routes here…
+        // Create
+        Route::get('/threads/create', [ThreadController::class, 'create'])->name('threads.create');
+        Route::post('/threads',       [ThreadController::class, 'store'])->name('threads.store');
+        Route::post('/posts',         [PostController::class,   'store'])->name('posts.store');
 
-        // ⬇️ ADD THESE:
-        Route::get('/t/{thread}/edit',   [\App\Http\Controllers\Forum\ThreadController::class, 'edit'])->name('threads.edit');
-        Route::put('/t/{thread}',        [\App\Http\Controllers\Forum\ThreadController::class, 'update'])->name('threads.update');
-        Route::delete('/t/{thread}',     [\App\Http\Controllers\Forum\ThreadController::class, 'destroy'])->name('threads.destroy');
+        // Thread edit/update/delete (slug)
+        Route::get('/t/{thread:slug}/edit', [ThreadController::class, 'edit'])->name('threads.edit');     // policy: update (owner <24h or admin)
+        Route::put('/t/{thread:slug}',      [ThreadController::class, 'update'])->name('threads.update'); // policy: update
+        Route::delete('/t/{thread:slug}',   [ThreadController::class, 'destroy'])->name('threads.destroy'); // policy: delete
 
-        Route::get('/p/{post}/edit',     [\App\Http\Controllers\Forum\PostController::class, 'edit'])->name('posts.edit');
-        Route::put('/p/{post}',          [\App\Http\Controllers\Forum\PostController::class, 'update'])->name('posts.update');
-        Route::delete('/p/{post}',       [\App\Http\Controllers\Forum\PostController::class, 'destroy'])->name('posts.destroy');
+        // Post edit/update/delete (id)
+        Route::get('/p/{post}/edit',  [PostController::class, 'edit'])->whereNumber('post')->name('posts.edit');     // policy: update (owner <24h or admin)
+        Route::put('/p/{post}',       [PostController::class, 'update'])->whereNumber('post')->name('posts.update'); // policy: update
+        Route::delete('/p/{post}',    [PostController::class, 'destroy'])->whereNumber('post')->name('posts.destroy'); // policy: delete
+
+        // Likes (AJAX)
+        Route::post('/like/thread/{thread:slug}', [ForumLikeController::class, 'toggleThread'])->name('likes.thread.toggle');
+        Route::post('/like/post/{post}',          [ForumLikeController::class, 'togglePost'])->whereNumber('post')->name('likes.post.toggle');
     });
-
-    // keep this public show route:
-    Route::get('/t/{thread}', [\App\Http\Controllers\Forum\ThreadController::class, 'show'])->name('threads.show');
 });
 

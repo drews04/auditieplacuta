@@ -17,6 +17,7 @@ class ThreadPolicy
     public function update(User $user, Thread $thread): bool
     {
         if ($user->is_admin ?? false) return true;
+
         return $user->id === $thread->user_id
             && $thread->created_at >= Carbon::now()->subHours($this->editWindowHours);
     }
@@ -24,6 +25,7 @@ class ThreadPolicy
     public function delete(User $user, Thread $thread): bool
     {
         if ($user->is_admin ?? false) return true;
+
         return $user->id === $thread->user_id
             && $thread->created_at >= Carbon::now()->subHours($this->editWindowHours);
     }

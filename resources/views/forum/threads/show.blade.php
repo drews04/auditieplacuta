@@ -30,6 +30,11 @@
                 </div>
 
                 <div class="col-md-4 text-md-end">
+                @can('update', $thread)
+                    <a href="{{ route('forum.threads.edit', $thread->slug) }}" class="btn btn-secondary">
+                        <i class="fas fa-edit me-2"></i>Editează
+                    </a>
+                @endcan
                     <div class="forum-thread-stats">
                         <div class="forum-stat">
                             <i class="fas fa-eye me-2"></i>

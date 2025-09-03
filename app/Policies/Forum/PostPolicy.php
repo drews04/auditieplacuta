@@ -17,6 +17,7 @@ class PostPolicy
     public function update(User $user, Post $post): bool
     {
         if ($user->is_admin ?? false) return true;
+
         return $user->id === $post->user_id
             && $post->created_at >= Carbon::now()->subHours($this->editWindowHours);
     }
@@ -24,6 +25,7 @@ class PostPolicy
     public function delete(User $user, Post $post): bool
     {
         if ($user->is_admin ?? false) return true;
+
         return $user->id === $post->user_id
             && $post->created_at >= Carbon::now()->subHours($this->editWindowHours);
     }
