@@ -4,21 +4,33 @@ namespace App\Policies\Forum;
 
 use App\Models\User;
 use App\Models\Forum\Thread;
+use Illuminate\Support\Carbon;
 
 class ThreadPolicy
 {
-    public function create(User $user)
+    protected int $editWindowHours = 24;
+
+    public function viewAny(?User $user): bool { return true; }
+    public function view(?User $user, Thread $thread): bool { return true; }
+    public function create(User $user): bool { return true; }
+
+    public function update(User $user, Thread $thread): bool
     {
-        return (bool) $user;
+        if ($user->is_admin ?? false) return true;
+        return $user->id === $thread->user_id
+            && $thread->created_at >= Carbon::now()->subHours($this->editWindowHours);
     }
-    
-    public function update(User $user, Thread $thread)
+
+    public function delete(User $user, Thread $thread): bool
     {
-        return $user->id === $thread->user_id;
+        if ($user->is_admin ?? false) return true;
+        return $user->id === $thread->user_id
+            && $thread->created_at >= Carbon::now()->subHours($this->editWindowHours);
     }
-    
-    public function delete(User $user, Thread $thread)
-    {
-        return $user->id === $thread->user_id;
-    }
+
+    public function restore(User $user, Thread $thread): bool
+    { return ($user->is_admin ?? false); }
+
+    public function forceDelete(User $user, Thread $thread): bool
+    { return ($user->is_admin ?? false); }
 }

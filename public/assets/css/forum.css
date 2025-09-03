@@ -564,6 +564,10 @@
     transform: translateY(-1px);
 }
 
+.forum-like-btn i.is-liked {
+    color: var(--forum-neon);
+}
+
 .forum-post-children {
     margin-left: 1.25rem;
     border-left: 2px solid var(--forum-border);
@@ -598,3 +602,128 @@
     font-size: 0.85rem;
     margin-bottom: 0.5rem;
 }
+
+/* Updated Forum Likes and Reply System */
+.forum-like-btn {
+    background: transparent;
+    border: 1px solid var(--forum-border);
+    color: var(--forum-text);
+    border-radius: 999px;
+    padding: 0.25rem 0.6rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.85rem;
+    transition: transform 0.15s ease, box-shadow 0.2s ease;
+}
+
+.forum-like-btn:hover {
+    box-shadow: 0 0 12px rgba(22, 241, 211, 0.25);
+    transform: translateY(-1px);
+}
+
+.forum-like-btn i.is-liked {
+    color: var(--forum-neon);
+}
+
+.forum-post-children {
+    margin-left: 1.25rem;
+    border-left: 2px solid var(--forum-border);
+    padding-left: 1rem;
+}
+
+.replying-pill {
+    display: inline-block;
+    border: 1px solid var(--forum-border);
+    border-radius: 999px;
+    padding: 0.25rem 0.75rem;
+    margin: 0.5rem 0;
+    color: var(--forum-text);
+}
+
+#reply-cancel {
+    cursor: pointer;
+    margin-left: 0.5rem;
+    opacity: 0.7;
+}
+.replying-to-pill{
+    display:inline-block;
+    border:1px solid var(--forum-border);
+    border-radius:999px;
+    padding:.2rem .6rem;
+    color:var(--forum-text);
+    font-size:.85rem;
+  }
+/* ---- Forum buttons: neon theme ---- */
+.forum-container .btn {
+    border-radius: 12px;
+    font-weight: 800;
+    letter-spacing: .3px;
+    transition: transform .15s ease, box-shadow .2s ease, border-color .2s ease;
+  }
+  
+  .forum-container .btn-primary {
+    background: linear-gradient(135deg, var(--forum-neon), #0fb8a0);
+    border: 0;
+    color: #002a24; /* dark teal for contrast */
+    box-shadow: 0 0 16px rgba(22,241,211,.35);
+  }
+  .forum-container .btn-primary:hover,
+  .forum-container .btn-primary:focus {
+    transform: translateY(-1px);
+    box-shadow: 0 0 26px rgba(22,241,211,.55);
+    color: #002a24;
+  }
+  
+  .forum-container .btn-secondary {
+    background: linear-gradient(180deg, #0a1a22, #0f1e28);
+    border: 2px solid var(--forum-border);
+    color: var(--forum-text);
+  }
+  .forum-container .btn-secondary:hover,
+  .forum-container .btn-secondary:focus {
+    border-color: var(--forum-neon);
+    color: var(--forum-neon);
+    box-shadow: 0 0 16px rgba(22,241,211,.30);
+  }
+  
+  /* Make the “Răspunde” submit look like primary */
+  .forum-container #reply-form .btn {
+    border-radius: 12px;
+  }
+  
+  /* ---- Select dropdown readability ---- */
+  .forum-container .forum-select option {
+    background: #0a1a22;
+    color: var(--forum-text);
+  }
+  .forum-container .forum-select option:checked,
+  .forum-container .forum-select option:hover {
+    background: #0f1e28;
+    color: var(--forum-text);
+  }
+  /* Make all .btn-new-thread use the neon style globally */
+.forum-container .btn-new-thread{
+    background: linear-gradient(135deg, var(--forum-neon), #0fb8a0) !important;
+    border: 0 !important;
+    color: #002a24 !important;
+    font-weight: 900;
+    padding: 0.75rem 1.5rem;
+    border-radius: 12px;
+    font-size: 0.9rem;
+    letter-spacing: 0.5px;
+    box-shadow: 0 0 20px rgba(22,241,211,.4);
+    transition: transform .15s ease, box-shadow .2s ease;
+  }
+  .forum-container .btn-new-thread:hover,
+  .forum-container .btn-new-thread:focus{
+    transform: translateY(-2px);
+    box-shadow: 0 0 30px rgba(22,241,211,.6);
+    color: #002a24 !important;
+    outline: none;
+  }
+  /* put author + time on the same side, neat spacing */
+.forum-thread-meta{
+    justify-content: flex-start !important;
+    gap: 1rem !important;
+  }

@@ -28,6 +28,7 @@
                         </span>
                     </div>
                 </div>
+
                 <div class="col-md-4 text-md-end">
                     <div class="forum-thread-stats">
                         <div class="forum-stat">
@@ -41,11 +42,26 @@
                             <span>răspunsuri</span>
                         </div>
                         <div class="forum-stat">
-                            <button class="forum-like-btn" data-type="thread" data-id="{{ $thread->id }}">
-                                <i class="fas fa-heart{{ $thread->likedBy(auth()->id()) ? '' : '-o' }}"></i>
+                            <button class="forum-like-btn" data-type="thread" data-id="{{ $thread->slug }}">
+                                <i class="far fa-heart {{ $thread->likedBy(auth()->id()) ? 'is-liked' : '' }}"></i>
                                 <span class="forum-like-count">{{ $thread->likes()->count() }}</span>
                             </button>
                         </div>
+                    </div>
+
+                    <!-- Thread actions (owner or admin) -->
+                    <div class="mt-2 d-flex justify-content-end gap-2">
+                        @can('update', $thread)
+                            <a href="{{ route('forum.threads.edit', $thread) }}" class="btn btn-secondary btn-sm">Editează</a>
+                        @endcan
+                        @can('delete', $thread)
+                            <form action="{{ route('forum.threads.destroy', $thread) }}" method="POST"
+                                  onsubmit="return confirm('Sigur ștergi acest thread?');" class="d-inline">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="btn btn-secondary btn-sm">Șterge</button>
+                            </form>
+                        @endcan
                     </div>
                 </div>
             </div>
@@ -67,11 +83,21 @@
         </div>
 
         <!-- Posts -->
-        @if($thread->posts->count() > 0)
+        @if($topPosts->count() > 0)
             <h3 class="text-light mb-3">Răspunsuri ({{ $thread->posts->count() }})</h3>
-            @foreach($thread->posts->where('parent_id', null) as $post)
+            @foreach($topPosts as $post)
                 @include('forum.partials.post', ['post' => $post])
             @endforeach
+        @endif
+
+        @if($errors->any())
+            <div class="alert alert-danger mb-3">
+                <ul class="mb-0">
+                    @foreach($errors->all() as $e)
+                        <li>{{ $e }}</li>
+                    @endforeach
+                </ul>
+            </div>
         @endif
 
         <!-- Reply Form -->
@@ -79,16 +105,18 @@
             @if(!$thread->locked)
                 <div class="forum-actions">
                     <h4 class="text-light mb-3">Adaugă un răspuns</h4>
-                    <form action="{{ route('forum.posts.store') }}" method="POST">
+                    <div id="replying-pill" class="replying-pill d-none"></div>
+
+                    <form id="reply-form" action="{{ route('forum.posts.store') }}" method="POST">
                         @csrf
                         <input type="hidden" name="thread_id" value="{{ $thread->id }}">
                         <input type="hidden" name="parent_id" id="parent_id" value="">
-                        
+
                         <div class="mb-3">
-                            <textarea name="body" class="form-control forum-textarea" 
+                            <textarea name="body" class="form-control forum-textarea"
                                       rows="4" placeholder="Scrie răspunsul tău..." required minlength="2"></textarea>
                         </div>
-                        
+
                         <div class="text-end">
                             <button type="submit" class="btn btn-new-thread">
                                 <i class="fas fa-reply me-2"></i>Răspunde
@@ -125,8 +153,9 @@
 
 @push('scripts')
 <script>
-  window.forumLikeThreadRoute = "{{ route('forum.likes.thread.toggle', ['thread' => $thread->id]) }}".replace(/\/\d+$/, '');
-  window.forumLikePostRoute   = "{{ route('forum.likes.post.toggle',   ['post'   => 0]) }}".replace(/0$/, '');
+  // explicit bases, no regex shenanigans
+  window.forumLikeThreadBase = "{{ url('/forum/like/thread') }}";
+  window.forumLikePostBase   = "{{ url('/forum/like/post') }}";
 </script>
 <script src="{{ asset('js/forum.js') }}"></script>
 @endpush

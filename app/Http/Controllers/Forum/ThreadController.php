@@ -81,8 +81,67 @@ class ThreadController extends Controller
             $thread->increment('views_count');
         }
         
-        $thread->load(['category', 'user', 'posts.user', 'posts.children.user', 'likes']);
+        $thread->load(['category', 'user', 'posts.user', 'posts.likes', 'posts.children.user', 'posts.children.likes', 'likes']);
         
-        return view('forum.threads.show', compact('thread'));
+        $topPosts = $thread->posts()->whereNull('parent_id')->orderBy('created_at')->get();
+        
+        return view('forum.threads.show', compact('thread', 'topPosts'));
     }
+
+    public function edit(\App\Models\Forum\Thread $thread)
+{
+    $this->authorize('update', $thread);
+    $categories = \App\Models\Forum\Category::orderBy('name')->get();
+    return view('forum.threads.edit', compact('thread','categories'));
+}
+
+    public function update(\Illuminate\Http\Request $request, \App\Models\Forum\Thread $thread)
+    {
+        $this->authorize('update', $thread);
+
+        $data = $request->validate([
+            'title' => ['required','string','min:4','max:140'],
+            'body'  => ['required','string','min:10'],
+            // optional: allow moving category
+            'category_id' => ['nullable','integer','exists:forum_categories,id'],
+        ]);
+
+        $thread->update([
+            'title'       => $data['title'],
+            'body'        => $data['body'],
+            'category_id' => $data['category_id'] ?? $thread->category_id,
+        ]);
+
+        return redirect()->route('forum.threads.show', $thread->slug)
+            ->with('success', 'Thread-ul a fost actualizat.');
+    }
+
+        public function destroy(\App\Models\Forum\Thread $thread)
+    {
+        $this->authorize('delete', $thread);
+
+        // collect child post ids
+        $postIds = $thread->posts()->pluck('id');
+
+        // delete likes (posts + thread)
+        \App\Models\Forum\Like::where('likeable_type', \App\Models\Forum\Post::class)
+            ->whereIn('likeable_id', $postIds)->delete();
+        \App\Models\Forum\Like::where('likeable_type', \App\Models\Forum\Thread::class)
+            ->where('likeable_id', $thread->id)->delete();
+
+        // delete views
+        \App\Models\Forum\ViewHit::where('thread_id', $thread->id)->delete();
+
+        // delete posts (force)
+        \App\Models\Forum\Post::whereIn('id', $postIds)->forceDelete();
+
+        // delete thread (force)
+        $thread->forceDelete();
+
+        // keep category counts tidy (if you use it)
+        \App\Models\Forum\Category::whereKey($thread->category_id)->decrement('threads_count');
+
+        return redirect()->route('forum.home')->with('success', 'Thread-ul a fost șters.');
+    }
+
 }

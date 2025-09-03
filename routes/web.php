@@ -344,5 +344,30 @@ Route::prefix('evenimente')->as('events.')->group(function () {
     });
 });
 
+// threads.edit    — Show edit form (owner or admin) → policy: update
+// threads.update  — Save edits to title/body → policy: update
+// threads.destroy — Soft-delete thread + its posts → policy: delete (owner or admin)
 
+// posts.edit      — Show edit form (owner within 30m or admin) → policy: update
+// posts.update    — Save edits; set edited_at timestamp → policy: update
+// posts.destroy   — Delete post; if top-level also delete its children → policy: delete
+Route::prefix('forum')->name('forum.')->group(function () {
+    // … your existing routes …
+
+    Route::middleware(['auth', 'throttle:30,1'])->group(function () {
+        // existing create/store routes here…
+
+        // ⬇️ ADD THESE:
+        Route::get('/t/{thread}/edit',   [\App\Http\Controllers\Forum\ThreadController::class, 'edit'])->name('threads.edit');
+        Route::put('/t/{thread}',        [\App\Http\Controllers\Forum\ThreadController::class, 'update'])->name('threads.update');
+        Route::delete('/t/{thread}',     [\App\Http\Controllers\Forum\ThreadController::class, 'destroy'])->name('threads.destroy');
+
+        Route::get('/p/{post}/edit',     [\App\Http\Controllers\Forum\PostController::class, 'edit'])->name('posts.edit');
+        Route::put('/p/{post}',          [\App\Http\Controllers\Forum\PostController::class, 'update'])->name('posts.update');
+        Route::delete('/p/{post}',       [\App\Http\Controllers\Forum\PostController::class, 'destroy'])->name('posts.destroy');
+    });
+
+    // keep this public show route:
+    Route::get('/t/{thread}', [\App\Http\Controllers\Forum\ThreadController::class, 'show'])->name('threads.show');
+});
 
