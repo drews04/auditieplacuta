@@ -16,6 +16,7 @@ class StorePostRequest extends FormRequest
         return [
             'thread_id' => ['required', 'exists:forum_threads,id'],
             'body' => ['required', 'string', 'min:2'],
+            'parent_id' => ['nullable', 'exists:forum_posts,id'],
         ];
     }
     
@@ -26,6 +27,7 @@ class StorePostRequest extends FormRequest
             'thread_id.exists' => 'Thread-ul nu există.',
             'body.required' => 'Conținutul este obligatoriu.',
             'body.min' => 'Conținutul trebuie să aibă cel puțin 2 caractere.',
+            'parent_id.exists' => 'Post-ul părinte nu există.',
         ];
     }
 }

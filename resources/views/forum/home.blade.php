@@ -108,5 +108,5 @@
 @endsection
 
 @push('scripts')
-    <script src="{{ asset('assets/js/forum.js') }}"></script>
+    <script src="{{ asset('js/forum.js') }}"></script>
 @endpush

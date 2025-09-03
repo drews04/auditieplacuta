@@ -303,6 +303,7 @@ Route::view('/regulament', 'concurs.regulament')->name('regulament');
 use App\Http\Controllers\Forum\CategoryController;
 use App\Http\Controllers\Forum\ThreadController;
 use App\Http\Controllers\Forum\PostController;
+use App\Http\Controllers\Forum\ForumLikeController;
 
 Route::prefix('forum')->name('forum.')->group(function () {
     Route::get('/', [CategoryController::class, 'index'])->name('home');
@@ -314,6 +315,11 @@ Route::prefix('forum')->name('forum.')->group(function () {
         Route::get('/threads/create', [ThreadController::class, 'create'])->name('threads.create');
         Route::post('/threads', [ThreadController::class, 'store'])->name('threads.store');
         Route::post('/posts', [PostController::class, 'store'])->name('posts.store');
+    });
+    
+    Route::middleware(['auth', 'throttle:30,1'])->group(function () {
+        Route::post('/like/thread/{thread}', [ForumLikeController::class, 'toggleThread'])->name('likes.thread.toggle');
+        Route::post('/like/post/{post}', [ForumLikeController::class, 'togglePost'])->name('likes.post.toggle');
     });
     
     Route::get('/t/{thread}', [ThreadController::class, 'show'])->name('threads.show');

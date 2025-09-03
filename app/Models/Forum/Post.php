@@ -11,7 +11,7 @@ class Post extends Model
     
     protected $table = 'forum_posts';
     
-    protected $fillable = ['thread_id', 'user_id', 'body'];
+    protected $fillable = ['thread_id', 'user_id', 'body', 'parent_id'];
     
     protected $casts = [
         'edited_at' => 'datetime',
@@ -25,6 +25,26 @@ class Post extends Model
     public function user()
     {
         return $this->belongsTo(\App\Models\User::class);
+    }
+    
+    public function likes()
+    {
+        return $this->morphMany(\App\Models\Forum\Like::class, 'likeable');
+    }
+    
+    public function likedBy(?int $userId): bool
+    {
+        return $userId ? $this->likes()->where('user_id', $userId)->exists() : false;
+    }
+    
+    public function parent()
+    {
+        return $this->belongsTo(self::class, 'parent_id');
+    }
+    
+    public function children()
+    {
+        return $this->hasMany(self::class, 'parent_id')->orderBy('created_at');
     }
     
     public function isEdited()

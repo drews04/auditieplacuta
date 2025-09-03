@@ -81,7 +81,7 @@ class ThreadController extends Controller
             $thread->increment('views_count');
         }
         
-        $thread->load(['category', 'user', 'posts.user']);
+        $thread->load(['category', 'user', 'posts.user', 'posts.children.user', 'likes']);
         
         return view('forum.threads.show', compact('thread'));
     }

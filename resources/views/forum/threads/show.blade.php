@@ -40,6 +40,12 @@
                             <span>{{ $thread->replies_count }}</span>
                             <span>răspunsuri</span>
                         </div>
+                        <div class="forum-stat">
+                            <button class="forum-like-btn" data-type="thread" data-id="{{ $thread->id }}">
+                                <i class="fas fa-heart{{ $thread->likedBy(auth()->id()) ? '' : '-o' }}"></i>
+                                <span class="forum-like-count">{{ $thread->likes()->count() }}</span>
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -63,7 +69,7 @@
         <!-- Posts -->
         @if($thread->posts->count() > 0)
             <h3 class="text-light mb-3">Răspunsuri ({{ $thread->posts->count() }})</h3>
-            @foreach($thread->posts as $post)
+            @foreach($thread->posts->where('parent_id', null) as $post)
                 @include('forum.partials.post', ['post' => $post])
             @endforeach
         @endif
@@ -76,6 +82,7 @@
                     <form action="{{ route('forum.posts.store') }}" method="POST">
                         @csrf
                         <input type="hidden" name="thread_id" value="{{ $thread->id }}">
+                        <input type="hidden" name="parent_id" id="parent_id" value="">
                         
                         <div class="mb-3">
                             <textarea name="body" class="form-control forum-textarea" 
@@ -117,5 +124,9 @@
 @endsection
 
 @push('scripts')
-    <script src="{{ asset('assets/js/forum.js') }}"></script>
+<script>
+  window.forumLikeThreadRoute = "{{ route('forum.likes.thread.toggle', ['thread' => $thread->id]) }}".replace(/\/\d+$/, '');
+  window.forumLikePostRoute   = "{{ route('forum.likes.post.toggle',   ['post'   => 0]) }}".replace(/0$/, '');
+</script>
+<script src="{{ asset('js/forum.js') }}"></script>
 @endpush
