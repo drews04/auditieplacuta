@@ -1,44 +1,46 @@
-/* Anchor wrapper so badge positions relative to the text */
-.nav-new-anchor { 
-    position: relative; 
-    display: inline-block; 
+/* --- Forum page: make header match forum background + remove seam --- */
+.page-forum header,
+.page-forum .site-header,
+.page-forum .navbar,
+.page-forum .header {
+  background: linear-gradient(180deg, #061016, #0b1220 60%, #0a111b) !important;
+  border-bottom: 0 !important;
+  box-shadow: none !important;
+  width: 100% !important; /* avoid 100vw covering the scrollbar channel */
 }
 
-/* Small corner badge */
-.nav-new-badge{
-  position: absolute;
-  top: -6px;      /* overlap a bit above the text */
-  right: -10px;   /* stick out to the right corner */
-  padding: 1px 6px;
-  font-size: 10px;
-  line-height: 1.1;
-  font-weight: 800;
-  letter-spacing: .6px;
-  color: #021819;
-  background: #16f1d3;
-  border-radius: 10px;
-  z-index: 5;
-  box-shadow: 0 0 10px rgba(22,241,211,.8), 0 0 22px rgba(22,241,211,.6);
-  animation: neonBreath 1.25s ease-in-out infinite;
+/* Some themes add a divider via pseudo-elements; kill them on forum pages */
+.page-forum header::before,
+.page-forum header::after,
+.page-forum .site-header::before,
+.page-forum .site-header::after,
+.page-forum .navbar::before,
+.page-forum .navbar::after,
+.page-forum .header::before,
+.page-forum .header::after {
+  content: none !important;
 }
 
-/* Dropdown item variant: sits inside the menu item, top-right corner */
-.dropdown-item .nav-new-badge{
-  top: -3px;
-  right: 6px;
+/* ---- Forum page: let the header be transparent so the page gradient shows through ---- */
+.page-forum header,
+.page-forum .site-header,
+.page-forum .navbar,
+.page-forum .header {
+  background: transparent !important;  /* reveal the body gradient */
+  border-bottom: 0 !important;
+  box-shadow: none !important;
+  margin-bottom: 0 !important;
+  width: 100% !important;              /* avoid 100vw covering the scrollbar channel */
 }
 
-.dropdown-item.nav-new-anchor { 
-    padding-right: 2rem; /* room for badge */
-}
-
-@keyframes neonBreath{
-  0%,100% { 
-      opacity: 1; 
-      box-shadow: 0 0 8px rgba(22,241,211,.7), 0 0 16px rgba(22,241,211,.45); 
-  }
-  50% { 
-      opacity: .55; 
-      box-shadow: 0 0 18px rgba(22,241,211,1), 0 0 36px rgba(22,241,211,.85); 
-  }
+/* Kill any decorative pseudo-element dividers some themes add */
+.page-forum header::before,
+.page-forum header::after,
+.page-forum .site-header::before,
+.page-forum .site-header::after,
+.page-forum .navbar::before,
+.page-forum .navbar::after,
+.page-forum .header::before,
+.page-forum .header::after {
+  content: none !important;
 }

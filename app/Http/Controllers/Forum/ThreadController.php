@@ -27,7 +27,9 @@ class ThreadController extends Controller
             $query->where('category_id', $category->id);
         }
 
-        $threads = $query->paginate(10);
+        // Threads per page: 20
+        $threads = $query->paginate(20)->withQueryString();
+        $threads->onEachSide(1); // show one page number on each side
 
         // Pass the selected category (if any) to the view
         $currentCategory = $category;
@@ -77,7 +79,7 @@ class ThreadController extends Controller
             ->where('created_at', '>', now()->subHours(6))
             ->exists();
 
-        if (! $exists) {
+        if (!$exists) {
             ViewHit::create([
                 'thread_id'  => $thread->id,
                 'user_id'    => $keyUser,
@@ -97,10 +99,15 @@ class ThreadController extends Controller
             'likes',
         ]);
 
+        // Top-level replies per page: 15 (children are eager-loaded)
         $topPosts = $thread->posts()
             ->whereNull('parent_id')
             ->orderBy('created_at')
-            ->get();
+            ->with(['user', 'likes', 'children.user', 'children.likes'])
+            ->paginate(50)
+            ->withQueryString();
+
+        $topPosts->onEachSide(1);
 
         return view('forum.threads.show', compact('thread', 'topPosts'));
     }

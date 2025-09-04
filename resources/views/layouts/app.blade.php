@@ -5,7 +5,7 @@
   <meta http-equiv="x-ua-compatible" content="ie=edge" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="csrf-token" content="{{ csrf_token() }}">
-  
+
   <title>@yield('title', 'Auditie Placuta')</title>
 
   <!-- Bootstrap CSS -->
@@ -38,6 +38,13 @@
     html, body { height: 100%; margin: 0; }
     body.site { min-height: 100%; display: flex; flex-direction: column; }
     main.site-main { flex: 1 0 auto; }
+
+    /* smooth fade-out for flash alerts (used globally below) */
+    .alert.fade-out{
+      opacity: 0;
+      transform: translateY(-4px);
+      transition: opacity .6s ease, transform .6s ease;
+    }
   </style>
 </head>
 
@@ -147,5 +154,25 @@
       }
     });
   </script>
+
+  <!-- GLOBAL: auto-dismiss all success alerts after 5s.
+       Also supports explicit data-auto-dismiss="true" on any .alert type,
+       and optional data-dismiss-ms="7000" to override per element. -->
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const candidates = document.querySelectorAll(
+        '.alert-success, .alert[data-auto-dismiss="true"]'
+      );
+      candidates.forEach(el => {
+        const msAttr = el.getAttribute('data-dismiss-ms');
+        const delay = Number.isFinite(parseInt(msAttr, 10)) ? parseInt(msAttr, 10) : 5000;
+        setTimeout(() => {
+          el.classList.add('fade-out');
+          el.addEventListener('transitionend', () => el.remove());
+        }, delay);
+      });
+    });
+  </script>
+
 </body>
 </html>

@@ -16,7 +16,7 @@
         </div>
     </div>
 
-    <div class="forum-post-body">
+    <div class="forum-post-body post-body">
         {!! nl2br(e($post->body)) !!}
     </div>
 
@@ -66,7 +66,7 @@
                         </div>
                     </div>
 
-                    <div class="forum-post-body">
+                    <div class="forum-post-body post-body">
                         @if($child->parent && $child->parent->user)
                             <div class="replying-to-pill mb-2">
                                 Răspunzi lui <strong>&#64;{{ $child->parent->user->name }}</strong>
@@ -84,7 +84,7 @@
                         <button class="forum-reply-btn ms-2"
                                 data-post-id="{{ $child->parent_id ?: $child->id }}"
                                 data-user-name="{{ $child->user->name ?? 'Utilizator' }}">↩ Răspunde</button>
-                        @endauth>
+                        @endauth
 
                         <div class="ms-auto d-flex gap-2">
                             @can('update', $child)

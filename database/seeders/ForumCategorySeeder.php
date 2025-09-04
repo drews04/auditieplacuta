@@ -6,7 +6,7 @@ use Illuminate\Database\Seeder;
 use Illuminate\Support\Str;
 use App\Models\Forum\Category;
 
-class ForumSeeder extends Seeder
+class ForumCategorySeeder extends Seeder
 {
     public function run()
     {
@@ -24,10 +24,9 @@ class ForumSeeder extends Seeder
 
         foreach ($categories as $cat) {
             $name = $cat['name'];
-            $slug = Str::slug($name, '-'); // diacritics-safe slug
+            $slug = Str::slug($name, '-');
             $desc = isset($cat['description']) ? $cat['description'] : null;
 
-            // idempotent (re-running won’t duplicate)
             Category::firstOrCreate(
                 ['slug' => $slug],
                 ['name' => $name, 'slug' => $slug, 'description' => $desc]

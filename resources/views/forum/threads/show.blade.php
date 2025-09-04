@@ -30,11 +30,7 @@
         </div>
 
         <div class="col-md-4 text-md-end">
-          @can('update', $thread)
-            <a href="{{ route('forum.threads.edit', $thread->slug) }}" class="btn btn-secondary">
-              <i class="fas fa-edit me-2"></i>Editează
-            </a>
-          @endcan
+          
 
           <div class="forum-thread-stats">
             <div class="forum-stat">
@@ -73,10 +69,10 @@
     </div>
 
     @if(session('success'))
-      <div class="alert alert-success mb-3">
+    <div class="alert alert-success mb-3" data-auto-dismiss="true">
         <i class="fas fa-check-circle me-2"></i>
         {{ session('success') }}
-      </div>
+    </div>
     @endif
 
     <!-- Thread Body -->
@@ -88,21 +84,18 @@
 
     <!-- Posts -->
     @if($topPosts->count() > 0)
-    <h3 class="text-light mb-3">
-        Răspunsuri ({{ $thread->posts()->count() }})
-    </h3>
+      <h3 id="replies" class="text-light mb-3">
+          Răspunsuri ({{ $thread->posts()->count() }})
+      </h3>
 
-    @foreach($topPosts as $post)
-        @include('forum.partials.post', ['post' => $post])
-    @endforeach
+      @foreach($topPosts as $post)
+          @include('forum.partials.post', ['post' => $post])
+      @endforeach
 
-    <div class="mt-4 d-flex justify-content-center">
-        <x-pagination :paginator="$topPosts" />
-    </div>
+      
     @else
-    <p class="text-muted">Nu există răspunsuri încă.</p>
+      <p class="text-muted">Nu există răspunsuri încă.</p>
     @endif
-
 
     @if($errors->any())
       <div class="alert alert-danger mb-3">
@@ -165,11 +158,18 @@
       </div>
     @endauth
 
+    
+
     <div class="text-center mt-4">
       <a href="{{ route('forum.home') }}" class="btn btn-secondary">
         <i class="fas fa-arrow-left me-2"></i>Înapoi la Forum
       </a>
     </div>
+    
+    <div class="mt-4 d-flex justify-content-center">
+          <x-pagination :paginator="$topPosts" fragment="replies" />
+    </div>
+
   </div>
 </div>
 @endsection
