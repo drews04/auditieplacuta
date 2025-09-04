@@ -28,6 +28,7 @@
   <link rel="stylesheet" href="{{ asset('assets/css/theme-like.css') }}?v={{ time() }}">
   <link rel="stylesheet" href="{{ asset('assets/css/tema-lunii.css') }}?v={{ time() }}">
   <link rel="stylesheet" href="{{ asset('assets/css/concurs.css') }}?v={{ time() }}">
+  <link rel="stylesheet" href="{{ asset('assets/css/pagination-neon.css') }}">
 
   {{-- Page-level style injections --}}
   @stack('styles')

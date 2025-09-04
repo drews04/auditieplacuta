@@ -98,11 +98,9 @@
         </div>
 
         <!-- Pagination -->
-        @if($threads->hasPages())
-            <div class="forum-pagination">
-                {{ $threads->links() }}
-            </div>
-        @endif
+        <div class="forum-pagination">
+            <x-pagination :paginator="$threads" />
+        </div>
     </div>
 </div>
 @endsection

@@ -30,7 +30,7 @@
             </div>
 
             <div class="px-3 pb-3">
-                {{ $wins->links() }}
+                <x-pagination :paginator="$wins" />
             </div>
         @else
             <div class="px-3 pb-3 text-muted">Nicio victorie încă.</div>

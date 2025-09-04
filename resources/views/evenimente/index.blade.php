@@ -40,7 +40,7 @@
     <div class="neon-card p-4 text-center opacity-75">Niciun eveniment încă.</div>
   @endforelse
 
-  <div class="mt-4">{{ $events->links() }}</div>
+  <div class="mt-4"><x-pagination :paginator="$events" /></div>
   </div>
 </div>
 @endsection

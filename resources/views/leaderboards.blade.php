@@ -156,7 +156,7 @@
     </div>
 
     {{-- Pagination --}}
-    <div class="mt-3">{{ $rows->links() }}</div>
+    <div class="mt-3"><x-pagination :paginator="$rows" /></div>
   </div>
 </div>
 @endsection
