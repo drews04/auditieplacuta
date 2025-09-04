@@ -1,0 +1,104 @@
+/* ap-core.css — sitewide base + neon components (v1) */
+
+/* ---------- Design tokens ---------- */
+:root{
+    /* colors */
+    --bg: #0c1118;
+    --bg-2:#0a1016;
+    --text: #e7f6ff;
+    --muted:#9bbcc6;
+    --neon:#16f1d3;
+    --danger:#ff6b6b;
+  
+    /* type scale */
+    --fs-xxl: clamp(40px, 6vw, 64px);
+    --fs-xl:  clamp(28px, 4vw, 36px);
+    --fs-lg:  24px;
+    --fs-md:  20px;   /* lead */
+    --fs-base:16px;   /* <- standardize base */
+    --fs-sm:  14px;
+    --fs-xs:  12px;
+  
+    /* spacing */
+    --s-0:0; --s-1:4px; --s-2:8px; --s-3:12px; --s-4:16px;
+    --s-5:24px; --s-6:32px; --s-7:48px;
+  
+    /* radius + glow */
+    --r-1: 8px; --r-2:12px; --r-3:16px; --r-round:9999px;
+    --shadow-neon:
+        0 0 0 1px rgba(22,241,211,.25) inset,
+        0 0 18px rgba(22,241,211,.28),
+        0 0 60px rgba(22,241,211,.16);
+  }
+  
+  /* ---------- Base reset/typography ---------- */
+  html{font-size:16px;}
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font:400 1rem/1.6 system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial,sans-serif;
+  }
+  
+  h1,h2,h3,h4,h5,h6{
+    font-weight:800;
+    letter-spacing:.02em;
+    line-height:1.15;
+    margin:0 0 var(--s-4);
+  }
+  h1{font-size:var(--fs-xxl);}
+  h2{font-size:var(--fs-xl);}
+  h3{font-size:var(--fs-lg);}
+  h4{font-size:var(--fs-md);}
+  h5{font-size:var(--fs-base);}
+  h6{font-size:var(--fs-sm);}
+  p{margin:0 0 var(--s-4);}
+  
+  small,.small{font-size:var(--fs-sm)}
+  .lead{font-size:var(--fs-md); line-height:1.5}
+  
+  /* Normalize odd 15px from template to 16px */
+  *[style*="font-size:15px"]{font-size:var(--fs-base)!important}
+  
+  /* ---------- Neon components (reusable) ---------- */
+  .neon-card{
+    background:rgba(0,0,0,.70);
+    border:2px solid var(--neon);
+    border-radius:var(--r-3);
+    box-shadow:var(--shadow-neon);
+    backdrop-filter: blur(8px);
+  }
+  
+  .btn-neon{
+    display:inline-flex; align-items:center; gap:.5ch;
+    padding:.6rem 1rem;
+    border-radius:var(--r-2);
+    border:2px solid var(--neon);
+    color:var(--text);
+    background:transparent;
+    transition:transform .15s ease, box-shadow .2s ease, background-color .2s ease, color .2s;
+  }
+  .btn-neon:hover{
+    transform:translateY(-1px);
+    box-shadow:var(--shadow-neon);
+    background:rgba(22,241,211,.08);
+    color:#dffff6;
+  }
+  .btn-neon--danger{ border-color:var(--danger); color:var(--danger); }
+  .btn-neon--pill{ border-radius:var(--r-round); padding:.55rem 1.1rem; }
+  
+  /* ---------- Utility shims (tiny set) ---------- */
+  .mt-4{margin-top:var(--s-4)} .mb-4{margin-bottom:var(--s-4)}
+  .mt-6{margin-top:var(--s-6)} .mb-6{margin-bottom:var(--s-6)}
+  .pt-4{padding-top:var(--s-4)} .pb-4{padding-bottom:var(--s-4)}
+  .round-2{border-radius:var(--r-2)} .round-3{border-radius:var(--r-3)}
+  .text-muted{color:var(--muted)}
+  .text-sm{font-size:var(--fs-sm)} .text-lg{font-size:var(--fs-lg)}
+  
+  /* ---------- High contrast / reduced motion ---------- */
+  @media (prefers-contrast: more){
+    .neon-card{background:rgba(0,0,0,.86);}
+  }
+  @media (prefers-reduced-motion: reduce){
+    .btn-neon{transition:background-color .2s ease, color .2s ease}
+  }
+  

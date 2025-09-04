@@ -1,0 +1,6 @@
+# Placeholder for reply.ogg
+# This file should contain a short, subtle notification sound
+# Format: OGG audio file (fallback for browsers that don't support MP3)
+# Duration: ~0.5-1 second
+# Volume: Low/moderate
+# Style: Subtle notification chime or beep

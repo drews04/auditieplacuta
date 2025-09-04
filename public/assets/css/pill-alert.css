@@ -1,0 +1,154 @@
+/* Forum Reply Alert — Square Curtain (v5) */
+
+/* Anchor */
+/* Anchor */
+.reply-pill-root{
+    position: fixed;
+    top: 8px;          /* was 16px / 84px */
+    right: 16px;
+    z-index: 9999;
+    pointer-events: none;
+  }
+  
+  @media (max-width: 575.98px){
+    .reply-pill-root{ top: 8px; right: 8px; left: auto; }
+  }
+  
+  /* Pill (now a square card) */
+  .reply-pill{
+    --neon:#16f1d3;
+    --matrix:#79ffb7;
+    --danger:#ff6b6b;
+  
+    position:relative;
+    display:block;
+    pointer-events:auto;
+  
+    padding:14px 18px;
+    border-radius:16px !important;           /* square-ish, not a capsule */
+    min-width:360px;
+    max-width:min(80vw, 720px);
+    width:auto;
+  
+    background:rgba(0,0,0,.78);              /* black, transparent */
+    backdrop-filter:blur(10px);
+    border:2px solid var(--neon);
+    box-shadow:
+      0 0 0 1px rgba(22,241,211,.25) inset,
+      0 0 22px rgba(22,241,211,.30),
+      0 0 70px rgba(22,241,211,.18);
+  
+    overflow:visible;
+  }
+  
+  /* subtle scanlines */
+  .reply-pill::before{
+    content:""; position:absolute; inset:0; pointer-events:none;
+    background-image:
+      linear-gradient(135deg, rgba(121,255,183,.10) 10%, transparent 10% 50%,
+                                 rgba(121,255,183,.10) 50% 60%, transparent 60%);
+    background-size:8px 8px; opacity:.16; mix-blend-mode:screen;
+    animation:pill-scan 7s linear infinite;
+  }
+  @keyframes pill-scan{from{background-position:0 0} to{background-position:160px 160px}}
+  
+  .reply-pill::after{
+    content:""; position:absolute; inset:2px; border-radius:14px;
+    box-shadow:inset 0 0 24px rgba(22,241,211,.18);
+    pointer-events:none;
+  }
+  
+  /* CURTAIN: top -> bottom (~1s) */
+  .reply-pill{
+    transform-origin:top;
+    transform:translateY(-10px) scaleY(0);
+    opacity:0;
+    transition:
+      transform .95s cubic-bezier(.22,.95,.21,1.05),
+      opacity .35s ease;
+    will-change:transform,opacity;
+  }
+  .reply-pill.pill-visible{
+    transform:translateY(0) scaleY(1);
+    opacity:1;
+  }
+  .reply-pill.pill-exiting{
+    transform:translateY(-8px) scaleY(.96);
+    opacity:0;
+  }
+  
+  /* Layout */
+  .pill-content{display:flex; align-items:center; gap:14px}
+  
+  /* Typewriter text (NO CUT) */
+  .pill-typing{
+    font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Courier New",monospace;
+    color:var(--matrix);
+    font-size:15px;
+    line-height:1.5;
+    flex:1 1 auto;
+    min-height:22px;
+    position:relative;
+    white-space:normal !important;       /* allow wrapping */
+    overflow:visible !important;
+    text-overflow:clip !important;
+    text-shadow:0 0 6px rgba(121,255,183,.45), 0 0 18px rgba(121,255,183,.25);
+  }
+  /* caret */
+  .pill-typing::after{
+    content:"▋"; margin-left:4px; color:var(--neon);
+    text-shadow:0 0 8px var(--neon), 0 0 16px var(--neon);
+    animation:pill-caret 1s steps(1) infinite;
+  }
+  .pill-typing.typing-complete::after{display:none}
+  @keyframes pill-caret{0%,50%{opacity:1} 51%,100%{opacity:0}}
+  
+  /* Buttons */
+  .pill-buttons{display:flex; align-items:center; gap:8px; flex-shrink:0}
+  .pill-btn{
+    background:transparent; border:none; color:var(--neon);
+    font-size:12px; font-weight:700; letter-spacing:.3px;
+    cursor:pointer; padding:3px 8px; border-radius:6px; text-decoration:none;
+    transition:transform .15s ease, background-color .2s ease, color .2s ease, text-shadow .2s ease;
+    outline:none;
+  }
+  .pill-btn:hover{
+    background:rgba(22,241,211,.10); color:#a6ffe9;
+    text-shadow:0 0 10px rgba(22,241,211,.6); transform:translateY(-1px);
+  }
+  .pill-btn:active{transform:translateY(0)}
+  .pill-open{font-size:11px; padding:4px 10px}
+  .pill-mute{font-size:14px; line-height:1; padding:4px 6px}
+  .pill-close{color:var(--danger); font-size:16px; padding:2px 8px}
+  .pill-close:hover{background:rgba(255,107,107,.12); color:#ff9090}
+  
+  /* Mobile */
+  @media (max-width:575.98px){
+    .reply-pill-root{top:80px; right:10px; left:10px}
+    .reply-pill{width:100%; min-width:0; max-width:none; padding:12px 14px}
+    .pill-content{gap:10px}
+    .pill-typing{font-size:14px}
+    .pill-btn{font-size:11px; padding:3px 8px}
+    .pill-mute{font-size:13px}
+    .pill-close{font-size:15px}
+  }
+  
+  /* Accessibility */
+  @media (prefers-contrast:high){
+    .reply-pill{
+      background:rgba(0,0,0,.92); border-color:#00ffff;
+      box-shadow:0 0 0 2px rgba(0,255,255,.6) inset, 0 0 20px rgba(0,255,255,.45);
+    }
+    .pill-typing{color:#00ff66; text-shadow:none}
+    .pill-btn{color:#00ffff}
+    .pill-btn:hover{background:rgba(0,255,255,.22); color:#fff}
+  }
+  @media (prefers-reduced-motion:reduce){
+    .reply-pill{transition:opacity .2s ease; transform:none !important}
+    .reply-pill.pill-visible{opacity:1}
+    .reply-pill.pill-exiting{opacity:0}
+    .pill-btn{transition:background-color .2s ease, color .2s ease}
+    .pill-btn:hover,.pill-btn:active{transform:none}
+    .reply-pill::before{animation:none}
+  }
+  

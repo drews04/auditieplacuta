@@ -8,29 +8,102 @@
 
   <title>@yield('title', 'Auditie Placuta')</title>
 
-  <!-- Bootstrap CSS -->
+  @php
+    // Helper: build asset URL with cache-busting based on filemtime, safely.
+    $cssv = function (string $rel) {
+        $full = public_path($rel);
+        $ver  = file_exists($full) ? filemtime($full) : time();
+        return asset($rel) . '?v=' . $ver;
+    };
+  @endphp
+
+  <!-- Bootstrap (core) -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous" />
 
-  <!-- Template CSS -->
-  <link rel="stylesheet" href="{{ asset('assets/css/animate.css') }}" />
-  <link rel="stylesheet" href="{{ asset('assets/css/magnific-popup.css') }}" />
-  <link rel="stylesheet" href="{{ asset('assets/css/owl.carousel.css') }}" />
-  <link rel="stylesheet" href="{{ asset('assets/css/off-canvas.css') }}" />
-  <link rel="stylesheet" href="{{ asset('assets/css/ico-moon-fonts.css') }}" />
-  <link rel="stylesheet" href="{{ asset('assets/css/all.min.css') }}" />
-  <link rel="stylesheet" href="{{ asset('assets/css/sc-spacing.css') }}" />
-  <link rel="stylesheet" href="{{ asset('assets/css/style.css') }}" />
-  <link rel="stylesheet" href="{{ asset('assets/css/responsive.css') }}" />
-  <link rel="stylesheet" href="{{ asset('logo.css') }}" />
-  <link rel="stylesheet" href="{{ asset('assets/css/winner.css') }}?v={{ time() }}">
-  <link rel="stylesheet" href="{{ asset('assets/css/leaderboard.css') }}?v={{ time() }}">
-  <link rel="stylesheet" href="{{ asset('assets/css/rotating-banner.css') }}">
-  <link rel="stylesheet" href="{{ asset('assets/css/theme-like.css') }}?v={{ time() }}">
-  <link rel="stylesheet" href="{{ asset('assets/css/tema-lunii.css') }}?v={{ time() }}">
-  <link rel="stylesheet" href="{{ asset('assets/css/concurs.css') }}?v={{ time() }}">
-  <link rel="stylesheet" href="{{ asset('assets/css/pagination-neon.css') }}">
+  <!-- ===== Global CSS (always) ===== -->
+  <link rel="stylesheet" href="{{ $cssv('assets/css/ico-moon-fonts.css') }}" />
+  <link rel="stylesheet" href="{{ $cssv('assets/css/all.min.css') }}" />
+  <link rel="stylesheet" href="{{ $cssv('assets/css/nav-new.css') }}" />      {{-- header/nav tweaks --}}
+  <link rel="stylesheet" href="{{ $cssv('assets/css/style.css') }}" />
+  <link rel="stylesheet" href="{{ $cssv('assets/css/responsive.css') }}" />
+  <link rel="stylesheet" href="{{ $cssv('logo.css') }}" />
 
-  {{-- Page-level style injections --}}
+  <!-- Our tiny core (last so it normalizes sizes & neon look) -->
+  <link rel="stylesheet" href="{{ $cssv('assets/css/ap-core.css') }}" />
+
+  {{-- ===== Route-based CSS (automatic) ===== --}}
+  @php
+    $isHome    = request()->is('/');
+    $isConcurs = request()->is('concurs*');
+    $isForum   = request()->is('forum*');
+    $isMuzica  = request()->is('muzica*');
+    $isArena   = request()->is('arena*');
+    $isMagazin = request()->is('magazin*');
+    $isRegul   = request()->is('regulament*') || request()->is('regulament');
+    $isAbout   = request()->is('despre*') || request()->is('about*');
+    $isEvents  = request()->is('evenimente*') || request()->is('events*');
+  @endphp
+
+  {{-- Home --}}
+  @if($isHome)
+    <link rel="stylesheet" href="{{ $cssv('assets/css/rotating-banner.css') }}">
+    @if(file_exists(public_path('assets/css/slick.css')))
+      <link rel="stylesheet" href="{{ $cssv('assets/css/slick.css') }}">
+    @endif
+    @if(file_exists(public_path('assets/css/slick-theme.min.css')))
+      <link rel="stylesheet" href="{{ $cssv('assets/css/slick-theme.min.css') }}">
+    @endif
+  @endif
+
+  {{-- Concurs --}}
+  @if($isConcurs)
+    <link rel="stylesheet" href="{{ $cssv('assets/css/tema-lunii.css') }}">
+    <link rel="stylesheet" href="{{ $cssv('assets/css/theme-like.css') }}">
+    <link rel="stylesheet" href="{{ $cssv('assets/css/concurs.css') }}">
+    <link rel="stylesheet" href="{{ $cssv('assets/css/winner.css') }}">
+    <link rel="stylesheet" href="{{ $cssv('assets/css/leaderboard.css') }}">
+    <link rel="stylesheet" href="{{ $cssv('assets/css/pagination-neon.css') }}">
+    @if(file_exists(public_path('assets/css/vote-btn.css')))
+      <link rel="stylesheet" href="{{ $cssv('assets/css/vote-btn.css') }}">
+    @endif
+    @if(file_exists(public_path('assets/css/alege-tema.css')))
+      <link rel="stylesheet" href="{{ $cssv('assets/css/alege-tema.css') }}">
+    @endif
+  @endif
+
+  {{-- Forum --}}
+  @if($isForum)
+    @if(file_exists(public_path('assets/css/forum.css')))
+      <link rel="stylesheet" href="{{ $cssv('assets/css/forum.css') }}">
+    @endif
+    <link rel="stylesheet" href="{{ $cssv('assets/css/pagination-neon.css') }}">
+  @endif
+
+  {{-- Muzica / Arena / Magazin (add only if you truly need per-page CSS) --}}
+  @if($isMuzica)
+    {{-- add per-page CSS here if muzica has its own file --}}
+  @endif
+
+  @if($isArena)
+    {{-- add per-page CSS here if arena has its own file --}}
+  @endif
+
+  @if($isMagazin)
+    {{-- add per-page CSS here if magazin has its own file --}}
+  @endif
+
+  {{-- Static pages (about/regulament/events) --}}
+  @if($isRegul && file_exists(public_path('assets/css/regulament.css')))
+    <link rel="stylesheet" href="{{ $cssv('assets/css/regulament.css') }}">
+  @endif
+  @if($isAbout && file_exists(public_path('assets/css/about.css')))
+    <link rel="stylesheet" href="{{ $cssv('assets/css/about.css') }}">
+  @endif
+  @if($isEvents && file_exists(public_path('assets/css/events.css')))
+    <link rel="stylesheet" href="{{ $cssv('assets/css/events.css') }}">
+  @endif
+
+  {{-- Page-level CSS (for one-off needs: magnific-popup, owl.carousel, etc.) --}}
   @stack('styles')
 
   <!-- Tiny layout skeleton -->
@@ -139,7 +212,7 @@
         });
       }
 
-      // YouTube modal wiring (kept from your push-block; in layout now)
+      // YouTube modal wiring (Bootstrap modal)
       const youtubeModal = document.getElementById('youtubeModal');
       const youtubeIframe = document.getElementById('youtubeIframe');
       if (youtubeModal && youtubeIframe) {
@@ -155,9 +228,7 @@
     });
   </script>
 
-  <!-- GLOBAL: auto-dismiss all success alerts after 5s.
-       Also supports explicit data-auto-dismiss="true" on any .alert type,
-       and optional data-dismiss-ms="7000" to override per element. -->
+  <!-- GLOBAL: auto-dismiss all success alerts after 5s. -->
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       const candidates = document.querySelectorAll(
@@ -173,6 +244,12 @@
       });
     });
   </script>
+
+  @auth
+    <div id="reply-pill-root" class="reply-pill-root" aria-live="polite"></div>
+    <link rel="stylesheet" href="{{ $cssv('assets/css/pill-alert.css') }}">
+    <script defer src="{{ asset('js/pill-alert.js') }}?v={{ filemtime(public_path('js/pill-alert.js')) }}"></script>
+  @endauth
 
 </body>
 </html>

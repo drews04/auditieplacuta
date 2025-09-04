@@ -304,6 +304,7 @@ use App\Http\Controllers\Forum\CategoryController;
 use App\Http\Controllers\Forum\ThreadController;
 use App\Http\Controllers\Forum\PostController;
 use App\Http\Controllers\Forum\ForumLikeController;
+use App\Http\Controllers\Forum\NotificationController;
 
 Route::prefix('forum')->name('forum.')->group(function () {
     Route::get('/', [CategoryController::class, 'index'])->name('home');
@@ -320,6 +321,10 @@ Route::prefix('forum')->name('forum.')->group(function () {
     Route::middleware(['auth', 'throttle:30,1'])->group(function () {
         Route::post('/like/thread/{thread}', [ForumLikeController::class, 'toggleThread'])->name('likes.thread.toggle');
         Route::post('/like/post/{post}', [ForumLikeController::class, 'togglePost'])->name('likes.post.toggle');
+    });
+    
+    Route::middleware('auth')->group(function () {
+        Route::get('/alerts/unread-summary', [NotificationController::class, 'unreadSummary'])->name('alerts.unread-summary');
     });
     
     Route::get('/t/{thread}', [ThreadController::class, 'show'])->name('threads.show');
