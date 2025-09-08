@@ -433,3 +433,41 @@ body.page-forum hr.header-line {
   letter-spacing: .2px;
   text-shadow: 0 0 10px rgba(22,241,211,.18);
 }
+/* Forum usernames */
+/* Usernames everywhere (thread card, thread view, replies) */
+.forum-thread-author strong,
+.forum-post-author strong,
+.forum-thread-activity .strong,
+.forum-username {
+    color: #0bbd9c; /* darker neon green */
+    font-weight: 600;
+}
+
+/* Icons near usernames */
+.forum-thread-author i.fas.fa-user,
+.forum-post-author i.fas.fa-user {
+    color: #059a7d; /* even darker green for contrast */
+    margin-right: 4px;
+}
+
+/* Mentions inside replies */
+a.username-mention {
+    color: #0bbd9c;
+    font-weight: 600;
+}
+a.username-mention:hover {
+    text-decoration: underline;
+}
+/* Thread header author (inside show.blade.php) */
+.forum-container .forum-header .forum-thread-meta .forum-thread-author {
+  color: #0bbd9c !important;   /* darker green */
+  font-weight: 700;
+}
+.forum-container .forum-header .forum-thread-meta .forum-thread-author i.fa-user {
+  color: #059a7d !important;   /* icon darker */
+  margin-right: 6px;
+}
+
+/* keep mentions consistent */
+a.username-mention { color: #0bbd9c; font-weight: 600; }
+a.username-mention:hover { text-decoration: underline; }
