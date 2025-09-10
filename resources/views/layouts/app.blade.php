@@ -245,11 +245,13 @@
     });
   </script>
 
-  @auth
+@auth
+  @php $isForum = request()->is('forum*'); @endphp
+  @if(!$isForum)
     <div id="reply-pill-root" class="reply-pill-root" aria-live="polite"></div>
-    <link rel="stylesheet" href="{{ $cssv('assets/css/pill-alert.css') }}">
-    <script defer src="{{ asset('js/pill-alert.js') }}?v={{ filemtime(public_path('js/pill-alert.js')) }}"></script>
-  @endauth
-
+    <link rel="stylesheet" href="{{ asset('assets/css/pill-alert.css') }}">
+    <script defer src="{{ asset('js/pill-alert.js') }}?v={{ file_exists(public_path('js/pill-alert.js')) ? filemtime(public_path('js/pill-alert.js')) : time() }}"></script>
+  @endif
+@endauth
 </body>
 </html>

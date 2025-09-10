@@ -4,118 +4,172 @@ namespace App\Http\Controllers\Forum;
 
 use App\Http\Controllers\Controller;
 use App\Models\Forum\Post;
-use App\Models\Forum\Thread;
-use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 
 class NotificationController extends Controller
 {
-    public function unreadSummary(Request $request)
+    /**
+     * GET /forum/alerts/unread-count
+     *
+     * Rules (simple):
+     * - Show pill if there are notifications AND last pill was >= 30 minutes ago (or never shown).
+     * - Visiting any /forum* page stamps users.forum_seen_at (middleware) so ONLY new items after that are counted.
+     * - Logging out/in does NOT affect cooldown (we removed the login listener).
+     *
+     * What counts as a "notification":
+     * - New replies in threads I own
+     * - Replies to my comments
+     *
+     * Not included:
+     * - Generic "threads I participated in" (kept simple on purpose)
+     */
+    public function unreadCount(Request $request)
     {
-        $user = auth()->user();
+        $user = $request->user();
         if (!$user) {
             return response()->json(['error' => 'Unauthorized'], 401);
         }
 
-        // Parse since parameter (ISO8601 or epoch ms)
-        $since = $request->query('since');
-        if ($since) {
-            if (is_numeric($since)) {
-                // Epoch milliseconds
-                $sinceDate = Carbon::createFromTimestampMs($since);
-            } else {
-                // ISO8601 string
-                $sinceDate = Carbon::parse($since);
-            }
-        } else {
-            // Default to 12 hours ago
-            $sinceDate = Carbon::now()->subHours(12);
-        }
+        // Lower bound for "new"
+        $sinceDate = $user->forum_seen_at
+            ? Carbon::parse($user->forum_seen_at)
+            : Carbon::now()->subDays(30);
 
-        // Find new replies where:
-        // 1. reply.user_id != current user
-        // 2. reply belongs to a thread owned by current user OR
-        // 3. reply is a child whose parent reply is by current user
-        $newReplies = Post::with(['thread', 'user', 'parent.user'])
+        // 30-minute cooldown
+        $cooldownOk = !$user->forum_pill_last_shown_at
+            || Carbon::parse($user->forum_pill_last_shown_at)->lte(Carbon::now()->subMinutes(30));
+
+        // Find posts that target me (threads I own OR replies to my comments), created after "seen"
+        $posts = Post::with('thread:id,slug,title')
             ->where('user_id', '!=', $user->id)
             ->where('created_at', '>', $sinceDate)
-            ->where(function ($query) use ($user) {
-                $query->whereHas('thread', function ($threadQuery) use ($user) {
-                    // Replies to threads owned by current user
-                    $threadQuery->where('user_id', $user->id);
-                })->orWhereHas('parent', function ($parentQuery) use ($user) {
-                    // Replies to posts by current user (one-level nesting)
-                    $parentQuery->where('user_id', $user->id);
-                });
+            ->where(function ($q) use ($user) {
+                $q->whereHas('thread', fn($t) => $t->where('user_id', $user->id))   // replies in threads I own
+                  ->orWhereHas('parent', fn($p) => $p->where('user_id', $user->id)); // replies to my comments
             })
             ->orderBy('created_at', 'desc')
             ->get();
 
-        if ($newReplies->isEmpty()) {
-            return response()->json([
-                'has_new' => false,
-                'type' => null,
-                'count' => 0,
-                'thread' => null,
-                'latest_user' => null,
-                'since' => $sinceDate->toISOString()
-            ]);
+        $actualCount   = $posts->count();
+        $throttled     = ($actualCount > 0 && !$cooldownOk);
+        $countToReturn = $throttled ? 0 : $actualCount;
+
+        // Small thread preview list (up to 3)
+        $uniqueThreads = $posts->pluck('thread')->filter()->unique('id')->values();
+        $threadsMini   = $uniqueThreads->take(3)->map(function ($t) {
+            return [
+                'id'    => $t->id,
+                'title' => $t->title,
+                'url'   => route('forum.threads.show', $t->slug),
+            ];
+        })->values();
+
+        return response()
+            ->json([
+                'has_new'       => $countToReturn > 0,
+                'count'         => $countToReturn,
+                'threads_count' => $uniqueThreads->count(),
+                'threads'       => $threadsMini,
+                'since'         => $sinceDate->toIso8601String(),
+                'throttled'     => $throttled,
+                'cooldown_min'  => 30,
+            ])
+            ->header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
+            ->header('Pragma', 'no-cache')
+            ->header('Expires', '0');
+    }
+
+    /**
+     * GET /forum/alerts/unread-detail
+     * Debug aid: same filter as unreadCount, but returns grouped details.
+     */
+    public function unreadDetail(Request $request)
+    {
+        $user = $request->user();
+        if (!$user) {
+            return response()->json(['error' => 'Unauthorized'], 401);
         }
 
-        $count = $newReplies->count();
-        $latestReply = $newReplies->first();
-        $threadIds = $newReplies->pluck('thread_id')->unique();
+        $sinceDate = $user->forum_seen_at
+            ? Carbon::parse($user->forum_seen_at)
+            : Carbon::now()->subDays(30);
 
-        // Determine type and build response
-        if ($count === 1) {
-            // Single reply
-            $thread = $latestReply->thread;
-            return response()->json([
-                'has_new' => true,
-                'type' => 'single',
-                'count' => 1,
-                'thread' => [
-                    'id' => $thread->id,
-                    'title' => $thread->title,
-                    'url' => route('forum.threads.show', $thread->slug)
-                ],
-                'latest_user' => [
-                    'id' => $latestReply->user->id,
-                    'name' => $latestReply->user->name
-                ],
-                'since' => $sinceDate->toISOString()
-            ]);
-        } elseif ($threadIds->count() === 1) {
-            // Multiple replies in one thread
-            $thread = $latestReply->thread;
-            return response()->json([
-                'has_new' => true,
-                'type' => 'multi_in_thread',
-                'count' => $count,
-                'thread' => [
-                    'id' => $thread->id,
-                    'title' => $thread->title,
-                    'url' => route('forum.threads.show', $thread->slug)
-                ],
-                'latest_user' => [
-                    'id' => $latestReply->user->id,
-                    'name' => $latestReply->user->name
-                ],
-                'since' => $sinceDate->toISOString()
-            ]);
-        } else {
-            // Multiple replies across multiple threads
-            return response()->json([
-                'has_new' => true,
-                'type' => 'multi_threads',
-                'count' => $count,
-                'thread' => null,
-                'latest_user' => [
-                    'id' => $latestReply->user->id,
-                    'name' => $latestReply->user->name
-                ],
-                'since' => $sinceDate->toISOString()
-            ]);
+        $posts = Post::query()
+            ->with(['thread:id,slug,title', 'parent:id,user_id', 'user:id,name'])
+            ->where('user_id', '!=', $user->id)
+            ->where('created_at', '>', $sinceDate)
+            ->where(function ($q) use ($user) {
+                $q->whereHas('thread', fn($t) => $t->where('user_id', $user->id))   // replies in threads I own
+                  ->orWhereHas('parent', fn($p) => $p->where('user_id', $user->id)); // replies to my comments
+            })
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        $total = $posts->count();
+
+        $threadGroups = $posts
+            ->filter(fn($p) => $p->thread)
+            ->groupBy('thread_id')
+            ->map(function ($group) {
+                $t = $group->first()->thread;
+                return [
+                    'thread_id' => $t->id,
+                    'title'     => $t->title,
+                    'url'       => route('forum.threads.show', $t->slug),
+                    'count'     => $group->count(),
+                ];
+            })
+            ->values()
+            ->sortByDesc('count')
+            ->values();
+
+        $commentReplies = $posts
+            ->filter(fn($p) => $p->parent && (int)$p->parent->user_id === (int)$user->id)
+            ->take(5)
+            ->map(function ($p) {
+                $body = trim(strip_tags($p->body ?? ''));
+                if (mb_strlen($body) > 120) $body = mb_substr($body, 0, 120) . '…';
+                return [
+                    'by_user'      => ['id' => $p->user->id, 'name' => $p->user->name],
+                    'excerpt'      => $body,
+                    'thread_title' => $p->thread?->title,
+                    'url'          => $p->thread ? route('forum.threads.show', $p->thread->slug) . '#post-' . $p->id : url('/forum'),
+                    'created_at'   => optional($p->created_at)->toIso8601String(),
+                ];
+            })
+            ->values();
+
+        return response()
+            ->json([
+                'has_new'         => $total > 0,
+                'count'           => $total,
+                'threads_count'   => $threadGroups->count(),
+                'threads'         => $threadGroups->take(3)->values(),
+                'by_threads'      => $threadGroups,
+                'comment_replies' => $commentReplies,
+                'since'           => $sinceDate->toIso8601String(),
+            ])
+            ->header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
+            ->header('Pragma', 'no-cache')
+            ->header('Expires', '0');
+    }
+
+    /**
+     * POST /forum/alerts/ack-shown
+     * Marks the pill as shown now (starts the 30-minute cooldown).
+     */
+    public function ackShown(Request $request)
+    {
+        $user = $request->user();
+        if (!$user) {
+            return response()->json(['error' => 'Unauthorized'], 401);
         }
+
+        $user->forceFill([
+            'forum_pill_last_shown_at' => Carbon::now(),
+        ])->save();
+
+        return response()->json(['ok' => true, 'at' => Carbon::now()->toIso8601String()]);
     }
 }

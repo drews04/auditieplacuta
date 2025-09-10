@@ -353,18 +353,13 @@ Route::prefix('evenimente')->as('events.')->group(function () {
 // Forum routes
 // ---------------------------------------
 
-
-
-
-
+// Forum pages (NO MarkForumSeen here; the Kernel web group middleware stamps forum_seen_at)
 Route::prefix('forum')->name('forum.')->group(function () {
-    // Home & listing
-    Route::get('/',                 [CategoryController::class, 'index'])->name('home');
-    Route::get('/threads',          [ThreadController::class, 'index'])->name('threads.index');
-    Route::get('/c/{category:slug}',[ThreadController::class, 'index'])->name('categories.show');
-
-    // Public thread show (slug)
-    Route::get('/t/{thread:slug}',  [ThreadController::class, 'show'])->name('threads.show');
+    // Public
+    Route::get('/',                  [CategoryController::class, 'index'])->name('home');
+    Route::get('/threads',           [ThreadController::class, 'index'])->name('threads.index');
+    Route::get('/c/{category:slug}', [ThreadController::class, 'index'])->name('categories.show');
+    Route::get('/t/{thread:slug}',   [ThreadController::class, 'show'])->name('threads.show');
 
     // Auth-only actions
     Route::middleware(['auth', 'throttle:30,1'])->group(function () {
@@ -373,19 +368,26 @@ Route::prefix('forum')->name('forum.')->group(function () {
         Route::post('/threads',       [ThreadController::class, 'store'])->name('threads.store');
         Route::post('/posts',         [PostController::class,   'store'])->name('posts.store');
 
-        // Thread edit/update/delete (slug)
-        Route::get('/t/{thread:slug}/edit', [ThreadController::class, 'edit'])->name('threads.edit');     // policy: update (owner <24h or admin)
-        Route::put('/t/{thread:slug}',      [ThreadController::class, 'update'])->name('threads.update'); // policy: update
-        Route::delete('/t/{thread:slug}',   [ThreadController::class, 'destroy'])->name('threads.destroy'); // policy: delete
+        // Thread edit/update/delete
+        Route::get('/t/{thread:slug}/edit', [ThreadController::class, 'edit'])->name('threads.edit');
+        Route::put('/t/{thread:slug}',      [ThreadController::class, 'update'])->name('threads.update');
+        Route::delete('/t/{thread:slug}',   [ThreadController::class, 'destroy'])->name('threads.destroy');
 
-        // Post edit/update/delete (id)
-        Route::get('/p/{post}/edit',  [PostController::class, 'edit'])->whereNumber('post')->name('posts.edit');     // policy: update (owner <24h or admin)
-        Route::put('/p/{post}',       [PostController::class, 'update'])->whereNumber('post')->name('posts.update'); // policy: update
-        Route::delete('/p/{post}',    [PostController::class, 'destroy'])->whereNumber('post')->name('posts.destroy'); // policy: delete
+        // Post edit/update/delete
+        Route::get('/p/{post}/edit',  [PostController::class, 'edit'])->whereNumber('post')->name('posts.edit');
+        Route::put('/p/{post}',       [PostController::class, 'update'])->whereNumber('post')->name('posts.update');
+        Route::delete('/p/{post}',    [PostController::class, 'destroy'])->whereNumber('post')->name('posts.destroy');
 
-        // Likes (AJAX)
+        // Likes
         Route::post('/like/thread/{thread:slug}', [ForumLikeController::class, 'toggleThread'])->name('likes.thread.toggle');
         Route::post('/like/post/{post}',          [ForumLikeController::class, 'togglePost'])->whereNumber('post')->name('likes.post.toggle');
     });
 });
 
+// Alerts API (auth only)
+Route::prefix('forum/alerts')->name('forum.alerts.')->middleware('auth')->group(function () {
+    Route::get('/unread-count',  [NotificationController::class, 'unreadCount'])->name('unread-count');
+    Route::get('/unread-detail', [NotificationController::class, 'unreadDetail'])->name('unread-detail');
+    Route::post('/ack-shown',    [NotificationController::class, 'ackShown'])->name('ack');
+});
+// -------- End forum routes --------
