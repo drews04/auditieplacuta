@@ -3,7 +3,7 @@
   const root = document.getElementById('reply-pill-root');
   if (!root) return;
 
-  const COOLDOWN_MS = 30 * 1000;      // 30 seconds (test)
+  const COOLDOWN_MS = 30 * 60 * 1000; // 30 minutes
   const IDLE_MS     = 2 * 60 * 1000;  // 2 minutes when there's nothing to show
 
   let timer = null;
