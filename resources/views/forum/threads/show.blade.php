@@ -30,8 +30,6 @@
         </div>
 
         <div class="col-md-4 text-md-end">
-          
-
           <div class="forum-thread-stats">
             <div class="forum-stat">
               <i class="fas fa-eye me-2"></i>
@@ -69,10 +67,10 @@
     </div>
 
     @if(session('success'))
-    <div class="alert alert-success mb-3" data-auto-dismiss="true">
+      <div class="alert alert-success mb-3" data-auto-dismiss="true">
         <i class="fas fa-check-circle me-2"></i>
         {{ session('success') }}
-    </div>
+      </div>
     @endif
 
     <!-- Thread Body -->
@@ -82,17 +80,23 @@
       </div>
     </div>
 
-    <!-- Posts -->
-    @if($topPosts->count() > 0)
+    <!-- Replies (FLAT, paginated) -->
+    @if($repliesFlat->count() > 0)
       <h3 id="replies" class="text-light mb-3">
-          Răspunsuri ({{ $thread->posts()->count() }})
+        Răspunsuri ({{ $repliesFlat->total() }})
       </h3>
 
-      @foreach($topPosts as $post)
-          @include('forum.partials.post', ['post' => $post])
+      <div class="mb-3 d-flex justify-content-center">
+  {{ $repliesFlat->onEachSide(1)->fragment('replies')->links('vendor.pagination.neon') }}
+</div>
+
+      @foreach($repliesFlat as $post)
+        @include('forum.partials.post', ['post' => $post, 'flat' => true])
       @endforeach
 
-      
+      <div class="mt-4 d-flex justify-content-center">
+        {{ $repliesFlat->onEachSide(1)->fragment('replies')->links('vendor.pagination.neon') }}
+      </div>
     @else
       <p class="text-muted">Nu există răspunsuri încă.</p>
     @endif
@@ -158,18 +162,11 @@
       </div>
     @endauth
 
-    
-
     <div class="text-center mt-4">
       <a href="{{ route('forum.home') }}" class="btn btn-secondary">
         <i class="fas fa-arrow-left me-2"></i>Înapoi la Forum
       </a>
     </div>
-    
-    <div class="mt-4 d-flex justify-content-center">
-          <x-pagination :paginator="$topPosts" fragment="replies" />
-    </div>
-
   </div>
 </div>
 @endsection

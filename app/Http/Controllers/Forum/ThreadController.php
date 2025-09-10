@@ -29,9 +29,8 @@ class ThreadController extends Controller
 
         // Threads per page: 20
         $threads = $query->paginate(20)->withQueryString();
-        $threads->onEachSide(1); // show one page number on each side
+        $threads->onEachSide(1);
 
-        // Pass the selected category (if any) to the view
         $currentCategory = $category;
 
         return view('forum.home', compact('categories', 'threads', 'currentCategory'));
@@ -57,7 +56,6 @@ class ThreadController extends Controller
             'last_post_user_id' => auth()->id(),
         ]);
 
-        // Update category thread count
         Category::whereKey($thread->category_id)->increment('threads_count');
 
         return redirect()
@@ -65,9 +63,9 @@ class ThreadController extends Controller
             ->with('success', 'Thread-ul a fost creat cu succes!');
     }
 
-    public function show(Thread $thread) // expects {thread:slug} binding
+    public function show(Thread $thread) // {thread:slug}
     {
-        // Increment view count with deduplication (user or session, 6h window)
+        // -------- Views counter (dedup 6h by user/session)
         $keyUser = auth()->id();
         $keySess = session()->getId();
 
@@ -89,39 +87,57 @@ class ThreadController extends Controller
             $thread->increment('views_count');
         }
 
+        // -------- Eager loads for the page
         $thread->load([
             'category',
             'user',
-            'posts.user',
-            'posts.likes',
-            'posts.children.user',
-            'posts.children.likes',
             'likes',
         ]);
 
-        // Top-level replies per page: 15 (children are eager-loaded)
+        // -------- OP id (first post)
+        $opId = $thread->posts()->orderBy('id', 'asc')->value('id');
+
+        // -------- Top-level replies (threaded view) — paginated
+        // NOTE: This paginates ONLY parent posts (children are eager-loaded under each parent)
         $topPosts = $thread->posts()
             ->whereNull('parent_id')
-            ->orderBy('created_at')
+            ->orderBy('id', 'asc')
             ->with(['user', 'likes', 'children.user', 'children.likes'])
-            ->paginate(50)
+            ->paginate(50)                 // set to 50 per your request
+            ->onEachSide(1)
             ->withQueryString();
 
-        $topPosts->onEachSide(1);
+        // -------- Flat replies (ALL except OP) — optional alternate view
+        $repliesFlat = Post::query()
+            ->with(['user:id,name', 'likes', 'parent.user:id,name'])
+            ->where('thread_id', $thread->id)
+            ->when($opId, fn ($q) => $q->where('id', '!=', $opId))
+            ->orderBy('id', 'asc')
+            ->paginate(50)                 // 50 per page flat
+            ->onEachSide(1)
+            ->withQueryString();
 
-        return view('forum.threads.show', compact('thread', 'topPosts'));
+        // Useful counts for the header/debug
+        $topLevelTotal = $topPosts->total();
+        $allRepliesTotal = Post::where('thread_id', $thread->id)->count() - ($opId ? 1 : 0);
+
+        return view('forum.threads.show', compact(
+            'thread',
+            'topPosts',
+            'repliesFlat',
+            'topLevelTotal',
+            'allRepliesTotal'
+        ));
     }
 
-    public function edit(Thread $thread) // expects {thread:slug}
+    public function edit(Thread $thread)
     {
         $this->authorize('update', $thread);
-
         $categories = Category::orderBy('name')->get();
-
         return view('forum.threads.edit', compact('thread', 'categories'));
     }
 
-    public function update(Request $request, Thread $thread) // expects {thread:slug}
+    public function update(Request $request, Thread $thread)
     {
         $this->authorize('update', $thread);
 
@@ -142,14 +158,12 @@ class ThreadController extends Controller
             ->with('success', 'Thread-ul a fost actualizat.');
     }
 
-    public function destroy(Thread $thread) // expects {thread:slug}
+    public function destroy(Thread $thread)
     {
         $this->authorize('delete', $thread);
 
-        // collect child post ids
         $postIds = $thread->posts()->pluck('id');
 
-        // delete likes (posts + thread)
         Like::where('likeable_type', Post::class)
             ->whereIn('likeable_id', $postIds)
             ->delete();
@@ -158,16 +172,11 @@ class ThreadController extends Controller
             ->where('likeable_id', $thread->id)
             ->delete();
 
-        // delete views
         ViewHit::where('thread_id', $thread->id)->delete();
 
-        // delete posts (force)
         Post::whereIn('id', $postIds)->forceDelete();
-
-        // delete thread (force)
         $thread->forceDelete();
 
-        // keep category counts tidy
         Category::whereKey($thread->category_id)->decrement('threads_count');
 
         return redirect()

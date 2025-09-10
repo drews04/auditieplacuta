@@ -1,4 +1,5 @@
 {{-- resources/views/forum/partials/post.blade.php --}}
+@php $flat = $flat ?? false; @endphp
 <div class="forum-thread-card forum-post" id="post-{{ $post->id }}">
     <div class="forum-post-header mb-3">
         <div class="d-flex justify-content-between align-items-center">
