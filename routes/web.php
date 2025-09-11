@@ -211,11 +211,17 @@ Route::middleware(['auth', \App\Http\Middleware\ForceWeekdayIfTesting::class])->
     Route::get('/concurs/alege-tema',  [ConcursTemaController::class, 'create'])->name('concurs.alege-tema.create');
     Route::post('/concurs/alege-tema', [ConcursTemaController::class, 'store'])->name('concurs.alege-tema.store');
 });
+// Dedicated pages (paths chosen to avoid any collisions)
+Route::get('/concurs/p/vote',   [App\Http\Controllers\SongController::class, 'votePage'])->name('concurs.vote.page');
+Route::get('/concurs/p/upload', [App\Http\Controllers\SongController::class, 'uploadPage'])->name('concurs.upload.page');
+
 
 // Admin (dashboard + Start)
 Route::middleware(['auth', AdminOnly::class])->group(function () {
     Route::get('/admin/concurs',  [ConcursAdminController::class, 'dashboard'])->name('admin.concurs');
-    Route::post('/concurs/start', [ConcursAdminController::class, 'start'])->name('concurs.start');
+    Route::post('/concurs/start', [ConcursAdminController::class, 'start'])
+    ->middleware('throttle:3,1') // max 3 starts per minute (safety)
+    ->name('concurs.start');
 
     // optional admin theme picker page:
     Route::get('/admin/concurs/alege-tema', [ConcursAdminController::class, 'pickTheme'])->name('admin.concurs.pick');
@@ -306,29 +312,6 @@ use App\Http\Controllers\Forum\PostController;
 use App\Http\Controllers\Forum\ForumLikeController;
 use App\Http\Controllers\Forum\NotificationController;
 
-Route::prefix('forum')->name('forum.')->group(function () {
-    Route::get('/', [CategoryController::class, 'index'])->name('home');
-    
-    Route::get('/threads', [ThreadController::class, 'index'])->name('threads.index');
-    Route::get('/c/{category:slug}', [ThreadController::class, 'index'])->name('categories.show');
-    
-    Route::middleware(['auth', 'throttle:20,1'])->group(function () {
-        Route::get('/threads/create', [ThreadController::class, 'create'])->name('threads.create');
-        Route::post('/threads', [ThreadController::class, 'store'])->name('threads.store');
-        Route::post('/posts', [PostController::class, 'store'])->name('posts.store');
-    });
-    
-    Route::middleware(['auth', 'throttle:30,1'])->group(function () {
-        Route::post('/like/thread/{thread}', [ForumLikeController::class, 'toggleThread'])->name('likes.thread.toggle');
-        Route::post('/like/post/{post}', [ForumLikeController::class, 'togglePost'])->name('likes.post.toggle');
-    });
-    
-    Route::middleware('auth')->group(function () {
-        Route::get('/alerts/unread-summary', [NotificationController::class, 'unreadSummary'])->name('alerts.unread-summary');
-    });
-    
-    Route::get('/t/{thread}', [ThreadController::class, 'show'])->name('threads.show');
-});
 
 // ───────────────────────────────────────────────────────────────────────────────
 // Static Pages

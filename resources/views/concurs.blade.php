@@ -20,54 +20,102 @@
 @section('content')
 
 
-  {{-- Admin-only Start button (hard reset + new cycle) --}}
-  @auth
-  @if((auth()->user()->is_admin ?? false) || auth()->id() === 1)
-    <div class="mb-2 d-flex justify-content-end">
-      <!-- Trigger -->
-      <button type="button"
-              class="btn btn-primary btn-sm w-auto d-inline-flex align-items-center px-2 py-1"
-              style="line-height:1; font-size:12px;"
-              data-bs-toggle="modal"
-              data-bs-target="#startConcursModal">
-        ▶ Start
-      </button>
-    </div>
+{{-- Admin-only Start (manual categories + free text themes + hard reset) --}}
+@auth
+@if((auth()->user()->is_admin ?? false) || auth()->id() === 1)
+  <div class="mb-2 d-flex justify-content-end">
+    <button type="button"
+            class="btn btn-primary btn-sm w-auto d-inline-flex align-items-center px-2 py-1"
+            style="line-height:1; font-size:12px;"
+            data-bs-toggle="modal"
+            data-bs-target="#startConcursModal">
+      ▶ Start
+    </button>
+  </div>
 
-    <!-- Modal -->
-    <div class="modal fade" id="startConcursModal" tabindex="-1" aria-hidden="true">
-      <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-          <form action="{{ route('concurs.start') }}" method="POST">
-            @csrf
-            <div class="modal-header">
-              <h5 class="modal-title">Pornește o rundă nouă (reset hard)</h5>
-              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Închide"></button>
+  <div class="modal fade" id="startConcursModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <form action="{{ route('concurs.start') }}" method="POST">
+          @csrf
+          <div class="modal-header">
+            <h5 class="modal-title">Pornește o rundă nouă</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Închide"></button>
+          </div>
+
+          <div class="modal-body">
+            <div class="mb-2 small text-muted">
+              Alege <strong>categoria</strong> (CSD/ITC/Artisti/Genuri) + scrie <strong>numele temei</strong> exact cum vrei să apară.
+              Dacă lași gol, alegem aleator din <code>theme_pools</code>.
             </div>
-            <div class="modal-body">
-              <div class="mb-3">
-                <label class="form-label">Categorie (ex: CSD)</label>
-                <input name="category" class="form-control" placeholder="CSD" required>
-              </div>
-              <div class="mb-1">
-                <label class="form-label">Tema</label>
-                <input name="theme" class="form-control" placeholder="American" required>
-              </div>
-              <small class="text-muted">
-                Apăsând <strong>Start</strong> se șterg runde active/viitoare (songs, votes, winners) și se creează
-                o rundă nouă: înscrieri <em>acum</em> → vot la 20:00 (zi lucrătoare).
-              </small>
+
+            {{-- TEMA A (începe acum; înscrieri până la 20:00, sau imediat→mâine 20:00 dacă e după 20:00) --}}
+            <h6 class="fw-bold mb-2">Tema A (pornește ACUM)</h6>
+
+            <div class="mb-3">
+              <label class="form-label">Categoria</label>
+              <select name="theme_a_category" class="form-select">
+                <option value="">— Alege categoria (opțional) —</option>
+                <option value="csd">CSD</option>
+                <option value="it">ITC</option>
+                <option value="artisti">Artisti</option>
+                <option value="genuri">Genuri</option>
+              </select>
             </div>
-            <div class="modal-footer">
-              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Renunță</button>
-              <button type="submit" class="btn btn-primary">▶ Start</button>
+
+            <div class="mb-3">
+              <label class="form-label">Numele temei</label>
+              <input name="theme_a_name" type="text" class="form-control" placeholder="ex: The Beatles / Dragoste / 90s">
+              <small class="text-muted">Afișare: <em>CSD — Dragoste</em>, <em>ITC — 90s</em>, <em>Artisti — The Beatles</em> etc.</small>
             </div>
-          </form>
-        </div>
+
+            <hr class="my-3">
+
+            {{-- TEMA B (mâine 00:00→20:00 în paralel cu votul pentru A) --}}
+            <h6 class="fw-bold mb-2">Tema B (mâine — înscrieri 00:00 → 20:00)</h6>
+
+            <div class="mb-3">
+              <label class="form-label">Categoria</label>
+              <select name="theme_b_category" class="form-select">
+                <option value="">— opțional (dacă lași gol, alegem aleator) —</option>
+                <option value="csd">CSD</option>
+                <option value="it">ITC</option>
+                <option value="artisti">Artisti</option>
+                <option value="genuri">Genuri</option>
+              </select>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">Numele temei</label>
+              <input name="theme_b_name" type="text" class="form-control" placeholder="ex: Rock / 2000s / ABBA">
+              <small class="text-muted">Rulăm Tema B în paralel cu <strong>votul pentru A</strong> (00:00 → 20:00).</small>
+            </div>
+
+            <div class="form-check mt-3">
+              <input class="form-check-input" type="checkbox" name="force_reset_today" id="force_reset_today" value="1">
+              <label class="form-check-label" for="force_reset_today">
+                Reset de azi (șterge înscrieri, voturi, câștigători și runde care ating ziua curentă) înainte de Start
+              </label>
+            </div>
+
+            <small class="text-muted d-block mt-3">
+              La <strong>00:00</strong>: vot pentru Tema A (00:00 → 20:00) + înscrieri pentru Tema B (00:00 → 20:00).
+              Apoi, a doua zi: vot pentru Tema B (00:00 → 20:00).
+            </small>
+          </div>
+
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Renunță</button>
+            <button type="submit" class="btn btn-primary">▶ Start</button>
+          </div>
+        </form>
       </div>
     </div>
-  @endif
-  @endauth
+  </div>
+@endif
+@endauth
+
+
 
   @if(session('status'))
     <div class="alert alert-success mb-3">
@@ -113,6 +161,53 @@
       <h1 class="mb-2 mb-sm-0 text-center w-100" style="font-weight:800; letter-spacing:1px;">
         🎧 CONCURSUL DE AZI
       </h1>
+
+      {{-- /concurs quick actions (safe links to dedicated pages) --}}
+      <div class="container my-3" id="concurs-quick-ctas">
+        <div class="d-flex gap-2 flex-wrap">
+          <a href="{{ route('concurs.vote.page') }}" class="btn btn-primary">
+            🔊 Votează melodiile de ieri
+          </a>
+          <a href="{{ route('concurs.upload.page') }}" class="btn btn-outline-info">
+            ⬆️ Încarcă melodia pentru azi
+          </a>
+        </div>
+      </div>
+
+      {{-- Posters row — completely hidden if no poster_url on that cycle --}}
+        @php
+            // These two vars should already be available or can be fetched via helpers on the model.
+            // Use data_get(...) so we don't error if the fields don't exist yet.
+            $voteCycle      = isset($voteCycle) ? $voteCycle : ($cycles['vote'] ?? null);
+            $submitCycle    = isset($submitCycle) ? $submitCycle : ($cycles['submit'] ?? null);
+
+            $votePosterUrl   = data_get($voteCycle, 'poster_url');    // string|null
+            $submitPosterUrl = data_get($submitCycle, 'poster_url');  // string|null
+        @endphp
+
+        @if($votePosterUrl || $submitPosterUrl)
+          <div class="container my-3" id="concurs-posters">
+            <div class="row g-3">
+              @if($votePosterUrl)
+                <div class="col-12 col-md-6">
+                  <a href="{{ route('concurs.vote.page') }}" class="d-block" aria-label="Deschide pagina de vot">
+                    <img src="{{ $votePosterUrl }}" alt="Poster vot" class="img-fluid rounded-3 w-100" style="display:block;">
+                  </a>
+                </div>
+              @endif
+
+              @if($submitPosterUrl)
+                <div class="col-12 col-md-6">
+                  <a href="{{ route('concurs.upload.page') }}" class="d-block" aria-label="Deschide pagina de upload">
+                    <img src="{{ $submitPosterUrl }}" alt="Poster înscrieri" class="img-fluid rounded-3 w-100" style="display:block;">
+                  </a>
+                </div>
+              @endif
+            </div>
+          </div>
+        @endif
+
+
       @if(($isWinner && !$tomorrowPicked) || (session('force_theme_modal') && session('ap_test_mode')))
         <a href="{{ route('concurs.alege-tema.create') }}" class="btn btn-neon">
           🎯 Alege tema pentru mâine
