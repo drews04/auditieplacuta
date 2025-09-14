@@ -15,6 +15,8 @@ use App\Models\Tiebreak;
 use App\Models\ContestTheme;
 use App\Models\ThemePool;    // columns: id, name, category
 use App\Services\AwardPoints;
+use App\Models\Poster;
+use App\Models\ContestCycle;
 
 class SongController extends Controller
 {
@@ -559,12 +561,14 @@ $ct = \App\Models\ContestTheme::firstOrCreate(
     \App\Models\Song::create([
         'user_id'          => $user->id,
         'youtube_url'      => $request->youtube_url,
+        'youtube_id'       => $videoId,               // 👈 add this line
         'title'            => $title,
         'votes'            => 0,
-        'competition_date' => $now->toDateString(),   // informational; cycle_id is the source of truth
-        'theme_id'         => null,                    // optional if you don’t use ContestTheme here
+        'competition_date' => $now->toDateString(),
+        'theme_id'         => null,
         'cycle_id'         => $cycleSubmit->id,
     ]);
+    
 
     return response()->json(['message' => 'Melodie încărcată cu succes.']);
 }
@@ -613,188 +617,114 @@ $ct = \App\Models\ContestTheme::firstOrCreate(
      * Voting for dual-cycle system.
      */
     public function voteForSong(Request $request)
-    {
-        $request->validate([
-            'song_id' => 'required|integer|exists:songs,id'
-        ]);
+{
+    $request->validate([
+        'song_id' => 'required|integer|exists:songs,id'
+    ]);
 
-        $songId = $request->input('song_id');
-        $user = Auth::user();
-        $now = Carbon::now();
+    $user = Auth::user();
+    $now  = Carbon::now();
+    $song = Song::findOrFail((int)$request->input('song_id'));
 
-        // Find current voting cycle
-        $cycleVote = \App\Models\ContestCycle::where('vote_start_at', '<=', $now)
-            ->where('vote_end_at', '>', $now)
-            ->orderByDesc('vote_start_at')
-            ->first();
+    // -------- Weekend guard (unless test mode admin) --------
+    if (!(config('ap.test_mode') && $user->is_admin)) {
+        if ($now->isWeekend()) {
+            return response()->json(['message' => 'Nu se votează în weekend.'], 422);
+        }
+    }
 
-        if (!$cycleVote) {
-            return response()->json(['message' => 'Votarea nu este deschisă.'], 403);
+    // -------- Tiebreak window? (20:00–20:30) --------
+    $tb = $this->getActiveTiebreakForToday();
+    $activeTiebreak = $tb && $now->between($tb->starts_at, $tb->ends_at);
+
+    if ($activeTiebreak) {
+        // must vote only among Versus songs
+        if (!in_array($song->id, (array)$tb->song_ids, true)) {
+            return response()->json(['message' => 'În Versus poți vota doar melodiile aflate la egalitate.'], 422);
         }
 
-        $song = Song::findOrFail($songId);
-        
-        // Check if song belongs to current voting cycle
-        if ((int)$song->cycle_id !== (int)$cycleVote->id) {
-            return response()->json(['message' => 'Nu poți vota în altă rundă.'], 403);
+        // one vote per user per tiebreak (unless test mode admin)
+        $alreadyVotedThisTiebreak = (config('ap.test_mode') && $user->is_admin) ? false :
+            Vote::where('user_id', $user->id)->where('tiebreak_id', $tb->id)->exists();
+
+        if ($alreadyVotedThisTiebreak) {
+            return response()->json(['message' => 'Ai votat deja în tiebreak.'], 403);
         }
 
-        // Check if user is not voting for their own song
-        if ((int)$song->user_id === (int)$user->id) {
+        // self-vote blocked (unless test mode admin)
+        if (!(config('ap.test_mode') && $user->is_admin) && (int)$song->user_id === (int)$user->id) {
             return response()->json(['message' => 'Nu poți vota propria melodie.'], 403);
         }
 
-        // Check if user hasn't already voted in this cycle
-        $alreadyVoted = \App\Models\Vote::where('user_id', $user->id)
-            ->where('cycle_id', $cycleVote->id)
-            ->exists();
-
-        if ($alreadyVoted) {
-            return response()->json(['message' => 'Ai votat deja în această rundă.'], 403);
-        }
-
-        // Create vote
-        \App\Models\Vote::create([
-            'user_id'  => $user->id,
-            'song_id'  => $song->id,
-            'cycle_id' => $cycleVote->id,
-            'vote_date' => $now->toDateString(),
+        Vote::create([
+            'user_id'     => $user->id,
+            'song_id'     => $song->id,
+            'vote_date'   => Carbon::today(),
+            'tiebreak_id' => $tb->id,
+            // cycle_id left NULL in Versus path (we key by tiebreak_id)
         ]);
 
-        // Increment song votes
         $song->increment('votes');
-
-        return response()->json(['message' => 'Vot înregistrat cu succes.']);
+        return response()->json(['message' => 'Vot înregistrat pentru Versus.']);
     }
+
+    // -------- Normal voting window (00:00–20:00) --------
+    // After 20:00 it’s closed (unless test mode admin)
+    if (!(config('ap.test_mode') && $user->is_admin)) {
+        if ($now->gte($now->copy()->startOfDay()->setTime(20, 0))) {
+            return response()->json(['message' => 'Votarea pentru azi s-a închis la 20:00.'], 422);
+        }
+    }
+
+    // must have an OPEN voting cycle
+    $cycleVote = \App\Models\ContestCycle::where('vote_start_at', '<=', $now)
+        ->where('vote_end_at', '>', $now)
+        ->orderByDesc('vote_start_at')
+        ->first();
+
+    if (!$cycleVote) {
+        return response()->json(['message' => 'Votarea nu este deschisă.'], 403);
+    }
+
+    // song must belong to this voting cycle
+    if ((int)$song->cycle_id !== (int)$cycleVote->id) {
+        return response()->json(['message' => 'Nu poți vota în altă rundă.'], 403);
+    }
+
+    // block self-vote (unless test mode admin)
+    if (!(config('ap.test_mode') && $user->is_admin) && (int)$song->user_id === (int)$user->id) {
+        return response()->json(['message' => 'Nu poți vota propria melodie.'], 403);
+    }
+
+    // one vote per user per cycle (unless test mode admin)
+    $alreadyVoted = (config('ap.test_mode') && $user->is_admin) ? false :
+        Vote::where('user_id', $user->id)->where('cycle_id', $cycleVote->id)->exists();
+
+    if ($alreadyVoted) {
+        return response()->json(['message' => 'Ai votat deja în această rundă.'], 403);
+    }
+
+    Vote::create([
+        'user_id'   => $user->id,
+        'song_id'   => $song->id,
+        'cycle_id'  => $cycleVote->id,
+        'vote_date' => $now->toDateString(),
+    ]);
+
+    $song->increment('votes');
+    return response()->json(['message' => 'Vot înregistrat cu succes.']);
+}
+
 
     /**
      * Legacy voting method (kept for backward compatibility).
      */
     public function voteForSongLegacy($id)
     {
-        $user  = Auth::user();
-        $today = Carbon::today();
-        $now   = Carbon::now();
-
-        // 🧪 ADMIN TEST MODE: Bypass weekend restriction
-        if (config('ap.test_mode') && $user->is_admin) {
-            // In test mode, admin can vote on weekends
-        } else {
-            if ($now->isWeekend()) {
-                return response()->json(['message' => 'Nu se votează în weekend.'], 422);
-            }
-        }
-
-        $tb = $this->getActiveTiebreakForToday();
-        $activeTiebreak = $tb && $now->between($tb->starts_at, $tb->ends_at);
-
-        // 🧪 ADMIN TEST MODE: Bypass time restrictions
-        if (config('ap.test_mode') && $user->is_admin) {
-            // In test mode, admin can vote anytime
-        } else {
-            if (!$activeTiebreak && $now->greaterThanOrEqualTo($today->copy()->setTime(20, 30))) {
-                return response()->json(['message' => 'Votarea pentru azi s-a închis.'], 422);
-            }
-        }
-
-        // 🧪 ADMIN TEST MODE: Bypass winner restriction
-        if (config('ap.test_mode') && $user->is_admin) {
-            // In test mode, admin can vote even after winner is declared
-        } else {
-            if (Winner::whereDate('contest_date', $today)->exists()) {
-                return response()->json(['message' => 'Votarea pentru azi este închisă.'], 422);
-            }
-        }
-
-        $song = Song::findOrFail($id);
-        // 🧪 ADMIN TEST MODE: Bypass date restriction
-        if (config('ap.test_mode') && $user->is_admin) {
-            // In test mode, admin can vote for any song
-        } else {
-            if (!Carbon::parse($song->competition_date)->isSameDay($today)) {
-                return response()->json(['message' => 'Poți vota doar melodiile concursului de azi.'], 422);
-            }
-        }
-
-        // 🧪 ADMIN TEST MODE: Bypass self-vote restriction
-        if (config('ap.test_mode') && $user->is_admin) {
-            // In test mode, admin can vote for their own songs
-        } else {
-            if ($song->user_id === $user->id) {
-                return response()->json(['message' => 'Nu poți vota propria melodie.'], 403);
-            }
-        }
-
-        if ($activeTiebreak) {
-            // 🧪 ADMIN TEST MODE: Bypass tiebreak restrictions
-            if (config('ap.test_mode') && $user->is_admin) {
-                // In test mode, admin can vote for any song in tiebreak
-            } else {
-                if (!in_array($song->id, (array) $tb->song_ids, true)) {
-                    return response()->json(['message' => 'În Versus poți vota doar melodiile aflate la egalitate.'], 422);
-                }
-            }
-
-            // 🧪 ADMIN TEST MODE: Bypass tiebreak voting restrictions
-            if (config('ap.test_mode') && $user->is_admin) {
-                // In test mode, admin can vote multiple times in tiebreak
-                $alreadyVotedThisTiebreak = false;
-            } else {
-                $alreadyVotedThisTiebreak = Vote::where('user_id', $user->id)
-                    ->where('vote_date', $today)
-                    ->where('tiebreak_id', $tb->id)
-                    ->exists();
-
-                if ($alreadyVotedThisTiebreak) {
-                    return response()->json(['message' => 'Ai votat deja în tiebreak.'], 403);
-                }
-            }
-
-            Vote::create([
-                'user_id'     => $user->id,
-                'song_id'     => $song->id,
-                'vote_date'   => $today,
-                'tiebreak_id' => $tb->id,
-            ]);
-
-            $song->increment('votes');
-
-            return response()->json(['message' => 'Vot înregistrat pentru Versus.']);
-        }
-
-        // 🧪 ADMIN TEST MODE: Bypass time restrictions
-        if (config('ap.test_mode') && $user->is_admin) {
-            // In test mode, admin can vote anytime
-        } else {
-            if ($now->greaterThanOrEqualTo($today->copy()->setTime(20, 0))) {
-                return response()->json(['message' => 'Votarea pentru azi s-a închis la 20:00.'], 422);
-            }
-        }
-
-        // 🧪 ADMIN TEST MODE: Bypass voting restrictions
-        if (config('ap.test_mode') && $user->is_admin) {
-            // In test mode, admin can vote multiple times
-            $alreadyVoted = false;
-        } else {
-            $alreadyVoted = Vote::where('user_id', $user->id)
-                ->whereDate('vote_date', $today)
-                ->where('created_at', '<', $today->copy()->setTime(20, 0))
-                ->exists();
-
-            if ($alreadyVoted) {
-                return response()->json(['message' => 'Ai votat deja azi.'], 403);
-            }
-        }
-
-        Vote::create([
-            'user_id'   => $user->id,
-            'song_id'   => $song->id,
-            'vote_date' => $today,
-        ]);
-
-        $song->increment('votes');
-
-        return response()->json(['message' => 'Vot înregistrat cu succes.']);
+        // Legacy GET/URL-style voting endpoint -> delegate to unified logic
+        $req = request();
+        $req->merge(['song_id' => (int) $id]);
+        return $this->voteForSong($req);
     }
 
     /** ---------- Versus fallback (alt route variant) ---------- */
@@ -818,4 +748,49 @@ $ct = \App\Models\ContestTheme::firstOrCreate(
             'endsAtIso' => $endsAtIso,
         ]);
     }
+    public function uploadPage()
+{
+    $now = \Carbon\Carbon::now();
+
+    // Weekend → read-only, redirect to hub
+    if ($now->isWeekend()) {
+        return redirect('/concurs')->with('error', 'Înscrierile sunt închise în weekend. Revin Luni la 00:00.');
+    }
+
+    // must have an OPEN submission cycle
+    $cycleSubmit = \App\Models\ContestCycle::where('start_at', '<=', $now)
+        ->where('submit_end_at', '>', $now)
+        ->orderByDesc('start_at')
+        ->first();
+
+    if (!$cycleSubmit) {
+        return redirect('/concurs')->with('error', 'Înscrierile nu sunt deschise acum.');
+    }
+
+    // (Keep whatever you had before if you actually show a page here)
+    return redirect('/concurs'); // hub is the main UI; no separate upload page needed right now
+}
+public function votePage()
+{
+    $now = \Carbon\Carbon::now();
+
+    // Weekend → read-only, redirect to hub
+    if ($now->isWeekend()) {
+        return redirect('/concurs')->with('error', 'Votarea este închisă în weekend. Următoarea votare: Luni 00:00.');
+    }
+
+    // must have an OPEN voting cycle
+    $cycleVote = \App\Models\ContestCycle::where('vote_start_at', '<=', $now)
+        ->where('vote_end_at', '>', $now)
+        ->orderByDesc('vote_start_at')
+        ->first();
+
+    if (!$cycleVote) {
+        return redirect('/concurs')->with('error', 'Nu e faza de vot acum.');
+    }
+
+    return redirect('/concurs'); // hub is the main UI; no separate vote page needed right now
+}
+
+
 }
