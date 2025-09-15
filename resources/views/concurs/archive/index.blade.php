@@ -1,47 +1,43 @@
 @extends('layouts.app')
 
-@section('title', 'Arhivă Concurs')
-@section('body_class', 'page-concurs-archive')
+@section('title','Concurs')
+
+@push('styles')
+<style>
+  .hub-wrap{display:flex;justify-content:center;margin:64px 0}
+  .hub{display:grid;grid-template-columns:1fr 1fr;gap:24px}
+  @media (max-width: 768px){ .hub{grid-template-columns:1fr;gap:16px} }
+  .hub-btn{
+    display:flex;align-items:center;justify-content:center;
+    padding:18px 26px;border-radius:14px;text-decoration:none;font-weight:800;
+    border:2px solid #27f0d0; box-shadow:0 0 22px rgba(39,240,208,.35) inset;
+    transition:transform .08s ease, opacity .2s ease;
+  }
+  .hub-btn--vote{ background:#0e1621; color:#fff; }
+  .hub-btn--upload{ background:#0e1f19; color:#fff; }
+  .hub-btn.is-disabled{opacity:.4;pointer-events:none;filter:grayscale(25%)}
+  .hub-btn:active{ transform:translateY(1px) }
+</style>
+@endpush
 
 @section('content')
-<div class="container py-5">
-  <h1 class="mb-4 fw-bold">Arhivă Concurs</h1>
+<div class="container">
+  <div class="hub-wrap">
+    <div class="hub">
+      {{-- LEFT: VOTEAZĂ --}}
+      <a href="{{ route('concurs.vote.page') }}"
+         class="hub-btn hub-btn--vote {{ !($votingOpen ?? false) ? 'is-disabled' : '' }}"
+         aria-disabled="{{ !($votingOpen ?? false) ? 'true' : 'false' }}">
+        ★ Votează
+      </a>
 
-  @forelse($cycles as $c)
-    @php
-      $w = $c->winner_snapshot ?? null;
-    @endphp
-    <div class="card border-0 shadow-sm mb-3">
-      <div class="card-body d-flex flex-wrap justify-content-between align-items-center">
-        <div class="mb-2">
-          <div class="small text-muted">
-            Încheiat: {{ $c->vote_end_at->timezone(config('app.timezone'))->format('D, d M Y H:i') }}
-          </div>
-          <div class="fw-semibold">Tema: {{ $c->theme_text ?? '—' }}</div>
-          @if($w)
-            <div class="mt-1">
-              🏆 {{ $w->song->title ?? 'Melodie' }}
-              <span class="text-muted">de</span>
-              <span class="fw-semibold">{{ $w->user->name ?? 'necunoscut' }}</span>
-              <span class="ms-2 badge bg-success">{{ $w->vote_count }} voturi</span>
-            </div>
-          @else
-            <div class="mt-1 text-muted">Rezultate în curs de validare…</div>
-          @endif
-        </div>
-
-        <a class="btn btn-outline-info"
-           href="{{ route('concurs.arhiva.show', $c->vote_end_at->toDateString()) }}">
-          Detalii & clasament
-        </a>
-      </div>
+      {{-- RIGHT: ÎNCARCĂ --}}
+      <a href="{{ route('concurs.upload.page') }}"
+         class="hub-btn hub-btn--upload {{ !($submissionsOpen ?? false) ? 'is-disabled' : '' }}"
+         aria-disabled="{{ !($submissionsOpen ?? false) ? 'true' : 'false' }}">
+        ⬆️ Încarcă melodia
+      </a>
     </div>
-  @empty
-    <div class="alert alert-info">Nu există încă runde încheiate.</div>
-  @endforelse
-
-  <div class="mt-3">
-    {{ $cycles->links() }}
   </div>
 </div>
 @endsection

@@ -30,6 +30,7 @@
 
   <!-- Our tiny core (last so it normalizes sizes & neon look) -->
   <link rel="stylesheet" href="{{ $cssv('assets/css/ap-core.css') }}" />
+  @include('partials.youtube_modal')
 
   {{-- ===== Route-based CSS (automatic) ===== --}}
   @php

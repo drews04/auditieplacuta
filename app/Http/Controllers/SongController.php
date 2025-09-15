@@ -242,230 +242,62 @@ class SongController extends Controller
     /**
      * Main Concurs page.
      */
-    public function showTodaySongs(Request $request)
-{
-    $now = \Carbon\Carbon::now();
-
-    // === Winner strip (last finished round) ===
-    $winnerStripCycle = \App\Models\ContestCycle::where('vote_end_at', '<=', $now)
-        ->orderByDesc('vote_end_at')
-        ->first();
-
-    $winnerStripWinner = null;
-    if ($winnerStripCycle) {
-        $winnerStripWinner = \App\Models\Winner::where('cycle_id', $winnerStripCycle->id)
-            ->with(['user:id,name', 'song:id,title,youtube_url'])
-            ->first();
-    }
-
-    // === CYCLES (current submission / current voting) ===
-    $cycleSubmit = \App\Models\ContestCycle::where('start_at', '<=', $now)
-        ->where('submit_end_at', '>', $now)
-        ->orderByDesc('start_at')
-        ->first();
-
-    $cycleVote = \App\Models\ContestCycle::where('vote_start_at', '<=', $now)
-        ->where('vote_end_at', '>', $now)
-        ->orderByDesc('vote_start_at')
-        ->first();
-
-    // --- GAP FALLBACK: between submit_end_at and vote_start_at (show today's list + timer) ---
-    $gapBetweenPhases = false;
-    if (!$cycleSubmit && !$cycleVote) {
-        $current = \App\Models\ContestCycle::where('start_at','<=',$now)
-            ->where('vote_end_at','>',$now)
+    public function showTodaySongs(\Illuminate\Http\Request $request)
+    {
+        $now = \Carbon\Carbon::now();
+    
+        // Current cycles (if any)
+        $cycleSubmit = \App\Models\ContestCycle::where('start_at', '<=', $now)
+            ->where('submit_end_at', '>', $now)
             ->orderByDesc('start_at')
             ->first();
-
-        if ($current) {
-            // Treat as "current submission context" so theme & songs show,
-            // but lock uploads; we'll flip flags below.
-            $cycleSubmit      = $current;
-            $gapBetweenPhases = true;
-        }
-    }
-
-    /* ---------- ensure submission cycle has a ContestTheme id ---------- */
-    if ($cycleSubmit && empty($cycleSubmit->contest_theme_id)) {
-        $raw  = (string)($cycleSubmit->theme_text ?? '');
-        // If "CSD — Dinamita", keep only the right side ("Dinamita")
-        $name = trim($raw);
-        if (preg_match('/^\s*([^—-]+)\s*[—-]\s*(.+)$/u', $raw, $m)) {
-            $name = trim($m[2] ?? $raw);
-        }
-
-       // Ensure only one theme per contest_date
-$contestDay = optional($cycleSubmit->submit_end_at)->toDateString() ?? now()->toDateString();
-
-$ct = \App\Models\ContestTheme::firstOrCreate(
-    ['contest_date' => $contestDay],
-    [
-        'name'              => ($name !== '' ? $name : 'Tema'),
-        'active'            => true,
-        'chosen_by_user_id' => auth()->id(),
-    ]
-);
-
-        $cycleSubmit->contest_theme_id = $ct->id;
-        $cycleSubmit->save();
-    }
-    /* ------------------------------------------------------------------- */
-
-    // --- fetch the actual themes with likes (for persistence) ---
-    $submitTheme = null;
-    $voteTheme   = null;
-    $authId      = auth()->id();
-
-    if ($cycleSubmit && $cycleSubmit->contest_theme_id) {
-        $submitTheme = \App\Models\ContestTheme::query()
-            ->withCount('likes')
-            ->with(['likes' => fn($q) => $q->where('user_id', $authId ?? 0)])
-            ->find($cycleSubmit->contest_theme_id);
-    }
-
-    if ($cycleVote && $cycleVote->contest_theme_id) {
-        $voteTheme = \App\Models\ContestTheme::query()
-            ->withCount('likes')
-            ->with(['likes' => fn($q) => $q->where('user_id', $authId ?? 0)])
-            ->find($cycleVote->contest_theme_id);
-    }
-    // --------------------------------------------------------------------
-
-    // Songs per cycle
-    $songsSubmit = collect();
-    if ($cycleSubmit) {
-        $songsSubmit = \App\Models\Song::where('cycle_id', $cycleSubmit->id)
-            ->orderBy('id')->get();
-    }
-
-    $songsVote = collect();
-    if ($cycleVote) {
-        $songsVote = \App\Models\Song::where('cycle_id', $cycleVote->id)
-            ->orderBy('id')->get();
-    }
-
-    // Simple flags
-    if ($gapBetweenPhases) {
-        $submissionsOpen = false;   // uploads are closed during the gap
-        $votingOpen      = false;   // voting not yet open
-    } else {
+    
+        $cycleVote = \App\Models\ContestCycle::where('vote_start_at', '<=', $now)
+            ->where('vote_end_at', '>', $now)
+            ->orderByDesc('vote_start_at')
+            ->first();
+    
+        // Flags for the hub buttons
         $submissionsOpen = (bool) $cycleSubmit;
         $votingOpen      = (bool) $cycleVote;
-    }
-
-    // When will voting open for the CURRENT context?
-    $votingOpensAt = null;
-    if ($cycleVote) {
-        // already open; keep null
-    } elseif ($cycleSubmit) {
-        $votingOpensAt = $cycleSubmit->vote_start_at ?? $cycleSubmit->submit_end_at;
-        if ($votingOpensAt) {
-            $votingOpensAt = $votingOpensAt->copy();
-        }
-    }
-
-    // Legacy compat
-    $today     = \Carbon\Carbon::today();
-    $isWeekday = !$now->isWeekend();
-
-    // Per-user flags
-    $userHasVotedToday = false;
-    if (\Auth::check() && $cycleVote) {
-        $userHasVotedToday = \App\Models\Vote::where('user_id', \Auth::id())
-            ->where('cycle_id', $cycleVote->id)
-            ->exists();
-    }
-
-    $userHasUploadedToday = false;
-    if (\Auth::check() && $cycleSubmit) {
-        $userHasUploadedToday = \App\Models\Song::where('user_id', \Auth::id())
-            ->where('cycle_id', $cycleSubmit->id)
-            ->exists();
-    }
-
-    // Use vote list during voting, submit list otherwise
-    $songs = $votingOpen ? $songsVote : $songsSubmit;
-
-    // Simple theme object for header (from submission cycle)
-    $theme = null;
-    if ($cycleSubmit) {
-        $theme = (object) [
-            'title'          => $cycleSubmit->theme_text ?? '—',
-            'category_code'  => 'GEN',
-        ];
-    }
-
-    // === WINNER POPUP (only for the winner, within 1h after vote_end_at) ===
-    $showWinnerModal = false;
-    $winnerCycle = null;
-
-    $finished = \App\Models\ContestCycle::query()
-        ->where('vote_end_at', '<=', $now)
-        ->orderByDesc('vote_end_at')
-        ->first();
-
-    if ($finished) {
-        $winner = \App\Models\Winner::where('cycle_id', $finished->id)->first();
-        if ($winner && !$winner->theme_chosen) {
-            $withinHour = $now->between($finished->vote_end_at, $finished->vote_end_at->copy()->addHour());
-            if ($withinHour && \Auth::check() && \Auth::id() === (int) $winner->user_id) {
-                $showWinnerModal = true;
-                $winnerCycle = $finished;
-            }
-        }
-    }
-
-    // === WEEKEND VIEW (read-only) ===
-    $isWeekendView     = (!$submissionsOpen && !$votingOpen) && $now->isWeekend();
-
-    $lastFinishedCycle = null;   // the most recent finished (Friday most likely)
-    $lastSongs         = collect();
-    $lastWinner        = null;
-
-    $upcomingCycle     = null;   // the next scheduled cycle (e.g., Monday)
-
-    if ($isWeekendView) {
-        $lastFinishedCycle = \App\Models\ContestCycle::where('vote_end_at', '<=', $now)
-            ->orderByDesc('vote_end_at')
-            ->first();
-
-        if ($lastFinishedCycle) {
-            $lastSongs  = \App\Models\Song::where('cycle_id', $lastFinishedCycle->id)
-                ->orderBy('id')->get();
-
-            $lastWinner = \App\Models\Winner::where('cycle_id', $lastFinishedCycle->id)
+    
+        // Weekend / no active cycle view
+        $isWeekendView = (!$submissionsOpen && !$votingOpen);
+    
+        // Upcoming cycle theme (for the little Monday pill)
+        $upcomingCycle = null;
+        if ($isWeekendView) {
+            $upcomingCycle = \App\Models\ContestCycle::where('start_at', '>', $now)
+                ->orderBy('start_at')
                 ->first();
         }
-
-        $upcomingCycle = \App\Models\ContestCycle::where('start_at', '>=', $now)
-            ->orderBy('start_at')
-            ->first();
+    
+        // Last finished round’s songs (for the recap list on weekend screen)
+        $lastSongs = collect();
+        if ($isWeekendView) {
+            $lastFinished = \App\Models\ContestCycle::where('vote_end_at', '<=', $now)
+                ->orderByDesc('vote_end_at')
+                ->first();
+    
+            if ($lastFinished) {
+                $lastSongs = \App\Models\Song::with('user:id,name')
+                    ->where('cycle_id', $lastFinished->id)
+                    ->orderBy('id')
+                    ->get();
+            }
+        }
+    
+        // The minimal hub page with the two buttons
+        return view('concurs', [
+            'submissionsOpen' => $submissionsOpen,
+            'votingOpen'      => $votingOpen,
+            'isWeekendView'   => $isWeekendView,
+            'upcomingCycle'   => $upcomingCycle,
+            'lastSongs'       => $lastSongs,
+        ]);
     }
-
-    // Legacy placeholders still expected by the blade
-    $todayWinner       = null;
-    $showWinnerPopup   = $showWinnerModal;
-    $tomorrowTheme     = null;
-    $dayLocked         = $gapBetweenPhases ? true : false; // lock UI in the gap
-    $uploadForTomorrow = false;
-
-    return view('concurs', compact(
-        'cycleSubmit', 'cycleVote',
-        'songsSubmit', 'songsVote',
-        'submissionsOpen', 'votingOpen', 'votingOpensAt',
-        'showWinnerModal', 'winnerCycle',
-        // weekend view extras:
-        'isWeekendView', 'lastFinishedCycle', 'lastSongs', 'lastWinner', 'upcomingCycle',
-        // legacy compat vars:
-        'songs', 'theme', 'userHasVotedToday', 'userHasUploadedToday',
-        'isWeekday', 'todayWinner', 'showWinnerPopup', 'tomorrowTheme',
-        'dayLocked', 'uploadForTomorrow',
-        // winner strip
-        'winnerStripCycle', 'winnerStripWinner',
-        // themes with likes so counts persist
-        'submitTheme', 'voteTheme'
-    ));
-}
+    
+    
 
     
     
@@ -791,6 +623,31 @@ public function votePage()
 
     return redirect('/concurs'); // hub is the main UI; no separate vote page needed right now
 }
+
+public function hub()
+{
+    $now = \Illuminate\Support\Carbon::now();
+
+    $cycleSubmit = \App\Models\ContestCycle::where('start_at', '<=', $now)
+        ->where('submit_end_at', '>', $now)
+        ->first();
+
+    $cycleVote = \App\Models\ContestCycle::where('vote_start_at', '<=', $now)
+        ->where('vote_end_at', '>', $now)
+        ->first();
+
+    $submissionsOpen = (bool) $cycleSubmit;
+    $votingOpen      = (bool) $cycleVote;
+
+    // Render ONLY the two buttons (view we just created)
+    return view('concurs', compact('submissionsOpen', 'votingOpen', 'isWeekendView'));
+
+}
+// app/Http/Controllers/SongController.php
+
+// app/Http/Controllers/SongController.php
+
+
 
 
 }

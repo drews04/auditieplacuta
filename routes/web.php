@@ -183,65 +183,77 @@ Route::post('/setari/parola', [UserSettingsController::class, 'updatePassword'])
 // abilities list
 Route::get('/abilitati', [AbilityController::class, 'index'])->name('abilities.index');
 
-// ───────────────────────────────────────────────────────────────────────────────
-// Concurs — core routes (dual-cycle) + legacy aliases
-// ───────────────────────────────────────────────────────────────────────────────
-Route::get('/concurs', [SongController::class, 'showTodaySongs'])
-    ->name('concurs')
-    ->middleware(\App\Http\Middleware\ForceWeekdayIfTesting::class);
 
-Route::get('/concurs/songs/today', [SongController::class, 'todayList'])
-    ->name('concurs.songs.today')
-    ->middleware(\App\Http\Middleware\ForceWeekdayIfTesting::class);
 
-Route::post('/concurs/upload', [SongController::class, 'uploadSong'])
-    ->name('concurs.upload')
-    ->middleware(['auth', \App\Http\Middleware\ForceWeekdayIfTesting::class]);
 
-Route::post('/concurs/vote', [SongController::class, 'voteForSong'])
-    ->name('concurs.vote')
-    ->middleware(['auth', \App\Http\Middleware\ForceWeekdayIfTesting::class]);
 
-Route::get('/concurs/versus', [SongController::class, 'versus'])
-    ->name('concurs.versus')
-    ->middleware(\App\Http\Middleware\ForceWeekdayIfTesting::class);
+// ──────────────────────────────────────────────
+// Concurs — hub + functional pages + archive
+// ──────────────────────────────────────────────
 
-// Winner picks theme
-Route::middleware(['auth', \App\Http\Middleware\ForceWeekdayIfTesting::class])->group(function () {
-    Route::get('/concurs/alege-tema',  [ConcursTemaController::class, 'create'])->name('concurs.alege-tema.create');
-    Route::post('/concurs/alege-tema', [ConcursTemaController::class, 'store'])->name('concurs.alege-tema.store');
+
+
+use App\Http\Controllers\ConcursArchiveController;
+use App\Http\Controllers\WinnersController;
+
+//
+// Hub (main entry)
+//
+Route::get('/concurs', [SongController::class, 'hub'])->name('concurs');
+
+Route::prefix('concurs')->group(function () {
+    // Phase pages
+    Route::get('/p/upload', [SongController::class, 'uploadPage'])->name('concurs.upload.page');
+    Route::get('/p/vote',   [SongController::class, 'votePage'])->name('concurs.vote.page');
+
+    // Actions
+    Route::post('/upload',  [SongController::class, 'uploadSong'])->name('concurs.upload');
+    Route::post('/vote',    [SongController::class, 'voteForSong'])->name('concurs.vote');
+
+    // Helpers
+    Route::get('/songs/today', [SongController::class, 'todayList'])->name('concurs.songs.today');
+    Route::get('/versus',      [SongController::class, 'versus'])->name('concurs.versus');
+
+    // Winner picks next theme
+    Route::get('/alege-tema',  [ConcursTemaController::class, 'create'])->name('concurs.alege-tema');
+    Route::post('/alege-tema', [ConcursTemaController::class, 'store'])->name('concurs.alege-tema.store');
+
+    // Archive
+    Route::get('/arhiva',                      [ConcursArchiveController::class, 'index'])->name('concurs.arhiva');
+    Route::get('/arhiva/{date}',               [ConcursArchiveController::class, 'show'])->name('concurs.arhiva.show');
+    Route::get('/arhiva/{date}/voters/{song}', [ConcursArchiveController::class, 'votersJson'])->name('concurs.arhiva.voters');
 });
-// Dedicated pages (paths chosen to avoid any collisions)
-Route::get('/concurs/p/vote',   [App\Http\Controllers\SongController::class, 'votePage'])->name('concurs.vote.page');
-Route::get('/concurs/p/upload', [App\Http\Controllers\SongController::class, 'uploadPage'])->name('concurs.upload.page');
+
+//
+// Winners list (global)
+//
+Route::get('/winners', [WinnersController::class, 'index'])->name('winners.index');
+
+//
+// Admin (Control Cave)
+//
+Route::prefix('admin')->middleware('admin')->group(function () {
+    Route::get('/concurs',        [ConcursAdminController::class, 'dashboard'])->name('admin.concurs');
+    Route::post('/concurs/start', [ConcursAdminController::class, 'start'])->name('concurs.start');
+});
 
 
-// Admin (dashboard + Start)
+
+
+// Admin Concurs dashboard + Start (protected)
 Route::middleware(['auth', AdminOnly::class])->group(function () {
     Route::get('/admin/concurs',  [ConcursAdminController::class, 'dashboard'])->name('admin.concurs');
-    Route::post('/concurs/start', [ConcursAdminController::class, 'start'])
-    ->middleware('throttle:3,1') // max 3 starts per minute (safety)
-    ->name('concurs.start');
 
-    // optional admin theme picker page:
-    Route::get('/admin/concurs/alege-tema', [ConcursAdminController::class, 'pickTheme'])->name('admin.concurs.pick');
+    // safety throttle: max 3 starts/min
+    Route::post('/concurs/start', [ConcursAdminController::class, 'start'])
+        ->middleware('throttle:3,1')
+        ->name('concurs.start');
+
+    // optional picker UI if you use it
+    Route::get('/admin/concurs/alege-tema', [ConcursAdminController::class, 'pickTheme'])
+        ->name('admin.concurs.pick');
 });
 
-// Legacy aliases so existing menu links still resolve
-Route::get('/concurs/incarca-melodie', fn () => redirect()->to(route('concurs') . '#concurs-submit'))
-    ->name('concurs.incarca-melodie');
-
-Route::get('/concurs/melodiile-zilei', fn () => redirect()->route('concurs'))
-    ->name('concurs.melodiile-zilei');
-
-Route::get('/concurs/voteaza', fn () => redirect()->to(route('concurs') . '#concurs-vote'))
-    ->name('concurs.voteaza');
-
-Route::get('/concurs/rezultate', fn () => redirect()->route('concurs'))
-    ->name('concurs.rezultate');
-
-// Arhivă teme page (kept)
-Route::get('/concurs/arhiva-teme', [ArhivaTemeController::class, 'index'])->name('concurs.arhiva-teme');
 
 // ───────────────────────────────────────────────────────────────────────────────
 // Leaderboards
@@ -273,7 +285,7 @@ Route::get('/test-mail', function () {
 });
 
 //Arhiva Concursuri
-use App\Http\Controllers\ConcursArchiveController;
+
 
 Route::get('/concurs/arhiva', [ConcursArchiveController::class, 'index'])
     ->name('concurs.arhiva');
@@ -288,10 +300,9 @@ Route::get('/concurs/arhiva/{date}/voters/{song}', [ConcursArchiveController::cl
     ->name('concurs.arhiva.voters');
 
 //Molodii Castigatoare
-use App\Http\Controllers\Header\Concurs\MelodiiCastigatoareController;
+//use App\Http\Controllers\Header\Concurs\MelodiiCastigatoareController;
 
-Route::get('/concurs/melodii-castigatoare', [MelodiiCastigatoareController::class, 'index'])
-    ->name('concurs.melodii-castigatoare');
+
 
     use App\Http\Controllers\ThemeLikeController;
     use App\Http\Middleware\VerifyCsrfToken;
@@ -300,8 +311,8 @@ Route::get('/concurs/melodii-castigatoare', [MelodiiCastigatoareController::clas
     ->name('themes.like.toggle')
     ->middleware(['auth', 'throttle:20,1']);
 
-// Static page: Regulament
-Route::view('/regulament', 'concurs.regulament')->name('regulament');
+
+
 
 // ───────────────────────────────────────────────────────────────────────────────
 // Forum Routes

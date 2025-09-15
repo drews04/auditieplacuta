@@ -14,6 +14,7 @@ class Song extends Model
         'title',
         'competition_date', // Y-m-d of the contest day this song belongs to
         'votes',
+        'youtube_id',
         'is_winner',
         'theme_id',         // FK → contest_themes.id
         'cycle_id',         // FK → contest_cycles.id

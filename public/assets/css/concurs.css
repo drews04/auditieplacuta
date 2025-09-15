@@ -1,0 +1,84 @@
+/* ==========================================================================
+   /concurs — two neon action buttons, centered under header
+   ========================================================================== */
+
+   :root{
+    --ap-neon: #16f1d3;
+    --ap-neon-soft: rgba(22,241,211,.55);
+    --ap-bg: #05090c;
+    --ap-text: #eafdf9;
+    --ap-disabled: rgba(255,255,255,.25);
+  }
+  
+  .concurs-hub{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:14px;
+    margin:28px auto 12px auto;
+  }
+  
+  .hub-actions{
+    display:flex;
+    gap:14px;
+    align-items:center;
+    justify-content:center;
+  }
+  
+  .hub-btn{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:.55rem;
+    min-width: 210px;
+    padding:.9rem 1.2rem;
+    border-radius:999px;
+    text-decoration:none;
+    font-weight:900;
+    letter-spacing:.2px;
+    color:#001311;
+    background:linear-gradient(135deg, var(--ap-neon), #7afbe8);
+    box-shadow:
+      0 0 18px var(--ap-neon),
+      0 0 44px var(--ap-neon-soft);
+    transition:transform .12s ease, box-shadow .12s ease, filter .12s ease;
+    position:relative;
+  }
+  
+  .hub-btn:hover{
+    transform:translateY(-1px) scale(1.02);
+    box-shadow:
+      0 0 24px var(--ap-neon),
+      0 0 60px rgba(22,241,211,.8);
+  }
+  
+  .hub-btn--vote { }
+  .hub-btn--upload { }
+  
+  /* Disabled state (weekend or outside window) */
+  .hub-btn.is-disabled{
+    pointer-events:none;
+    filter:grayscale(.55) opacity(.65);
+    box-shadow:0 0 10px rgba(255,255,255,.08);
+    background:linear-gradient(135deg, #6f7c7a, #9fb1ae);
+    color:#0e1514;
+  }
+  
+  /* Small helper hint strip */
+  .hub-hint{
+    margin-top:4px;
+    color:#b5e9e1;
+    font-weight:700;
+    opacity:.9;
+    text-align:center;
+  }
+  
+  .hub-hint__label{ margin-right:.4rem; opacity:.9; }
+  .hub-hint__next{ opacity:.8; }
+  
+  /* Responsive */
+  @media (max-width:680px){
+    .hub-actions{ gap:10px; }
+    .hub-btn{ min-width: 160px; padding:.8rem 1rem; font-size:.95rem; }
+  }
+  

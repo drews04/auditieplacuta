@@ -4,6 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class ContestTheme extends Model
 {
@@ -19,30 +21,63 @@ class ContestTheme extends Model
     ];
 
     protected $casts = [
-        'active' => 'boolean',
+        'active'       => 'boolean',
+        'contest_date' => 'date',
     ];
 
-    /* Likes (polymorphic) */
+    /* =========================
+       Relationships
+       ========================= */
+
+    /** Polymorphic likes */
     public function likes(): MorphMany
     {
-        return $this->morphMany(\App\Models\ThemeLike::class, 'likeable');
+        return $this->morphMany(ThemeLike::class, 'likeable');
     }
 
-    /* Helpers */
+    /** Inverse: who picked it (if winner-picked) */
+    public function chooser(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'chosen_by_user_id');
+    }
+
+    /** Optional: linked pool entry this theme was sourced from */
+    public function pool(): BelongsTo
+    {
+        return $this->belongsTo(ThemePool::class, 'theme_pool_id');
+    }
+
+    /**
+     * Correct relation to cycles:
+     * contest_cycles has FK: contest_theme_id → contest_themes.id
+     */
+    public function cycles(): HasMany
+    {
+        return $this->hasMany(ContestCycle::class, 'contest_theme_id');
+    }
+
+    /* =========================
+       Scopes / Helpers
+       ========================= */
+
     public function scopeWithLikesCount($q)
     {
         return $q->withCount('likes');
+    }
+
+    public function scopeActive($q, bool $only = true)
+    {
+        return $only ? $q->where('active', true) : $q;
+    }
+
+    public function scopeForDate($q, $date)
+    {
+        return $q->whereDate('contest_date', \Illuminate\Support\Carbon::parse($date)->toDateString());
     }
 
     public function likedByUserId(?int $userId): bool
     {
         if (!$userId) return false;
         return $this->likes()->where('user_id', $userId)->exists();
-    }
-
-    /* Relations */
-    public function cycle()
-    {
-        return $this->belongsTo(ContestCycle::class, 'contest_cycle_id');
     }
 }
