@@ -527,7 +527,7 @@ $ct = \App\Models\ContestTheme::firstOrCreate(
         ->where('cycle_id', $cycleSubmit->id)
         ->exists();
     if ($already) {
-        return response()->json(['message' => 'Ai înscris deja o melodie în această rundă.'], 403);
+        return redirect()->back()->with('error', 'Ai încărcat deja o melodie.');
     }
 
     // Normalize URL → YouTube ID (block duplicates within the same cycle)
@@ -748,49 +748,101 @@ $ct = \App\Models\ContestTheme::firstOrCreate(
             'endsAtIso' => $endsAtIso,
         ]);
     }
-    public function uploadPage()
+    public function uploadPage(Request $request)
+    {
+        $now = \Carbon\Carbon::now();
+    
+        // OPEN submission cycle (page renders read-only if none)
+        $cycleSubmit = \App\Models\ContestCycle::where('start_at', '<=', $now)
+            ->where('submit_end_at', '>', $now)
+            ->orderByDesc('start_at')
+            ->first();
+    
+        $songsSubmit            = collect();
+        $submitTheme            = null;
+        $submissionsOpen        = (bool) $cycleSubmit;
+        $userHasUploadedToday   = false;
+        $votingOpensAt          = null;
+    
+        if ($cycleSubmit) {
+            // songs in this submission cycle
+            $songsSubmit = \App\Models\Song::where('cycle_id', $cycleSubmit->id)
+                ->orderBy('id')->get();
+    
+            // per-user: already uploaded?
+            if (\Auth::check()) {
+                $userHasUploadedToday = \App\Models\Song::where('user_id', \Auth::id())
+                    ->where('cycle_id', $cycleSubmit->id)
+                    ->exists();
+            }
+    
+            // theme + likes (for header pill)
+            if ($cycleSubmit->contest_theme_id) {
+                $submitTheme = \App\Models\ContestTheme::query()
+                    ->withCount('likes')
+                    ->with(['likes' => fn($q) => $q->where('user_id', \Auth::id() ?? 0)])
+                    ->find($cycleSubmit->contest_theme_id);
+            }
+    
+            // when voting will open for THIS cycle (for hint text)
+            $votingOpensAt = $cycleSubmit->vote_start_at ?? $cycleSubmit->submit_end_at;
+        }
+    
+        return view('concurs.upload', compact(
+            'cycleSubmit',
+            'songsSubmit',
+            'submitTheme',
+            'submissionsOpen',
+            'userHasUploadedToday',
+            'votingOpensAt'
+        ));
+    }
+    
+public function votePage(Request $request)
 {
     $now = \Carbon\Carbon::now();
 
-    // Weekend → read-only, redirect to hub
-    if ($now->isWeekend()) {
-        return redirect('/concurs')->with('error', 'Înscrierile sunt închise în weekend. Revin Luni la 00:00.');
-    }
-
-    // must have an OPEN submission cycle
-    $cycleSubmit = \App\Models\ContestCycle::where('start_at', '<=', $now)
-        ->where('submit_end_at', '>', $now)
-        ->orderByDesc('start_at')
-        ->first();
-
-    if (!$cycleSubmit) {
-        return redirect('/concurs')->with('error', 'Înscrierile nu sunt deschise acum.');
-    }
-
-    // (Keep whatever you had before if you actually show a page here)
-    return redirect('/concurs'); // hub is the main UI; no separate upload page needed right now
-}
-public function votePage()
-{
-    $now = \Carbon\Carbon::now();
-
-    // Weekend → read-only, redirect to hub
-    if ($now->isWeekend()) {
-        return redirect('/concurs')->with('error', 'Votarea este închisă în weekend. Următoarea votare: Luni 00:00.');
-    }
-
-    // must have an OPEN voting cycle
+    // Current OPEN voting cycle (no redirects; page renders read-only if none)
     $cycleVote = \App\Models\ContestCycle::where('vote_start_at', '<=', $now)
         ->where('vote_end_at', '>', $now)
         ->orderByDesc('vote_start_at')
         ->first();
 
-    if (!$cycleVote) {
-        return redirect('/concurs')->with('error', 'Nu e faza de vot acum.');
+    $songsVote          = collect();
+    $voteTheme          = null;
+    $votingOpen         = (bool) $cycleVote;
+    $userHasVotedToday  = false;
+
+    if ($cycleVote) {
+        // Songs in this voting cycle
+        $songsVote = \App\Models\Song::where('cycle_id', $cycleVote->id)
+            ->orderBy('id')->get();
+
+        // Per-user flag (hide buttons when already voted)
+        if (\Auth::check()) {
+            $userHasVotedToday = \App\Models\Vote::where('user_id', \Auth::id())
+                ->where('cycle_id', $cycleVote->id)
+                ->exists();
+        }
+
+        // Theme + likes (to keep the same header pills/like counts)
+        if ($cycleVote->contest_theme_id) {
+            $voteTheme = \App\Models\ContestTheme::query()
+                ->withCount('likes')
+                ->with(['likes' => fn($q) => $q->where('user_id', \Auth::id() ?? 0)])
+                ->find($cycleVote->contest_theme_id);
+        }
     }
 
-    return redirect('/concurs'); // hub is the main UI; no separate vote page needed right now
+    return view('concurs.vote', compact(
+        'cycleVote',
+        'songsVote',
+        'voteTheme',
+        'votingOpen',
+        'userHasVotedToday'
+    ));
 }
+
 
 
 }
