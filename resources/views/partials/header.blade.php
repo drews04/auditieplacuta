@@ -51,7 +51,7 @@
               <ul class="sub-menu">
               <li><a href="{{ route('leaderboard.monthly') }}">Clasament</a></li>
                 <li><a href="{{ route('concurs') . '#concurs-submit' }}">Încarcă melodie</a></li>
-                <li><a href="{{ route('concurs') }}">Melodiile zilei</a></li>
+                <a href="{{ route('winners.index') }}">🎖️ Melodii câștigătoare</a>
                 <li><a href="{{ route('concurs') . '#concurs-vote' }}">Votează</a></li>
                 <li><a href="{{ route('concurs') }}">Rezultate (Arhivă)</a></li>
                 <li><a href="{{ route('concurs.arhiva-teme') }}">Arhivă teme</a></li>

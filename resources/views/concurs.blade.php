@@ -57,7 +57,7 @@
               <select name="theme_a_category" class="form-select">
                 <option value="">— Alege categoria (opțional) —</option>
                 <option value="csd">CSD</option>
-                <option value="it">ITC</option>
+                <option value="itc">ITC</option>
                 <option value="artisti">Artisti</option>
                 <option value="genuri">Genuri</option>
               </select>
@@ -79,7 +79,7 @@
               <select name="theme_b_category" class="form-select">
                 <option value="">— opțional (dacă lași gol, alegem aleator) —</option>
                 <option value="csd">CSD</option>
-                <option value="it">ITC</option>
+                <option value="itc">ITC</option>
                 <option value="artisti">Artisti</option>
                 <option value="genuri">Genuri</option>
               </select>
@@ -254,9 +254,10 @@
                 $parts = preg_split('/\s*—\s*/u', $winnerStripCycle->theme_text, 2);
                 $cat   = trim($parts[0] ?? '');
                 $title = trim($parts[1] ?? $winnerStripCycle->theme_text);
+                $catDisp = ['csd'=>'CSD','it'=>'ITC','itc'=>'ITC','artisti'=>'Artisti','genuri'=>'Genuri'][strtolower($cat)] ?? $cat;
               @endphp
               <span class="ap-theme-pill">
-                @if($cat !== '')<span class="ap-theme-cat">{{ $cat }}</span>@endif
+                @if($catDisp !== '')<span class="ap-theme-cat">{{ $catDisp }}</span>@endif
                 <span class="ap-theme-sep">—</span>
                 <span class="ap-theme-title">{{ $title }}</span>
               </span>
@@ -403,6 +404,7 @@
           $parts = preg_split('/\s*—\s*/u', $cycleSubmit->theme_text, 2);
           $cat   = trim($parts[0] ?? '');
           $title = trim($parts[1] ?? $cycleSubmit->theme_text);
+          $catDisp = ['csd'=>'CSD','it'=>'ITC','itc'=>'ITC','artisti'=>'Artisti','genuri'=>'Genuri'][strtolower($cat)] ?? $cat;
 
           // Force a concrete ContestTheme id straight from the cycle
           $submitThemeId = (int)($cycleSubmit->contest_theme_id ?? 0);
@@ -440,8 +442,8 @@
 
         <div class="ap-theme-row">
           <div class="ap-left">
-            @if($cat !== '')
-              <span class="ap-cat-badge">{{ $cat }}</span>
+            @if($catDisp !== '')
+              <span class="ap-cat-badge">{{ $catDisp }}</span>
               <span class="ap-dot">🎯</span>
               <span class="ap-label">Tema:</span>
             @else
@@ -550,6 +552,7 @@
           $parts = preg_split('/\s*—\s*/u', $cycleVote->theme_text, 2);
           $cat   = trim($parts[0] ?? '');
           $title = trim($parts[1] ?? $cycleVote->theme_text);
+          $catDisp = ['csd'=>'CSD','it'=>'ITC','itc'=>'ITC','artisti'=>'Artisti','genuri'=>'Genuri'][strtolower($cat)] ?? $cat;
 
           $voteTheme      = $voteTheme ?? ($cycleVote->contestTheme ?? null);
           $voteThemeId    = $voteTheme->id ?? ($cycleVote->contest_theme_id ?? 0);
@@ -561,8 +564,8 @@
 
         <div class="ap-theme-row mb-3">
           <div class="ap-left">
-            @if($cat !== '')
-              <span class="ap-cat-badge">{{ $cat }}</span>
+            @if($catDisp !== '')
+              <span class="ap-cat-badge">{{ $catDisp }}</span>
               <span class="ap-dot">🎯</span>
               <span class="ap-label">Tema:</span>
             @else
@@ -625,11 +628,12 @@
                 $parts = preg_split('/\s*—\s*/u', $upcomingCycle->theme_text, 2);
                 $cat   = trim($parts[0] ?? '');
                 $title = trim($parts[1] ?? $upcomingCycle->theme_text);
+                $catDisp = ['csd'=>'CSD','it'=>'ITC','itc'=>'ITC','artisti'=>'Artisti','genuri'=>'Genuri'][strtolower($cat)] ?? $cat;
               @endphp
               <div class="ap-theme-row">
                 <div class="ap-left">
-                  @if($cat !== '')
-                    <span class="ap-cat-badge">{{ $cat }}</span>
+                  @if($catDisp !== '')
+                    <span class="ap-cat-badge">{{ $catDisp }}</span>
                     <span class="ap-dot">🎯</span>
                     <span class="ap-label">Tema de luni:</span>
                   @else
@@ -817,4 +821,3 @@
     </script>
   @endif
 @endpush
-

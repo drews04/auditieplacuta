@@ -132,10 +132,10 @@
     <div class="alert alert-dark mb-4">🔒 Autentifică-te pentru a-ți înscrie melodia.</div>
   @endauth
 
-  {{-- ===== TODAY'S SONG LIST (under upload) ===== --}}
-  @if($songsSubmit->isNotEmpty())
-    <div class="card border-0 shadow-sm mb-4 ap-neon">
-      <div class="card-body">
+  {{-- ===== TODAY'S SONG LIST (under upload) — keep wrapper id for AJAX refresh ===== --}}
+  <div class="card border-0 shadow-sm mb-4 ap-neon">
+    <div class="card-body">
+      <div id="song-list">
         @include('partials.songs_list', [
           'songs'              => $songsSubmit,
           'userHasVotedToday'  => true,   // no voting on upload page
@@ -146,18 +146,67 @@
         ])
       </div>
     </div>
-  @endif
+  </div>
 
+</div>
+
+{{-- YouTube Modal (same behavior as /concurs) --}}
+<div class="modal fade" id="youtubeModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content bg-dark text-white">
+      <div class="modal-header border-0">
+        <h5 class="modal-title">Redă melodia</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Închide"></button>
+      </div>
+      <div class="modal-body pt-0">
+        <div class="ratio ratio-16x9">
+          <iframe id="ytFrame" src="" title="YouTube player" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+        </div>
+      </div>
+      <div class="modal-footer border-0">
+        <a id="ytOpenLink" href="#" target="_blank" rel="noopener" class="btn btn-outline-info">Vezi pe YouTube</a>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Închide</button>
+      </div>
+    </div>
+  </div>
 </div>
 @endsection
 
 @push('scripts')
-  {{-- same JS so AJAX upload + YT modal behavior are identical --}}
+  {{-- same JS so AJAX upload + list refresh + YT modal behavior are identical --}}
   <script>
     window.songListRoute = "{{ route('concurs.songs.today') }}";
     window.uploadRoute   = "{{ route('concurs.upload') }}";
+    window.voteRoute     = "{{ route('concurs.vote') }}"; // harmless here; used by shared JS
     window.csrfToken     = "{{ csrf_token() }}";
   </script>
   <script src="{{ asset('js/concurs.js') }}"></script>
   <script src="{{ asset('js/theme-like.js') }}"></script>
+
+  {{-- YouTube modal wiring (same as hub) --}}
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      const ytFrame  = document.getElementById('ytFrame');
+      const openLink = document.getElementById('ytOpenLink');
+      const modalEl  = document.getElementById('youtubeModal');
+
+      function ytId(url) {
+        if (!url) return null;
+        const m1 = url.match(/youtu\.be\/([0-9A-Za-z_-]{11})/); if (m1) return m1[1];
+        const m2 = url.match(/(?:v=|\/embed\/|\/v\/)([0-9A-Za-z_-]{11})/); if (m2) return m2[1];
+        const m3 = url.match(/([0-9A-Za-z_-]{11})/); return m3 ? m3[1] : null;
+      }
+      function toEmbed(url){ const id = ytId(url); return id ? `https://www.youtube.com/embed/${id}?autoplay=1&rel=0` : ''; }
+
+      document.body.addEventListener('click', function (e) {
+        const btn = e.target.closest('.play3d'); if (!btn) return;
+        const url = btn.getAttribute('data-youtube-url') || '';
+        const theEmbed = toEmbed(url);
+        ytFrame.src = theEmbed || '';
+        openLink.href = url || '#';
+      });
+
+      modalEl?.addEventListener('hidden.bs.modal', () => { ytFrame.src = ''; });
+    });
+  </script>
 @endpush

@@ -27,7 +27,7 @@ use App\Http\Controllers\Header\Clasamente\TemaLuniiController;
 use App\Http\Controllers\Header\Concurs\ConcursController;
 use App\Http\Controllers\Header\Concurs\ArhivaTemeController;
 use App\Http\Controllers\Header\Concurs\IncarcaMelodieController;
-use App\Http\Controllers\Header\Concurs\MelodiileZileiController;
+
 use App\Http\Controllers\Header\Concurs\RezultateController;
 use App\Http\Controllers\Header\Concurs\VoteazaController;
 
@@ -374,3 +374,18 @@ Route::prefix('forum/alerts')->name('forum.alerts.')->middleware('auth')->group(
     Route::post('/ack-shown',    [NotificationController::class, 'ackShown'])->name('ack');
 });
 // -------- End forum routes --------
+use App\Http\Controllers\WinnersController;
+
+Route::get('/winners', [WinnersController::class, 'index'])->name('winners.index');
+
+
+
+Route::middleware(['auth', \App\Http\Middleware\AdminOnly::class])
+    ->prefix('admin')
+    ->group(function () {
+        Route::get('/concurs', [ConcursAdminController::class, 'dashboard'])
+            ->name('admin.concurs');
+
+        Route::post('/concurs/start', [ConcursAdminController::class, 'start'])
+            ->name('concurs.start');
+    });

@@ -123,6 +123,11 @@
 
 <body class="site @yield('body_class')">
   @include('partials.header')
+  {{-- YouTube player modal markup --}}
+@include('partials.youtube_modal')
+
+{{-- External script – do NOT @include the file contents --}}
+<script defer src="{{ asset('assets/js/youtube-modal.js') }}?v={{ time() }}"></script>
 
   {{-- Pages decide if they want container or full-width --}}
   <main class="site-main">

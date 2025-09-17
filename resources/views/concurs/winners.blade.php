@@ -1,4 +1,5 @@
 @extends('layouts.app')
+<link rel="stylesheet" href="{{ asset('assets/css/winners.css') }}?v={{ filemtime(public_path('assets/css/winners.css')) }}">
 
 @section('title', 'Melodii câștigătoare')
 @section('body_class', 'page-winners')
@@ -8,31 +9,32 @@
 @endpush
 
 @section('content')
-<div class="container py-5">
+<div class="container mt-4 mb-4">
 
   {{-- Header / hero --}}
   <div class="winners-hero">
     <h1>🎖️ Melodii câștigătoare</h1>
   </div>
 
-  {{-- Toolbar (search + per-page) --}}
-  <form method="GET" class="winners-toolbar">
-    <input
-      class="form-control"
-      name="q"
-      value="{{ $q }}"
-      placeholder="Caută după melodie, câștigător, temă…"
-      aria-label="Căutare"
-    />
-    <div class="d-flex gap-2">
-      <select name="per" class="form-select" onchange="this.form.submit()" aria-label="Rezultate pe pagină">
-        @foreach([10,20,30,50,100] as $opt)
-          <option value="{{ $opt }}" @selected($per === $opt)>{{ $opt }} / pagină</option>
-        @endforeach
-      </select>
-      <button class="btn btn-primary fw-bold" type="submit">Caută</button>
-    </div>
-  </form>
+  
+  {{-- Toolbar (search + button + per-page) --}}
+<form method="GET" class="winners-toolbar d-flex align-items-center flex-wrap gap-2">
+  <input
+    class="form-control form-control-sm winners-input"
+    name="q"
+    value="{{ $q }}"
+    placeholder="Caută după melodie, câștigător, temă…"
+    aria-label="Căutare"
+  />
+  <button class="btn btn-success btn-sm fw-bold" type="submit">Caută</button>
+  <select name="per" class="form-select form-select-sm">
+    @foreach([20,30,50,100] as $opt)
+      <option value="{{ $opt }}" @selected($per === $opt)>{{ $opt }} / pagină</option>
+    @endforeach
+  </select>
+</form>
+
+
 
   @if($winners->count() === 0)
     <div class="alert alert-secondary mt-2">Nu am găsit rezultate.</div>

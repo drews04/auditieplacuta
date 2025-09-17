@@ -507,9 +507,15 @@ $ct = \App\Models\ContestTheme::firstOrCreate(
     $user = \Auth::user();
     $now  = \Carbon\Carbon::now();
 
+    // Helper to respond JSON vs Redirect (toast)
+    $wantsJson = $request->ajax() || $request->wantsJson();
+
     // Weekdays only
     if ($now->isWeekend()) {
-        return response()->json(['message' => 'Nu se ține concurs în weekend.'], 422);
+        $msg = 'Nu se ține concurs în weekend.';
+        return $wantsJson
+            ? response()->json(['message' => $msg], 422)
+            : redirect()->back()->with('error', $msg);
     }
 
     // Find the CURRENT submission cycle
@@ -519,7 +525,10 @@ $ct = \App\Models\ContestTheme::firstOrCreate(
         ->first();
 
     if (!$cycleSubmit) {
-        return response()->json(['message' => 'Înscrierile nu sunt deschise acum.'], 422);
+        $msg = 'Înscrierile nu sunt deschise acum.';
+        return $wantsJson
+            ? response()->json(['message' => $msg], 422)
+            : redirect()->back()->with('error', $msg);
     }
 
     // One submission per user per CYCLE
@@ -527,25 +536,53 @@ $ct = \App\Models\ContestTheme::firstOrCreate(
         ->where('cycle_id', $cycleSubmit->id)
         ->exists();
     if ($already) {
-        return redirect()->back()->with('error', 'Ai încărcat deja o melodie.');
+        $msg = 'Ai încărcat deja o melodie.';
+        return $wantsJson
+            ? response()->json(['message' => $msg], 403)
+            : redirect()->back()->with('error', $msg);
     }
 
-    // Normalize URL → YouTube ID (block duplicates within the same cycle)
+    // Normalize URL → YouTube ID
     $videoId = $this->ytId($request->youtube_url);
     if (!$videoId) {
-        return response()->json(['message' => 'Link YouTube invalid.'], 422);
+        $msg = 'Link YouTube invalid.';
+        return $wantsJson
+            ? response()->json(['message' => $msg], 422)
+            : redirect()->back()->with('error', $msg);
     }
 
+    // Block re-uploading a past WINNER this calendar year (by YouTube ID)
+    $yearStart = $now->copy()->startOfYear()->toDateString();
+    $yearEnd   = $now->copy()->endOfYear()->toDateString();
+    $wonThisYear = \App\Models\Winner::query()
+        ->whereBetween('contest_date', [$yearStart, $yearEnd])
+        ->whereHas('song', function ($q) use ($videoId) {
+            $q->where('youtube_id', $videoId);
+        })
+        ->exists();
+    if ($wonThisYear) {
+        $msg = 'Această melodie a câștigat deja anul acesta. Te rog alege altă piesă.';
+        return $wantsJson
+            ? response()->json(['message' => $msg], 409)
+            : redirect()->back()->with('error', $msg);
+    }
+
+    // Block duplicate within the SAME cycle (by YouTube ID)
     $dupe = \App\Models\Song::where('cycle_id', $cycleSubmit->id)
-        ->get(['youtube_url'])
+        ->get(['youtube_url', 'youtube_id'])
         ->contains(function ($s) use ($videoId) {
+            // prefer direct youtube_id match; fallback parse url if old rows lack youtube_id
+            if (!empty($s->youtube_id)) return $s->youtube_id === $videoId;
             return $this->ytId($s->youtube_url) === $videoId;
         });
     if ($dupe) {
-        return response()->json(['message' => 'Această melodie este deja înscrisă în această rundă.'], 409);
+        $msg = 'Această melodie este deja înscrisă în această rundă.';
+        return $wantsJson
+            ? response()->json(['message' => $msg], 409)
+            : redirect()->back()->with('error', $msg);
     }
 
-    // Best‑effort title (fallback kept)
+    // Best-effort title (fallback kept)
     $title = 'Melodie YouTube';
     try {
         $resp = \Illuminate\Support\Facades\Http::timeout(6)->get('https://www.youtube.com/oembed', [
@@ -561,17 +598,20 @@ $ct = \App\Models\ContestTheme::firstOrCreate(
     \App\Models\Song::create([
         'user_id'          => $user->id,
         'youtube_url'      => $request->youtube_url,
-        'youtube_id'       => $videoId,               // 👈 add this line
+        'youtube_id'       => $videoId,
         'title'            => $title,
         'votes'            => 0,
         'competition_date' => $now->toDateString(),
         'theme_id'         => null,
         'cycle_id'         => $cycleSubmit->id,
     ]);
-    
 
-    return response()->json(['message' => 'Melodie încărcată cu succes.']);
+    $ok = 'Melodie încărcată cu succes.';
+    return $wantsJson
+        ? response()->json(['message' => $ok])
+        : redirect()->back()->with('status', $ok);
 }
+
 
 
     /**

@@ -1,0 +1,168 @@
+/* ========================================================================== */
+/* Winners page — Neon theme (cleaned)                                        */
+/* File: public/assets/css/winners.css                                        */
+/* ========================================================================== */
+
+/* Backdrop */
+body.page-winners,
+body.page-winners #app,
+body.page-winners main{
+  background: linear-gradient(180deg, #061016, #0b1220 60%, #0a111b) !important;
+}
+
+/* ---- SINGLE top offset under the global header (tweak as needed) --------- */
+:root{ --ap-header-offset-winners: 250px; } /* adjust if your header height changes */
+body.page-winners main{
+  padding-top: var(--ap-header-offset-winners) !important;
+}
+
+/* ---------------------------------- Hero ---------------------------------- */
+.page-winners .winners-hero{
+  text-align: center;
+  margin: 0 0 50px 0 !important; /* 50px space below title */
+}
+.page-winners .winners-hero h1{
+  color: #e6f1fb;
+  font-weight: 900;
+  letter-spacing: .5px;
+  text-shadow: 0 0 10px rgba(22,241,211,.15);
+}
+
+/* ------------------------------- Toolbar row ------------------------------ */
+/* Order: [search] [Caută] [20/pagină] — tight row */
+.page-winners .winners-toolbar{
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+  flex-wrap: nowrap;
+  margin: 0 0 40px 0 !important; /* 40px gap before results */
+}
+
+/* Smaller search input (no stretching), keep neon look */
+.page-winners .winners-input{
+  width: 360px !important;
+  max-width: 360px !important;
+  min-width: 300px;
+  flex: 0 0 auto;
+  display: inline-block;
+
+  background: linear-gradient(180deg, #0a1a22, #0f1e28);
+  border: 2px solid rgba(22,241,211,.35);
+  border-radius: 12px;
+  color: #e6f1fb;
+  padding: .5rem 1rem .5rem 2.5rem;
+}
+.page-winners .winners-input::placeholder{ color: rgba(230,241,251,.68); }
+.page-winners .winners-input:focus{
+  outline: none;
+  border-color: #16f1d3;
+  box-shadow: 0 0 20px rgba(22,241,211,.3);
+}
+
+/* Compact select and small Caută button */
+.page-winners .winners-toolbar .form-select{
+  width: auto;
+  min-width: 120px;
+  flex: 0 0 auto;
+
+  background: linear-gradient(180deg, #0a1a22, #0f1e28);
+  border: 2px solid rgba(22,241,211,.35);
+  border-radius: 12px;
+  color: #e6f1fb;
+  padding: .45rem 2.25rem .45rem .75rem;
+}
+.page-winners .winners-toolbar .form-select:focus{
+  outline: none; border-color:#16f1d3; box-shadow:0 0 15px rgba(22,241,211,.3);
+}
+.page-winners .winners-toolbar .btn.btn-success{
+  width: auto !important;
+  flex: 0 0 auto;
+  padding: .45rem .9rem;
+  line-height: 1.2;
+  font-size: .9rem;
+  font-weight: 900;
+  border-radius: 12px;
+  white-space: nowrap;
+
+  background: linear-gradient(135deg, #16f1d3, #0fb8a0);
+  border: 0;
+  color: #002a24;
+  box-shadow: 0 0 16px rgba(22,241,211,.35);
+}
+.page-winners .winners-toolbar .btn.btn-success:hover{
+  transform: translateY(-1px);
+  box-shadow: 0 0 26px rgba(22,241,211,.55);
+}
+.page-winners .winners-toolbar::before{ content:none; }
+
+/* ------------------------------ Card container ---------------------------- */
+.page-winners .winners-card{
+  background: linear-gradient(180deg, #07141a, #0d1a22);
+  border: 2px solid rgba(22,241,211,.35);
+  border-radius: 16px;
+  box-shadow: 0 0 18px rgba(22,241,211,.25), inset 0 0 20px rgba(22,241,211,.08);
+  padding: 1rem;
+}
+
+/* ---------------------------------- Table --------------------------------- */
+.page-winners .winners-table{ width:100%; border-collapse:collapse; font-size:.95rem; }
+.page-winners .winners-table th,
+.page-winners .winners-table td{
+  padding: .65rem .75rem;
+  border-bottom: 1px solid rgba(255,255,255,.08);
+  vertical-align: middle;
+  color: #e6f1fb;
+}
+.page-winners .winners-table th{
+  font-weight: 800;
+  background: rgba(22,241,211,.05);
+  text-transform: uppercase;
+  font-size: .8rem;
+  letter-spacing: .6px;
+}
+.page-winners .winners-table tr:hover td{ background: rgba(22,241,211,.05); }
+
+/* Theme pill */
+.page-winners .ap-theme-chip{
+  display: inline-flex; align-items: center; gap: .35rem;
+  background: rgba(22,241,211,.10);
+  padding: 2px 8px; border-radius: 999px; font-size: .85rem;
+}
+
+/* Votes badge */
+.page-winners .ap-votes-badge{
+  display: inline-block; padding: .2rem .6rem; border-radius: 12px;
+  background: rgba(22,241,211,.18); font-weight: 800; font-size: .85rem; color:#16f1d3;
+}
+
+/* YouTube link chip */
+.page-winners .ap-yt-link{
+  display:inline-block; padding:.25rem .75rem; border-radius:8px;
+  background:#ff0000; color:#fff; font-weight:700; text-decoration:none; font-size:.85rem;
+}
+.page-winners .ap-yt-link:hover{ background:#e60000; }
+
+/* ------------------------------- Pagination ------------------------------- */
+.page-winners .winners-pagination{ margin-top:1rem; display:flex; justify-content:center; }
+.page-winners .winners-pagination .page-link{
+  background: linear-gradient(180deg, #0a1a22, #0f1e28);
+  border: 2px solid rgba(22,241,211,.35);
+  color:#e6f1fb; padding:.5rem .9rem; border-radius:8px; text-decoration:none; transition:all .3s;
+}
+.page-winners .winners-pagination .page-link:hover{
+  border-color:#16f1d3; box-shadow:0 0 15px rgba(22,241,211,.3); color:#16f1d3;
+}
+.page-winners .winners-pagination .page-item.active .page-link{
+  background: linear-gradient(135deg, #16f1d3, #0fb8a0);
+  border-color:#16f1d3; color:#002a24; box-shadow:0 0 20px rgba(22,241,211,.4);
+}
+
+/* -------------------------------- Responsive ------------------------------ */
+@media (max-width: 768px){
+  .page-winners .winners-toolbar{ flex-wrap: wrap; }
+  .page-winners .winners-input{
+    width: 100% !important; max-width: none !important; min-width: 0;
+    flex: 1 1 100%;
+  }
+  .page-winners .winners-card{ padding: .75rem; }
+}
