@@ -161,51 +161,136 @@
       <h1 class="mb-2 mb-sm-0 text-center w-100" style="font-weight:800; letter-spacing:1px;">
         🎧 CONCURSUL DE AZI
       </h1>
-
       {{-- /concurs quick actions (safe links to dedicated pages) --}}
-      <div class="container my-3" id="concurs-quick-ctas">
-        <div class="d-flex gap-2 flex-wrap">
-          <a href="{{ route('concurs.vote.page') }}" class="btn btn-primary">
-            🔊 Votează melodiile de ieri
-          </a>
-          <a href="{{ route('concurs.upload.page') }}" class="btn btn-outline-info">
-            ⬆️ Încarcă melodia pentru azi
-          </a>
-        </div>
-      </div>
+@php
+  $voteCycle        = $cycleVote   ?? ($voteCycle   ?? null);
+  $submitCycle      = $cycleSubmit ?? ($submitCycle ?? null);
+  $votePosterUrl    = data_get($voteCycle, 'poster_url');
+  $submitPosterUrl  = data_get($submitCycle, 'poster_url');
+@endphp
 
-      {{-- Posters row — completely hidden if no poster_url on that cycle --}}
-        @php
-            // These two vars should already be available or can be fetched via helpers on the model.
-            // Use data_get(...) so we don't error if the fields don't exist yet.
-            $voteCycle      = isset($voteCycle) ? $voteCycle : ($cycles['vote'] ?? null);
-            $submitCycle    = isset($submitCycle) ? $submitCycle : ($cycles['submit'] ?? null);
+<div class="container my-3 posters-grid" id="concurs-hero">
+  {{-- LEFT: VOTE --}}
+  <div class="poster-slot">
+    @if($votePosterUrl)
+      <div class="poster-wrap">
+        <a href="{{ route('concurs.vote.page') }}" class="poster-card" aria-label="Votează melodiile de ieri">
+          <img class="poster-img"
+               src="{{ $votePosterUrl }}?v={{ optional($voteCycle)->updated_at?->timestamp ?? time() }}"
+               alt="Votează melodiile de ieri">
+        </a>
 
-            $votePosterUrl   = data_get($voteCycle, 'poster_url');    // string|null
-            $submitPosterUrl = data_get($submitCycle, 'poster_url');  // string|null
-        @endphp
+        {{-- Admin replace (bottom-left) --}}
+        @if(auth()->check() && data_get(auth()->user(),'is_admin') && data_get($voteCycle,'id'))
+          <form class="poster-admin-overlay"
+                method="POST"
+                action="{{ route('admin.concurs.poster.store') }}"
+                enctype="multipart/form-data">
+            @csrf
+            <input type="hidden" name="cycle_id" value="{{ data_get($voteCycle,'id') }}">
+            <label class="ap-mini-upload ap-mini-upload--ghost">
+              <input type="file" name="poster" accept="image/*" class="d-none" onchange="this.form.submit()">
+              Replace
+            </label>
+          </form>
 
-        @if($votePosterUrl || $submitPosterUrl)
-          <div class="container my-3" id="concurs-posters">
-            <div class="row g-3">
-              @if($votePosterUrl)
-                <div class="col-12 col-md-6">
-                  <a href="{{ route('concurs.vote.page') }}" class="d-block" aria-label="Deschide pagina de vot">
-                    <img src="{{ $votePosterUrl }}" alt="Poster vot" class="img-fluid rounded-3 w-100" style="display:block;">
-                  </a>
-                </div>
-              @endif
-
-              @if($submitPosterUrl)
-                <div class="col-12 col-md-6">
-                  <a href="{{ route('concurs.upload.page') }}" class="d-block" aria-label="Deschide pagina de upload">
-                    <img src="{{ $submitPosterUrl }}" alt="Poster înscrieri" class="img-fluid rounded-3 w-100" style="display:block;">
-                  </a>
-                </div>
-              @endif
-            </div>
-          </div>
+          {{-- Admin remove (bottom-right) --}}
+          <form class="poster-admin-overlay poster-admin-overlay--right"
+                method="POST"
+                action="{{ route('admin.concurs.poster.destroy') }}"
+                onsubmit="return confirm('Ștergi acest poster?');">
+            @csrf
+            @method('DELETE')
+            <input type="hidden" name="cycle_id" value="{{ data_get($voteCycle,'id') }}">
+            <button type="submit" class="ap-mini-upload ap-mini-upload--danger">Remove</button>
+          </form>
         @endif
+      </div>
+    @else
+      <div class="hero-placeholder">
+        <a href="{{ route('concurs.vote.page') }}" class="btn-hero-link">🔊 Votează melodiile de ieri</a>
+
+        {{-- Admin upload (only when no poster) --}}
+        @if(auth()->check() && data_get(auth()->user(),'is_admin') && data_get($voteCycle,'id'))
+          <form class="ap-admin-tools hero-upload"
+                method="POST"
+                action="{{ route('admin.concurs.poster.store') }}"
+                enctype="multipart/form-data">
+            @csrf
+            <input type="hidden" name="cycle_id" value="{{ data_get($voteCycle,'id') }}">
+            <label class="ap-mini-upload">
+              <input type="file" name="poster" accept="image/*" class="d-none" onchange="this.form.submit()">
+              Upload
+            </label>
+            @error('poster')   <div class="text-danger small mt-2">{{ $message }}</div> @enderror
+            @error('cycle_id') <div class="text-danger small mt-2">{{ $message }}</div> @enderror
+          </form>
+        @endif
+      </div>
+    @endif
+  </div>
+
+  {{-- RIGHT: UPLOAD --}}
+  <div class="poster-slot">
+    @if($submitPosterUrl)
+      <div class="poster-wrap">
+        <a href="{{ route('concurs.upload.page') }}" class="poster-card" aria-label="Încarcă melodia pentru azi">
+          <img class="poster-img"
+               src="{{ $submitPosterUrl }}?v={{ optional($submitCycle)->updated_at?->timestamp ?? time() }}"
+               alt="Încarcă melodia pentru azi">
+        </a>
+
+        {{-- Admin replace (bottom-left) --}}
+        @if(auth()->check() && data_get(auth()->user(),'is_admin') && data_get($submitCycle,'id'))
+          <form class="poster-admin-overlay"
+                method="POST"
+                action="{{ route('admin.concurs.poster.store') }}"
+                enctype="multipart/form-data">
+            @csrf
+            <input type="hidden" name="cycle_id" value="{{ data_get($submitCycle,'id') }}">
+            <label class="ap-mini-upload ap-mini-upload--ghost">
+              <input type="file" name="poster" accept="image/*" class="d-none" onchange="this.form.submit()">
+              Replace
+            </label>
+          </form>
+
+          {{-- Admin remove (bottom-right) --}}
+          <form class="poster-admin-overlay poster-admin-overlay--right"
+                method="POST"
+                action="{{ route('admin.concurs.poster.destroy') }}"
+                onsubmit="return confirm('Ștergi acest poster?');">
+            @csrf
+            @method('DELETE')
+            <input type="hidden" name="cycle_id" value="{{ data_get($submitCycle,'id') }}">
+            <button type="submit" class="ap-mini-upload ap-mini-upload--danger">Remove</button>
+          </form>
+        @endif
+      </div>
+    @else
+      <div class="hero-placeholder">
+        <a href="{{ route('concurs.upload.page') }}" class="btn-hero-link">⬆️ Încarcă melodia pentru azi</a>
+
+        {{-- Admin upload (only when no poster) --}}
+        @if(auth()->check() && data_get(auth()->user(),'is_admin') && data_get($submitCycle,'id'))
+          <form class="ap-admin-tools hero-upload"
+                method="POST"
+                action="{{ route('admin.concurs.poster.store') }}"
+                enctype="multipart/form-data">
+            @csrf
+            <input type="hidden" name="cycle_id" value="{{ data_get($submitCycle,'id') }}">
+            <label class="ap-mini-upload">
+              <input type="file" name="poster" accept="image/*" class="d-none" onchange="this.form.submit()">
+              Upload
+            </label>
+            @error('poster')   <div class="text-danger small mt-2">{{ $message }}</div> @enderror
+            @error('cycle_id') <div class="text-danger small mt-2">{{ $message }}</div> @enderror
+          </form>
+        @endif
+      </div>
+    @endif
+  </div>
+</div>
+
 
 
       @if(($isWinner && !$tomorrowPicked) || (session('force_theme_modal') && session('ap_test_mode')))

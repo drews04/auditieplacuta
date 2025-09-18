@@ -1,0 +1,213 @@
+/* =========================
+   Concurs Hero – posters row
+   ========================= */
+   #concurs-hero {
+    /* local “theme” tokens for the hero only */
+    --neon: rgba(22,241,211,0.85);
+    --neon-glow: rgba(22,241,211,0.28);
+    --neon-glow-inset: rgba(22,241,211,0.10);
+    --glass: rgba(8,20,24,0.40);
+    --radius: 22px;
+  
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 3px;                         /* exact 3px everywhere */
+    margin-block: 30px;
+  }
+  
+  @media (min-width: 768px) {
+    #concurs-hero {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+  
+  /* one “column” */
+  #concurs-hero .poster-slot { position: relative; }
+  
+  /* when there IS a poster */
+  #concurs-hero .poster-wrap { position: relative; }
+  
+  /* both PRESENT & PLACEHOLDER cards share same frame */
+  #concurs-hero .poster-card,
+  #concurs-hero .hero-placeholder {
+    position: relative;
+    display: block;
+    width: 100%;
+    aspect-ratio: 1 / 1;              /* always square */
+    border-radius: var(--radius);
+    overflow: hidden;
+  
+    border: 1px solid var(--neon);
+    box-shadow:
+      0 0 18px var(--neon-glow),
+      inset 0 0 6px var(--neon-glow-inset);
+    transition: transform .12s ease, filter .12s ease, box-shadow .12s ease;
+  }
+  
+  #concurs-hero .poster-card:hover,
+  #concurs-hero .hero-placeholder:hover {
+    transform: translateY(-1px);
+    filter: brightness(1.04);
+    box-shadow:
+      0 0 22px rgba(22,241,211,0.36),
+      inset 0 0 8px rgba(22,241,211,0.12);
+  }
+  
+  /* poster image */
+  #concurs-hero .poster-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+  
+  /* =============== PLACEHOLDER (no poster) =============== */
+  #concurs-hero .hero-placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--glass);
+    backdrop-filter: blur(3px);
+  }
+  
+  /* the big action in the middle of the empty card */
+  #concurs-hero .btn-hero-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 12px 18px;
+    border-radius: 14px;
+    font-weight: 800;
+    letter-spacing: .2px;
+    color: #e6f1fb;
+    text-decoration: none;
+  
+    border: 1px solid var(--neon);
+    background: rgba(8,20,24,0.35);
+    box-shadow:
+      inset 0 0 6px var(--neon-glow-inset),
+      0 0 14px rgba(22,241,211,0.20);
+  }
+  
+  /* (optional) admin upload when empty – bottom centered */
+  #concurs-hero .hero-upload {
+    position: absolute;
+    display: flex;
+    left: 0; right: 0; bottom: 12px;
+    justify-content: center;
+  }
+  
+  /* =============== ADMIN CONTROLS (present posters) =============== */
+  #concurs-hero .poster-admin-overlay {
+    position: absolute;
+    left: 12px;
+    bottom: 12px;
+    z-index: 3;
+  }
+  
+  #concurs-hero .poster-admin-overlay--right {
+    left: auto;
+    right: 12px;
+    bottom: 12px;
+  }
+  
+  /* mini buttons style (neutral) */
+  #concurs-hero .ap-mini-upload {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 16px;
+    border-radius: 12px;
+    cursor: pointer;
+    user-select: none;
+  
+    border: 1px solid var(--neon);
+    color: #e6f1fb;
+    background: rgba(8,20,24,0.35);
+    box-shadow:
+      inset 0 0 6px var(--neon-glow-inset),
+      0 0 14px rgba(22,241,211,0.20);
+    font-weight: 700;
+    letter-spacing: .2px;
+    transition: transform .12s ease, box-shadow .12s ease, filter .12s ease;
+  }
+  #concurs-hero .ap-mini-upload:hover {
+    transform: translateY(-1px);
+    box-shadow:
+      inset 0 0 8px rgba(22,241,211,0.12),
+      0 0 18px rgba(22,241,211,0.30);
+  }
+  
+  /* visual modifiers */
+  #concurs-hero .ap-mini-upload--ghost { opacity: .95; }
+  
+  #concurs-hero .ap-mini-upload--danger {
+    border-color: rgba(244, 84, 84, .9);
+    color: #ffdada;
+    background: rgba(244, 84, 84, .08);
+    box-shadow:
+      inset 0 0 6px rgba(244,84,84,.12),
+      0 0 14px rgba(244,84,84,.20);
+  }
+  /* === 60px vertical gaps between key items (append this) === */
+
+/* H1 → posters row */
+.page-concurs h1 + #concurs-hero { margin-top: 60px; }
+
+/* posters row → tagline under posters */
+#concurs-hero.posters-grid + p { margin-top: 60px; margin-bottom: 60px; }
+
+/* tagline → the next major block (winner strip / any card / neon card) */
+#concurs-hero.posters-grid + p + .ap-winner-strip,
+#concurs-hero.posters-grid + p + .card,
+#concurs-hero.posters-grid + p + .ap-neon-card { margin-top: 60px; }
+
+/* general safety: keep 60px between stacked content cards that follow */
+.page-concurs .container > .card + .card,
+.page-concurs .container > .ap-neon-card + .card,
+.page-concurs .container > .card + .ap-neon-card,
+.page-concurs .container > .ap-neon-card + .ap-neon-card,
+.page-concurs .container > .ap-winner-strip + .card,
+.page-concurs .container > .ap-winner-strip + .ap-neon-card { margin-top: 60px; }
+/* ===== Strong, layout-safe spacing around the posters grid ===== */
+
+/* Give the posters grid a 60px block gap above and below */
+#concurs-hero {
+  margin-top: 60px !important;
+  margin-bottom: 60px !important;
+}
+
+/* Optional: also make the tagline under the posters breathe more */
+#concurs-hero + p.text-center {
+  margin-top: 0 !important;       /* handled by the grid's bottom margin */
+  margin-bottom: 60px !important; /* gap before the winner strip/buttons */
+}
+/* Align Replace & Remove chips perfectly */
+#concurs-hero .poster-wrap form.poster-admin-overlay,
+#concurs-hero .poster-wrap form.poster-admin-overlay.poster-admin-overlay--right{
+  position: absolute;
+  top: auto;                 /* ignore any old top */
+  bottom: 16px;              /* shared baseline */
+  display: flex;
+  align-items: center;
+  margin: 0;
+  padding: 0;
+  z-index: 3;
+}
+
+/* left = Replace, right = Remove */
+#concurs-hero .poster-wrap form.poster-admin-overlay{ left: 16px; right: auto; }
+#concurs-hero .poster-wrap form.poster-admin-overlay.poster-admin-overlay--right{ right: 16px; left: auto; }
+
+/* normalize the chip element itself (label vs button) */
+#concurs-hero .poster-wrap label.ap-mini-upload,
+#concurs-hero .poster-wrap button.ap-mini-upload{
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 36px;              /* identical height */
+  padding: 0 16px;           /* identical padding */
+  line-height: 1;            /* no baseline drift */
+  border-width: 1px;
+  margin: 0;                 /* KILL Bootstrap label margin-bottom */
+}

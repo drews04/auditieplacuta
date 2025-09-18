@@ -389,3 +389,17 @@ Route::middleware(['auth', \App\Http\Middleware\AdminOnly::class])
         Route::post('/concurs/start', [ConcursAdminController::class, 'start'])
             ->name('concurs.start');
     });
+
+
+    //Poster routes
+    use App\Http\Controllers\Admin\ConcursPosterController;
+    
+    
+    // ── Concurs posters (admin only) ─────────────────────────────────────────────
+    Route::middleware(['web', 'auth', AdminOnly::class])->group(function () {
+        Route::post('/admin/concurs/poster',  [ConcursPosterController::class, 'store'])
+            ->name('admin.concurs.poster.store');
+    
+        Route::delete('/admin/concurs/poster', [ConcursPosterController::class, 'destroy'])
+            ->name('admin.concurs.poster.destroy');
+    });
