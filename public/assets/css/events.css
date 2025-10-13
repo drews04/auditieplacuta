@@ -192,3 +192,42 @@
 .events-add-btn {
   margin-top: 0 !important; /* reset if it had margin from elsewhere */
 }
+
+/* Make event meta text readable on dark bg */
+.events-page-wrap .text-muted,
+.event-card .text-muted {
+  color: #e6f1fb !important; /* bright, high-contrast */
+  opacity: 0.95;             /* remove Bootstrap dim */
+}
+
+.events-page-wrap .small {
+  font-size: .95rem;         /* keep small but readable */
+}
+/* --- Title bar layout fix --- */
+.page-releases .title-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  margin-bottom: 2.5rem;
+}
+
+/* Force the button to be small and on the right (not full-width) */
+.page-releases .title-bar .btn-neon {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  display: inline-block !important;
+  width: auto !important;
+  padding: .6rem 1rem;
+  box-sizing: border-box;
+}
+
+/* Keep the title visible and centered */
+.page-releases .title-bar h1 {
+  margin: 0 !important;
+  text-align: center;
+  width: 100%;
+  z-index: 1;
+}

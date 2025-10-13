@@ -471,3 +471,71 @@ a.username-mention:hover {
 /* keep mentions consistent */
 a.username-mention { color: #0bbd9c; font-weight: 600; }
 a.username-mention:hover { text-decoration: underline; }
+/* ======================================================
+   Forum — Mobile & Tablet (keeps desktop intact)
+   Scope: .page-forum
+   ====================================================== */
+
+/* ------------ Phones (≤576px) ------------ */
+@media (max-width: 576.98px) {
+  .page-forum .container { padding-left: 14px; padding-right: 14px; }
+
+  /* Titles */
+  .page-forum h1 { font-size: clamp(22px, 7.5vw, 30px); line-height: 1.15; margin-bottom: 10px; text-align: center; }
+  .page-forum h2, .page-forum .section-title { font-size: clamp(18px, 6vw, 22px); margin: 8px 0; }
+
+  /* Thread list cards */
+  .page-forum .thread-card,
+  .page-forum .forum-thread,
+  .page-forum .card.post,
+  .page-forum .card.reply {
+    margin-bottom: 12px;
+    padding: 12px;
+  }
+
+  /* Meta row readability */
+  .page-forum .meta, .page-forum .text-muted { color: #9ec7d3 !important; opacity: .9; font-size: 12px; }
+
+  /* Actions: buttons full width for tap comfort */
+  .page-forum .btn, .page-forum .ap-btn-neon { width: 100%; max-width: 420px; justify-content: center; }
+
+  /* Composer: textarea & emoji row */
+  .page-forum textarea { min-height: 120px; }
+  .page-forum .emoji-toolbar { gap: 8px; }
+
+  /* Replies: one column, tidy indentation for depth 1 */
+  .page-forum .replies { margin-top: 10px; }
+  .page-forum .reply-item { padding: 10px; }
+  .page-forum .reply-item.depth-1 { margin-left: 14px; border-left: 2px solid rgba(22,241,211,0.25); padding-left: 10px; }
+
+  /* Code/quotes/images */
+  .page-forum pre, .page-forum code { white-space: pre-wrap; word-break: break-word; }
+  .page-forum img { max-width: 100%; height: auto; }
+
+  /* Pagination */
+  .page-forum .pagination { gap: 6px; justify-content: center; }
+
+  /* Safe area (iOS) */
+  @supports (padding: max(0px)) {
+    .page-forum .container {
+      padding-left: max(14px, env(safe-area-inset-left));
+      padding-right: max(14px, env(safe-area-inset-right));
+    }
+  }
+}
+
+/* ------------ Small tablets (577–767px) ------------ */
+@media (min-width: 577px) and (max-width: 767.98px) {
+  .page-forum h1 { font-size: clamp(26px, 5.2vw, 34px); text-align: center; }
+  .page-forum .btn, .page-forum .ap-btn-neon { max-width: 520px; margin-left: auto; margin-right: auto; }
+  .page-forum .reply-item.depth-1 { margin-left: 18px; }
+}
+
+/* ------------ Tablets (768–991px) ------------ */
+@media (min-width: 768px) and (max-width: 991.98px) {
+  /* Keep two-column layouts only if you explicitly have grids.
+     Otherwise this block intentionally stays light to avoid desktop shifts. */
+  .page-forum .btn, .page-forum .ap-btn-neon { width: auto; }
+}
+
+/* Desktop remains unchanged */

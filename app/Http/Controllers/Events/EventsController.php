@@ -14,21 +14,19 @@ class EventsController extends Controller
     public function index(Request $request)
     {
         $events = Event::latest()->paginate(6);
-
-        // Track the latest seen event for the blinking badge logic
-        if ($events->count()) {
-            session(['events_last_seen_id' => optional($events->first())->id]);
+    
+        // Mark latest as seen for BOTH logged-in (session) and guests (cookie)
+        $latestId = Event::max('id');
+        if ($latestId) {
+            session(['events_last_seen_id' => $latestId]);
         }
-
-        return view('evenimente.index', compact('events'));
+    
+        // keep session + also set a long-lived cookie (180 days)
+        return response()
+            ->view('evenimente.index', compact('events'))
+            ->withCookie(cookie('events_last_seen_id', (string) $latestId, 60 * 24 * 180));
     }
-
-    public function create()
-    {
-        // TODO: re-enable when policy is in place
-        // $this->authorize('create', Event::class); // optional: add policy later, for now middleware auth is enough
-        return view('evenimente.create');
-    }
+    
 
     public function store(Request $request)
     {

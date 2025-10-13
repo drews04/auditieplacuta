@@ -2,6 +2,10 @@
 
 @section('title', 'Acasă – Auditie Placuta')
 @section('content')
+@section('body_class', 'page-home')
+@push('styles')
+  <link rel="stylesheet" href="{{ asset('assets/css/home.css') }}?v={{ filemtime(public_path('assets/css/home.css')) }}">
+@endpush
 
 <div id="sc-banner" class="sc-banner banner-bg position-relative">
   <div class="container">

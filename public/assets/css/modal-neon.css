@@ -1,0 +1,93 @@
+/* ===== Neon Login Modal (scoped to #loginModal) ===== */
+#loginModal .modal-backdrop,
+.modal-backdrop.show{
+  background: rgba(0,0,0,.72);
+}
+
+#loginModal .modal-dialog{ max-width: 480px; }
+
+#loginModal .modal-content{
+  background: rgba(6,14,18,.94);      /* transparent black */
+  border: none;
+  border-radius: 16px;
+  box-shadow:
+    0 0 0 1px rgba(22,241,211,.06) inset,
+    0 12px 40px rgba(0,0,0,.55),
+    0 0 26px rgba(22,241,211,.18);
+}
+
+#loginModal .modal-header{ border:0; padding-bottom:.25rem; }
+#loginModal .modal-title{
+  color:#e6f1fb; font-weight:800; letter-spacing:.4px; text-transform:uppercase; position:relative;
+}
+#loginModal .modal-title::after{
+  content:""; position:absolute; left:0; bottom:-8px; width:64px; height:3px; border-radius:3px;
+  background: linear-gradient(90deg,#16f1d3,rgba(22,241,211,.1));
+  box-shadow:0 0 10px rgba(22,241,211,.35);
+}
+#loginModal .btn-close{ filter:drop-shadow(0 0 6px rgba(22,241,211,.35)); opacity:.85; }
+#loginModal .btn-close:hover{ opacity:1; }
+
+/* Inputs */
+#loginModal .form-label{ color:#a6d5cf; font-weight:600; }
+#loginModal .form-control{
+  color:#e6f1fb;
+  background: rgba(255,255,255,.04);
+  border: 1px solid rgba(22,241,211,.16);
+  border-radius: 12px;
+}
+#loginModal .form-control::placeholder{ color: rgba(230,241,251,.45); }
+#loginModal .form-control:focus{
+  border-color:#16f1d3;
+  box-shadow: 0 0 0 3px rgba(22,241,211,.18);
+  background: rgba(255,255,255,.05);
+}
+
+/* Links */
+#loginModal a{ color:#aeece3; }
+#loginModal a:hover{ color:#16f1d3; text-decoration:none; }
+
+/* Divider */
+#loginModal hr{ border-color: rgba(22,241,211,.12); opacity:1; }
+
+/* Replace Bootstrap blue with neon (local to modal only) */
+#loginModal .btn-primary{
+  width:100%;
+  background:#16f1d3;
+  color:#002a25;
+  border:0;
+  border-radius:12px;
+  font-weight:800;
+  letter-spacing:.2px;
+  box-shadow:0 0 18px rgba(22,241,211,.35);
+}
+#loginModal .btn-primary:hover{
+  filter:brightness(1.06);
+  box-shadow:0 0 26px rgba(22,241,211,.45);
+}
+#loginModal .btn-primary:active{ transform: translateY(1px); }
+/* Keep neon input bg when browser autofills */
+#loginModal input.form-control:-webkit-autofill,
+#loginModal input.form-control:-webkit-autofill:hover,
+#loginModal input.form-control:-webkit-autofill:focus {
+  -webkit-text-fill-color: #e6f1fb;
+  caret-color: #e6f1fb;
+  /* paint our dark bg over Chrome's white autofill */
+  box-shadow: 0 0 0 1000px rgba(255,255,255,.04) inset, 
+              0 0 0 1px rgba(22,241,211,.16) inset;
+  border-color: rgba(22,241,211,.16);
+  transition: background-color 9999s ease-in-out 0s;
+}
+
+/* Focus state to keep glow */
+#loginModal input.form-control:-webkit-autofill:focus {
+  box-shadow: 0 0 0 1000px rgba(255,255,255,.05) inset,
+              0 0 0 3px rgba(22,241,211,.18);
+  border-color: #16f1d3;
+}
+
+/* Firefox */
+#loginModal input.form-control:-moz-autofill {
+  box-shadow: 0 0 0 1000px rgba(255,255,255,.04) inset !important;
+  -moz-text-fill-color: #e6f1fb !important;
+}

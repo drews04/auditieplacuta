@@ -11,820 +11,284 @@ use Carbon\Carbon;
 use App\Models\Song;
 use App\Models\Vote;
 use App\Models\Winner;
-use App\Models\Tiebreak;
 use App\Models\ContestTheme;
-use App\Models\ThemePool;    // columns: id, name, category
-use App\Services\AwardPoints;
-use App\Models\Poster;
 use App\Models\ContestCycle;
 
 class SongController extends Controller
 {
-    /** ---------- helpers ---------- */
+    /* -----------------------------------------------------------------------
+     | Helpers
+     |-----------------------------------------------------------------------*/
 
-    // Extract a canonical 11-char YouTube video ID from any common URL format
     private function ytId(string $url): ?string
     {
         $url = trim($url);
 
-        if (preg_match('~youtu\.be/([0-9A-Za-z_-]{11})~', $url, $m)) {
-            return $m[1];
-        }
-        if (preg_match('~(?:v=|/embed/|/v/)([0-9A-Za-z_-]{11})~', $url, $m)) {
-            return $m[1];
-        }
-        if (preg_match('~([0-9A-Za-z_-]{11})~', $url, $m)) {
-            return $m[1];
-        }
+        if (preg_match('~youtu\.be/([0-9A-Za-z_-]{11})~', $url, $m)) return $m[1];
+        if (preg_match('~(?:v=|/embed/|/v/)([0-9A-Za-z_-]{11})~', $url, $m)) return $m[1];
+        if (preg_match('~([0-9A-Za-z_-]{11})~', $url, $m)) return $m[1];
+
         return null;
     }
 
-    private function userHasVotedToday(?int $userId): bool
-    {
-        if (!$userId) return false;
-        return Vote::where('user_id', $userId)
-            ->whereDate('vote_date', Carbon::today())
-            ->exists();
-    }
+    /* -----------------------------------------------------------------------
+     | PAGES
+     |-----------------------------------------------------------------------*/
 
-    /**
-     * Return today's songs that are tied for FIRST place (share the max votes).
-     */
-    private function todayTieSongs()
-    {
-        $today = Carbon::today();
-        $max = Song::whereDate('competition_date', $today)->max('votes');
-        if ($max === null) return collect();
-
-        return Song::whereDate('competition_date', $today)
-            ->where('votes', $max)
-            ->orderBy('created_at')
-            ->get(['id','title','user_id','youtube_url','votes','theme_id']);
-    }
-
-    /** ---------- Tiebreak helpers ---------- */
-
-    private function getActiveTiebreakForToday(): ?Tiebreak
-    {
-        $today = Carbon::today();
-        return Tiebreak::whereDate('contest_date', $today)
-            ->where('resolved', false)
-            ->first();
-    }
-
-    private function openTiebreakIfNeeded(): ?Tiebreak
-    {
-        $today = Carbon::today();
-        $now   = Carbon::now();
-
-        if ($now->isWeekend() || $now->lt($today->copy()->setTime(20, 0))) {
-            return null;
-        }
-
-        if ($tb = $this->getActiveTiebreakForToday()) {
-            return $tb;
-        }
-
-        $tieSongs = $this->todayTieSongs();
-        if ($tieSongs->count() < 2) return null;
-
-        $starts = $today->copy()->setTime(20, 0);
-        $ends   = $today->copy()->setTime(20, 30);
-
-        return Tiebreak::create([
-            'contest_date' => $today,
-            'starts_at'    => $starts,
-            'ends_at'      => $ends,
-            'song_ids'     => $tieSongs->pluck('id')->values()->all(),
-            'resolved'     => false,
-        ]);
-    }
-
-    private function resolveTiebreakIfEnded(): ?Winner
-    {
-        $tb = $this->getActiveTiebreakForToday();
-        if (!$tb) return null;
-
-        $now = Carbon::now();
-        if ($now->lt($tb->ends_at)) return null;
-
-        $counts = Vote::select('song_id', DB::raw('COUNT(*) as total'))
-            ->whereIn('song_id', $tb->song_ids)
-            ->whereBetween('created_at', [$tb->starts_at, $tb->ends_at])
-            ->groupBy('song_id')
-            ->orderByDesc('total')
-            ->get();
-
-        $winnerSongId = null;
-        $finalWasTie  = false;
-
-        if ($counts->isNotEmpty()) {
-            $topTotal = $counts->first()->total;
-            $leaders  = $counts->where('total', $topTotal)->pluck('song_id')->values();
-            if ($leaders->count() === 1) {
-                $winnerSongId = $leaders->first();
-            } else {
-                $lastVote = Vote::whereIn('song_id', $leaders)
-                    ->whereBetween('created_at', [$tb->starts_at, $tb->ends_at])
-                    ->orderByDesc('created_at')
-                    ->first();
-                if ($lastVote) {
-                    $winnerSongId = $lastVote->song_id;
-                    $finalWasTie  = true;
-                }
-            }
-        }
-
-        if (!$winnerSongId) {
-            $lastOfDay = Vote::whereIn('song_id', $tb->song_ids)
-                ->where('created_at', '<', $tb->ends_at)
-                ->orderByDesc('created_at')
-                ->first();
-            if ($lastOfDay) {
-                $winnerSongId = $lastOfDay->song_id;
-                $finalWasTie  = true;
-            }
-        }
-
-        if (!$winnerSongId) {
-            $winnerSongId = (int) collect($tb->song_ids)->first();
-            $finalWasTie  = true;
-        }
-
-        $song = Song::find($winnerSongId);
-        if (!$song) {
-            $tb->resolved = true;
-            $tb->save();
-            return null;
-        }
-
-        $today = Carbon::today()->toDateString();
-
-        $winner = Winner::create([
-            'contest_date'          => $today,
-            'user_id'               => $song->user_id,
-            'song_id'               => $song->id,
-            'vote_count'            => (int) Vote::where('song_id', $song->id)
-                                        ->whereDate('vote_date', $today)
-                                        ->count(),
-            'was_tie'               => true,
-            'theme_chosen'          => false,
-            'competition_theme_id'  => $song->theme_id ?? null,
-        ]);
-
-        if (!$song->is_winner) {
-            $song->is_winner = true;
-            $song->save();
-        }
-
-        $tb->resolved = true;
-        $tb->save();
-
-        app(AwardPoints::class)->awardForDate($today);
-
-        return $winner;
-    }
-
-    private function finalizeDailyWinnerIfNeeded(): ?Winner
-    {
-        $today = Carbon::today();
-
-        if (Carbon::now()->isWeekend()) return null;
-        if (Carbon::now()->lt($today->copy()->setTime(20, 0))) return null;
-        if (Winner::whereDate('contest_date', $today)->exists()) return null;
-        if ($this->getActiveTiebreakForToday()) return null;
-
-        $maxVotes = Song::whereDate('competition_date', $today)->max('votes');
-        if ($maxVotes === null) return null;
-
-        $leaders = Song::whereDate('competition_date', $today)
-            ->where('votes', $maxVotes)
-            ->orderBy('created_at')
-            ->get(['id','user_id','theme_id']);
-
-        if ($leaders->count() !== 1) return null;
-
-        $song = $leaders->first();
-
-        $winner = Winner::create([
-            'contest_date'          => $today->toDateString(),
-            'user_id'               => $song->user_id,
-            'song_id'               => $song->id,
-            'vote_count'            => (int) Vote::where('song_id', $song->id)
-                                            ->whereDate('vote_date', $today)
-                                            ->count(),
-            'was_tie'               => false,
-            'theme_chosen'          => false,
-            'competition_theme_id'  => $song->theme_id ?? null,
-        ]);
-
-        if (!$song->is_winner) {
-            $song->is_winner = true;
-            $song->save();
-        }
-
-        app(AwardPoints::class)->awardForDate($today->toDateString());
-
-        return $winner;
-    }
-
-    /** ---------- date helper ---------- */
-
-    private function nextWeekdayContestDate(Carbon $from): Carbon
-    {
-        $d = $from->copy()->startOfDay();
-        do { $d->addDay(); } while (in_array($d->dayOfWeekIso, [6,7])); // Sat/Sun
-        return $d;
-    }
-
-    /** ---------- pages ---------- */
-
-    /**
-     * Main Concurs page.
-     */
     public function showTodaySongs(Request $request)
-{
-    $now = \Carbon\Carbon::now();
+    {
+        $tz  = config('app.timezone', 'Europe/Bucharest');
+        $now = Carbon::now($tz);
 
-    // === Winner strip (last finished round) ===
-    $winnerStripCycle = \App\Models\ContestCycle::where('vote_end_at', '<=', $now)
-        ->orderByDesc('vote_end_at')
-        ->first();
-
-    $winnerStripWinner = null;
-    if ($winnerStripCycle) {
-        $winnerStripWinner = \App\Models\Winner::where('cycle_id', $winnerStripCycle->id)
-            ->with(['user:id,name', 'song:id,title,youtube_url'])
-            ->first();
-    }
-
-    // === CYCLES (current submission / current voting) ===
-    $cycleSubmit = \App\Models\ContestCycle::where('start_at', '<=', $now)
-        ->where('submit_end_at', '>', $now)
-        ->orderByDesc('start_at')
-        ->first();
-
-    $cycleVote = \App\Models\ContestCycle::where('vote_start_at', '<=', $now)
-        ->where('vote_end_at', '>', $now)
-        ->orderByDesc('vote_start_at')
-        ->first();
-
-    // --- GAP FALLBACK: between submit_end_at and vote_start_at (show today's list + timer) ---
-    $gapBetweenPhases = false;
-    if (!$cycleSubmit && !$cycleVote) {
-        $current = \App\Models\ContestCycle::where('start_at','<=',$now)
-            ->where('vote_end_at','>',$now)
-            ->orderByDesc('start_at')
-            ->first();
-
-        if ($current) {
-            // Treat as "current submission context" so theme & songs show,
-            // but lock uploads; we'll flip flags below.
-            $cycleSubmit      = $current;
-            $gapBetweenPhases = true;
-        }
-    }
-
-    /* ---------- ensure submission cycle has a ContestTheme id ---------- */
-    if ($cycleSubmit && empty($cycleSubmit->contest_theme_id)) {
-        $raw  = (string)($cycleSubmit->theme_text ?? '');
-        // If "CSD — Dinamita", keep only the right side ("Dinamita")
-        $name = trim($raw);
-        if (preg_match('/^\s*([^—-]+)\s*[—-]\s*(.+)$/u', $raw, $m)) {
-            $name = trim($m[2] ?? $raw);
-        }
-
-       // Ensure only one theme per contest_date
-$contestDay = optional($cycleSubmit->submit_end_at)->toDateString() ?? now()->toDateString();
-
-$ct = \App\Models\ContestTheme::firstOrCreate(
-    ['contest_date' => $contestDay],
-    [
-        'name'              => ($name !== '' ? $name : 'Tema'),
-        'active'            => true,
-        'chosen_by_user_id' => auth()->id(),
-    ]
-);
-
-        $cycleSubmit->contest_theme_id = $ct->id;
-        $cycleSubmit->save();
-    }
-    /* ------------------------------------------------------------------- */
-
-    // --- fetch the actual themes with likes (for persistence) ---
-    $submitTheme = null;
-    $voteTheme   = null;
-    $authId      = auth()->id();
-
-    if ($cycleSubmit && $cycleSubmit->contest_theme_id) {
-        $submitTheme = \App\Models\ContestTheme::query()
-            ->withCount('likes')
-            ->with(['likes' => fn($q) => $q->where('user_id', $authId ?? 0)])
-            ->find($cycleSubmit->contest_theme_id);
-    }
-
-    if ($cycleVote && $cycleVote->contest_theme_id) {
-        $voteTheme = \App\Models\ContestTheme::query()
-            ->withCount('likes')
-            ->with(['likes' => fn($q) => $q->where('user_id', $authId ?? 0)])
-            ->find($cycleVote->contest_theme_id);
-    }
-    // --------------------------------------------------------------------
-
-    // Songs per cycle
-    $songsSubmit = collect();
-    if ($cycleSubmit) {
-        $songsSubmit = \App\Models\Song::where('cycle_id', $cycleSubmit->id)
-            ->orderBy('id')->get();
-    }
-
-    $songsVote = collect();
-    if ($cycleVote) {
-        $songsVote = \App\Models\Song::where('cycle_id', $cycleVote->id)
-            ->orderBy('id')->get();
-    }
-
-    // Simple flags
-    if ($gapBetweenPhases) {
-        $submissionsOpen = false;   // uploads are closed during the gap
-        $votingOpen      = false;   // voting not yet open
-    } else {
-        $submissionsOpen = (bool) $cycleSubmit;
-        $votingOpen      = (bool) $cycleVote;
-    }
-
-    // When will voting open for the CURRENT context?
-    $votingOpensAt = null;
-    if ($cycleVote) {
-        // already open; keep null
-    } elseif ($cycleSubmit) {
-        $votingOpensAt = $cycleSubmit->vote_start_at ?? $cycleSubmit->submit_end_at;
-        if ($votingOpensAt) {
-            $votingOpensAt = $votingOpensAt->copy();
-        }
-    }
-
-    // Legacy compat
-    $today     = \Carbon\Carbon::today();
-    $isWeekday = !$now->isWeekend();
-
-    // Per-user flags
-    $userHasVotedToday = false;
-    if (\Auth::check() && $cycleVote) {
-        $userHasVotedToday = \App\Models\Vote::where('user_id', \Auth::id())
-            ->where('cycle_id', $cycleVote->id)
-            ->exists();
-    }
-
-    $userHasUploadedToday = false;
-    if (\Auth::check() && $cycleSubmit) {
-        $userHasUploadedToday = \App\Models\Song::where('user_id', \Auth::id())
-            ->where('cycle_id', $cycleSubmit->id)
-            ->exists();
-    }
-
-    // Use vote list during voting, submit list otherwise
-    $songs = $votingOpen ? $songsVote : $songsSubmit;
-
-    // Simple theme object for header (from submission cycle)
-    $theme = null;
-    if ($cycleSubmit) {
-        $theme = (object) [
-            'title'          => $cycleSubmit->theme_text ?? '—',
-            'category_code'  => 'GEN',
-        ];
-    }
-
-    // === WINNER POPUP (only for the winner, within 1h after vote_end_at) ===
-    $showWinnerModal = false;
-    $winnerCycle = null;
-
-    $finished = \App\Models\ContestCycle::query()
-        ->where('vote_end_at', '<=', $now)
-        ->orderByDesc('vote_end_at')
-        ->first();
-
-    if ($finished) {
-        $winner = \App\Models\Winner::where('cycle_id', $finished->id)->first();
-        if ($winner && !$winner->theme_chosen) {
-            $withinHour = $now->between($finished->vote_end_at, $finished->vote_end_at->copy()->addHour());
-            if ($withinHour && \Auth::check() && \Auth::id() === (int) $winner->user_id) {
-                $showWinnerModal = true;
-                $winnerCycle = $finished;
-            }
-        }
-    }
-
-    // === WEEKEND VIEW (read-only) ===
-    $isWeekendView     = (!$submissionsOpen && !$votingOpen) && $now->isWeekend();
-
-    $lastFinishedCycle = null;   // the most recent finished (Friday most likely)
-    $lastSongs         = collect();
-    $lastWinner        = null;
-
-    $upcomingCycle     = null;   // the next scheduled cycle (e.g., Monday)
-
-    if ($isWeekendView) {
-        $lastFinishedCycle = \App\Models\ContestCycle::where('vote_end_at', '<=', $now)
+        /* ---- Winner strip (last finished round) ---- */
+        $winnerStripCycle = ContestCycle::where('vote_end_at', '<=', $now)
             ->orderByDesc('vote_end_at')
             ->first();
 
-        if ($lastFinishedCycle) {
-            $lastSongs  = \App\Models\Song::where('cycle_id', $lastFinishedCycle->id)
-                ->orderBy('id')->get();
-
-            $lastWinner = \App\Models\Winner::where('cycle_id', $lastFinishedCycle->id)
+        $winnerStripWinner = null;
+        if ($winnerStripCycle) {
+            $winnerStripWinner = Winner::where('cycle_id', $winnerStripCycle->id)
+                ->with(['user:id,name', 'song:id,title,youtube_url'])
                 ->first();
         }
 
-        $upcomingCycle = \App\Models\ContestCycle::where('start_at', '>=', $now)
-            ->orderBy('start_at')
+        /* ---- Cycles for current moment ---- */
+        $cycleSubmit = ContestCycle::where('start_at', '<=', $now)
+            ->where('submit_end_at', '>', $now)
+            ->orderByDesc('start_at')
             ->first();
-    }
 
-    // Legacy placeholders still expected by the blade
-    $todayWinner       = null;
-    $showWinnerPopup   = $showWinnerModal;
-    $tomorrowTheme     = null;
-    $dayLocked         = $gapBetweenPhases ? true : false; // lock UI in the gap
-    $uploadForTomorrow = false;
+        $cycleVote = ContestCycle::where('vote_start_at', '<=', $now)
+            ->where('vote_end_at', '>', $now)
+            ->orderByDesc('vote_start_at')
+            ->first();
 
-    return view('concurs', compact(
-        'cycleSubmit', 'cycleVote',
-        'songsSubmit', 'songsVote',
-        'submissionsOpen', 'votingOpen', 'votingOpensAt',
-        'showWinnerModal', 'winnerCycle',
-        // weekend view extras:
-        'isWeekendView', 'lastFinishedCycle', 'lastSongs', 'lastWinner', 'upcomingCycle',
-        // legacy compat vars:
-        'songs', 'theme', 'userHasVotedToday', 'userHasUploadedToday',
-        'isWeekday', 'todayWinner', 'showWinnerPopup', 'tomorrowTheme',
-        'dayLocked', 'uploadForTomorrow',
-        // winner strip
-        'winnerStripCycle', 'winnerStripWinner',
-        // themes with likes so counts persist
-        'submitTheme', 'voteTheme'
-    ));
-}
+        $gapBetweenPhases = false;
+        if (!$cycleSubmit && !$cycleVote) {
+            $current = ContestCycle::where('start_at', '<=', $now)
+                ->where('vote_end_at', '>', $now)
+                ->orderByDesc('start_at')
+                ->first();
 
-    
-    
-    /**
-     * Versus page.
-     */
-    public function versus(Request $request)
-    {
-        $today = Carbon::today();
-        $now   = Carbon::now();
-
-        $tb = $this->getActiveTiebreakForToday();
-
-        if (!$tb || !$now->between($tb->starts_at, $tb->ends_at)) {
-            if ($tb && $now->greaterThanOrEqualTo($tb->ends_at) && !$tb->resolved) {
-                $this->resolveTiebreakIfEnded();
+            if ($current) {
+                $cycleSubmit      = $current;
+                $gapBetweenPhases = true;
             }
-            return redirect()->route('concurs');
         }
 
-        $songs     = Song::whereIn('id', (array) $tb->song_ids)->with('user:id,name')->get();
-        $endsAtIso = $tb->ends_at?->toIso8601String();
+        /* ---- Ensure theme model ---- */
+        if ($cycleSubmit && empty($cycleSubmit->contest_theme_id)) {
+            $raw  = (string)($cycleSubmit->theme_text ?? '');
+            $name = trim($raw);
+            if (preg_match('/^\s*([^—-]+)\s*[—-]\s*(.+)$/u', $raw, $m)) {
+                $name = trim($m[2] ?? $raw);
+            }
 
-        return view('concurs_versus', compact('songs', 'endsAtIso'));
-    }
+            $contestDay = optional($cycleSubmit->submit_end_at)->toDateString() ?? $now->toDateString();
+            $ct = ContestTheme::firstOrCreate(
+                ['contest_date' => $contestDay],
+                [
+                    'name'              => ($name !== '' ? $name : 'Tema'),
+                    'active'            => true,
+                    'chosen_by_user_id' => auth()->id(),
+                ]
+            );
 
-    /** ---------- actions ---------- */
-
-    /**
-     * Upload a YouTube song (1 per user/day).
-     * Requires TODAY to have a ContestTheme row.
-     */
-    public function uploadSong(Request $request)
-{
-    $request->validate([
-        'youtube_url' => 'required|url',
-    ]);
-
-    $user = \Auth::user();
-    $now  = \Carbon\Carbon::now();
-
-    // Helper to respond JSON vs Redirect (toast)
-    $wantsJson = $request->ajax() || $request->wantsJson();
-
-    // Weekdays only
-    if ($now->isWeekend()) {
-        $msg = 'Nu se ține concurs în weekend.';
-        return $wantsJson
-            ? response()->json(['message' => $msg], 422)
-            : redirect()->back()->with('error', $msg);
-    }
-
-    // Find the CURRENT submission cycle
-    $cycleSubmit = \App\Models\ContestCycle::where('start_at', '<=', $now)
-        ->where('submit_end_at', '>', $now)
-        ->orderByDesc('start_at')
-        ->first();
-
-    if (!$cycleSubmit) {
-        $msg = 'Înscrierile nu sunt deschise acum.';
-        return $wantsJson
-            ? response()->json(['message' => $msg], 422)
-            : redirect()->back()->with('error', $msg);
-    }
-
-    // One submission per user per CYCLE
-    $already = \App\Models\Song::where('user_id', $user->id)
-        ->where('cycle_id', $cycleSubmit->id)
-        ->exists();
-    if ($already) {
-        $msg = 'Ai încărcat deja o melodie.';
-        return $wantsJson
-            ? response()->json(['message' => $msg], 403)
-            : redirect()->back()->with('error', $msg);
-    }
-
-    // Normalize URL → YouTube ID
-    $videoId = $this->ytId($request->youtube_url);
-    if (!$videoId) {
-        $msg = 'Link YouTube invalid.';
-        return $wantsJson
-            ? response()->json(['message' => $msg], 422)
-            : redirect()->back()->with('error', $msg);
-    }
-
-    // Block re-uploading a past WINNER this calendar year (by YouTube ID)
-    $yearStart = $now->copy()->startOfYear()->toDateString();
-    $yearEnd   = $now->copy()->endOfYear()->toDateString();
-    $wonThisYear = \App\Models\Winner::query()
-        ->whereBetween('contest_date', [$yearStart, $yearEnd])
-        ->whereHas('song', function ($q) use ($videoId) {
-            $q->where('youtube_id', $videoId);
-        })
-        ->exists();
-    if ($wonThisYear) {
-        $msg = 'Această melodie a câștigat deja anul acesta. Te rog alege altă piesă.';
-        return $wantsJson
-            ? response()->json(['message' => $msg], 409)
-            : redirect()->back()->with('error', $msg);
-    }
-
-    // Block duplicate within the SAME cycle (by YouTube ID)
-    $dupe = \App\Models\Song::where('cycle_id', $cycleSubmit->id)
-        ->get(['youtube_url', 'youtube_id'])
-        ->contains(function ($s) use ($videoId) {
-            // prefer direct youtube_id match; fallback parse url if old rows lack youtube_id
-            if (!empty($s->youtube_id)) return $s->youtube_id === $videoId;
-            return $this->ytId($s->youtube_url) === $videoId;
-        });
-    if ($dupe) {
-        $msg = 'Această melodie este deja înscrisă în această rundă.';
-        return $wantsJson
-            ? response()->json(['message' => $msg], 409)
-            : redirect()->back()->with('error', $msg);
-    }
-
-    // Best-effort title (fallback kept)
-    $title = 'Melodie YouTube';
-    try {
-        $resp = \Illuminate\Support\Facades\Http::timeout(6)->get('https://www.youtube.com/oembed', [
-            'url'    => $request->youtube_url,
-            'format' => 'json',
-        ]);
-        if ($resp->ok() && isset($resp['title'])) {
-            $title = (string) $resp['title'];
-        }
-    } catch (\Throwable $e) {}
-
-    // Save inside this CYCLE
-    \App\Models\Song::create([
-        'user_id'          => $user->id,
-        'youtube_url'      => $request->youtube_url,
-        'youtube_id'       => $videoId,
-        'title'            => $title,
-        'votes'            => 0,
-        'competition_date' => $now->toDateString(),
-        'theme_id'         => null,
-        'cycle_id'         => $cycleSubmit->id,
-    ]);
-
-    $ok = 'Melodie încărcată cu succes.';
-    return $wantsJson
-        ? response()->json(['message' => $ok])
-        : redirect()->back()->with('status', $ok);
-}
-
-
-
-    /**
-     * Return partial list of today's songs (for AJAX refresh).
-     */
-    public function todayList()
-{
-    $now = \Carbon\Carbon::now();
-
-    // Current submission cycle only (the list we refresh after uploads)
-    $cycleSubmit = \App\Models\ContestCycle::where('start_at', '<=', $now)
-        ->where('submit_end_at', '>', $now)
-        ->orderByDesc('start_at')
-        ->first();
-
-    // If no submission cycle, return empty list (no uploads should be shown)
-    if (!$cycleSubmit) {
-        $songs = collect();
-        $userHasVotedToday = true; // ensures no vote buttons
-        return view('partials.songs_list', [
-            'songs' => $songs,
-            'userHasVotedToday' => $userHasVotedToday,
-            'showVoteButtons' => false,
-        ]);
-    }
-
-    // Pull ONLY songs from this submission cycle
-    $songs = \App\Models\Song::where('cycle_id', $cycleSubmit->id)
-        ->orderBy('id')
-        ->get();
-
-    // During submissions, vote buttons must be hidden
-    $userHasVotedToday = true;
-
-    return view('partials.songs_list', [
-        'songs' => $songs,
-        'userHasVotedToday' => $userHasVotedToday,
-        'showVoteButtons' => false,
-    ]);
-}
-
-    /**
-     * Voting for dual-cycle system.
-     */
-    public function voteForSong(Request $request)
-{
-    $request->validate([
-        'song_id' => 'required|integer|exists:songs,id'
-    ]);
-
-    $user = Auth::user();
-    $now  = Carbon::now();
-    $song = Song::findOrFail((int)$request->input('song_id'));
-
-    // -------- Weekend guard (unless test mode admin) --------
-    if (!(config('ap.test_mode') && $user->is_admin)) {
-        if ($now->isWeekend()) {
-            return response()->json(['message' => 'Nu se votează în weekend.'], 422);
-        }
-    }
-
-    // -------- Tiebreak window? (20:00–20:30) --------
-    $tb = $this->getActiveTiebreakForToday();
-    $activeTiebreak = $tb && $now->between($tb->starts_at, $tb->ends_at);
-
-    if ($activeTiebreak) {
-        // must vote only among Versus songs
-        if (!in_array($song->id, (array)$tb->song_ids, true)) {
-            return response()->json(['message' => 'În Versus poți vota doar melodiile aflate la egalitate.'], 422);
+            $cycleSubmit->contest_theme_id = $ct->id;
+            $cycleSubmit->save();
         }
 
-        // one vote per user per tiebreak (unless test mode admin)
-        $alreadyVotedThisTiebreak = (config('ap.test_mode') && $user->is_admin) ? false :
-            Vote::where('user_id', $user->id)->where('tiebreak_id', $tb->id)->exists();
+        /* ---- Themes with likes ---- */
+        $authId      = auth()->id();
+        $submitTheme = $cycleSubmit && $cycleSubmit->contest_theme_id
+            ? ContestTheme::query()
+                ->withCount('likes')
+                ->with(['likes' => fn($q) => $q->where('user_id', $authId ?? 0)])
+                ->find($cycleSubmit->contest_theme_id)
+            : null;
 
-        if ($alreadyVotedThisTiebreak) {
-            return response()->json(['message' => 'Ai votat deja în tiebreak.'], 403);
+        $voteTheme = $cycleVote && $cycleVote->contest_theme_id
+            ? ContestTheme::query()
+                ->withCount('likes')
+                ->with(['likes' => fn($q) => $q->where('user_id', $authId ?? 0)])
+                ->find($cycleVote->contest_theme_id)
+            : null;
+
+        /* ---- Song lists ---- */
+        $songsSubmit = $cycleSubmit
+            ? Song::where('cycle_id', $cycleSubmit->id)->orderBy('id')->get()
+            : collect();
+
+        $songsVote = $cycleVote
+            ? Song::where('cycle_id', $cycleVote->id)->orderBy('id')->get()
+            : collect();
+
+        /* ---- Flags for blades ---- */
+        if ($gapBetweenPhases) {
+            $submissionsOpen = false;
+            $votingOpen      = false;
+        } else {
+            $submissionsOpen = (bool) $cycleSubmit;
+            $votingOpen      = (bool) $cycleVote;
         }
 
-        // self-vote blocked (unless test mode admin)
-        if (!(config('ap.test_mode') && $user->is_admin) && (int)$song->user_id === (int)$user->id) {
-            return response()->json(['message' => 'Nu poți vota propria melodie.'], 403);
+        $votingOpensAt = null;
+        if (!$cycleVote && $cycleSubmit) {
+            $votingOpensAt = $cycleSubmit->vote_start_at ?? $cycleSubmit->submit_end_at;
+            if ($votingOpensAt) $votingOpensAt = $votingOpensAt->copy();
         }
 
-        Vote::create([
-            'user_id'     => $user->id,
-            'song_id'     => $song->id,
-            'vote_date'   => Carbon::today(),
-            'tiebreak_id' => $tb->id,
-            // cycle_id left NULL in Versus path (we key by tiebreak_id)
-        ]);
-
-        $song->increment('votes');
-        return response()->json(['message' => 'Vot înregistrat pentru Versus.']);
-    }
-
-    // -------- Normal voting window (00:00–20:00) --------
-    // After 20:00 it’s closed (unless test mode admin)
-    if (!(config('ap.test_mode') && $user->is_admin)) {
-        if ($now->gte($now->copy()->startOfDay()->setTime(20, 0))) {
-            return response()->json(['message' => 'Votarea pentru azi s-a închis la 20:00.'], 422);
-        }
-    }
-
-    // must have an OPEN voting cycle
-    $cycleVote = \App\Models\ContestCycle::where('vote_start_at', '<=', $now)
-        ->where('vote_end_at', '>', $now)
-        ->orderByDesc('vote_start_at')
-        ->first();
-
-    if (!$cycleVote) {
-        return response()->json(['message' => 'Votarea nu este deschisă.'], 403);
-    }
-
-    // song must belong to this voting cycle
-    if ((int)$song->cycle_id !== (int)$cycleVote->id) {
-        return response()->json(['message' => 'Nu poți vota în altă rundă.'], 403);
-    }
-
-    // block self-vote (unless test mode admin)
-    if (!(config('ap.test_mode') && $user->is_admin) && (int)$song->user_id === (int)$user->id) {
-        return response()->json(['message' => 'Nu poți vota propria melodie.'], 403);
-    }
-
-    // one vote per user per cycle (unless test mode admin)
-    $alreadyVoted = (config('ap.test_mode') && $user->is_admin) ? false :
-        Vote::where('user_id', $user->id)->where('cycle_id', $cycleVote->id)->exists();
-
-    if ($alreadyVoted) {
-        return response()->json(['message' => 'Ai votat deja în această rundă.'], 403);
-    }
-
-    Vote::create([
-        'user_id'   => $user->id,
-        'song_id'   => $song->id,
-        'cycle_id'  => $cycleVote->id,
-        'vote_date' => $now->toDateString(),
-    ]);
-
-    $song->increment('votes');
-    return response()->json(['message' => 'Vot înregistrat cu succes.']);
-}
-
-
-    /**
-     * Legacy voting method (kept for backward compatibility).
-     */
-    public function voteForSongLegacy($id)
-    {
-        // Legacy GET/URL-style voting endpoint -> delegate to unified logic
-        $req = request();
-        $req->merge(['song_id' => (int) $id]);
-        return $this->voteForSong($req);
-    }
-
-    /** ---------- Versus fallback (alt route variant) ---------- */
-
-    public function showVersus()
-    {
-        $now = Carbon::now();
-        $tb  = $this->getActiveTiebreakForToday();
-
-        if (!$tb || !$now->between($tb->starts_at, $tb->ends_at)) {
-            return redirect()->route('concurs')
-                ->with('message', 'Nu există tiebreak activ acum.');
+        /* ---- Per-user flags ---- */
+        $userHasVotedToday = false;
+        if (Auth::check() && $cycleVote) {
+            $userHasVotedToday = Vote::where('user_id', Auth::id())
+                ->where('cycle_id', $cycleVote->id)
+                ->exists();
         }
 
-        $songs     = Song::whereIn('id', (array) $tb->song_ids)->get();
-        $endsAtIso = optional($tb->ends_at)->toIso8601String();
+        $userHasUploadedToday = false;
+        if (Auth::check() && $cycleSubmit) {
+            $userHasUploadedToday = Song::where('user_id', Auth::id())
+                ->where('cycle_id', $cycleSubmit->id)
+                ->exists();
+        }
 
-        return view('concurs_versus', [
-            'songs'     => $songs,
-            'tiebreak'  => $tb,
-            'endsAtIso' => $endsAtIso,
-        ]);
+        $songs = $votingOpen ? $songsVote : $songsSubmit;
+
+        $theme = null;
+        if ($cycleSubmit) {
+            $theme = (object)[
+                'title'         => $cycleSubmit->theme_text ?? '—',
+                'category_code' => 'GEN',
+            ];
+        }
+
+        /* ---- Winner modal visibility ---- */
+        $finished = ContestCycle::where('vote_end_at', '<=', $now)
+            ->orderByDesc('vote_end_at')
+            ->first();
+
+        $todayWinner     = null;
+        $showWinnerModal = false;
+        $showWinnerPopup = false;
+        $tomorrowTheme   = null;
+
+        if ($finished) {
+            $persisted = Winner::where('cycle_id', $finished->id)->first();
+
+            if ($persisted) {
+                $todayWinner = Song::with('user:id,name')->find($persisted->song_id);
+            } else {
+                $row = DB::table('votes as v')
+                    ->join('songs as s', 's.id', '=', 'v.song_id')
+                    ->where('s.cycle_id', $finished->id)
+                    ->selectRaw('s.id as song_id, COUNT(*) as vote_count, MIN(v.created_at) as first_vote_at')
+                    ->groupBy('s.id')
+                    ->orderByDesc('vote_count')
+                    ->orderBy('first_vote_at')
+                    ->limit(1)
+                    ->first();
+
+                if ($row) {
+                    $todayWinner = Song::with('user:id,name')->find($row->song_id);
+                }
+            }
+
+            $tomorrowMidnight = $now->copy()->addDay()->startOfDay();
+            $tomorrowCycle = ContestCycle::where('vote_start_at', $tomorrowMidnight)->first();
+            $tomorrowPicked = (bool)($tomorrowCycle && (
+                !empty($tomorrowCycle->contest_theme_id) || !empty($tomorrowCycle->theme_text)
+            ));
+
+            $showWindow = $now->between(
+                $finished->vote_end_at ?? $now->copy()->setTime(20, 0, 0),
+                ($finished->vote_end_at ?? $now->copy()->setTime(20, 0, 0))->copy()->addHour()
+            );
+
+            $isWinner = auth()->check() && $todayWinner && ((int)auth()->id() === (int)$todayWinner->user_id);
+            $showWinnerModal = $todayWinner && $isWinner && $showWindow && !$tomorrowPicked;
+            $showWinnerPopup = $showWinnerModal;
+
+            $tomorrowTheme = $tomorrowCycle?->theme_text;
+        }
+
+        $dayLocked         = $gapBetweenPhases ? true : false;
+        $uploadForTomorrow = false;
+
+        return view('concurs', compact(
+            'cycleSubmit','cycleVote',
+            'songsSubmit','songsVote',
+            'submissionsOpen','votingOpen','votingOpensAt',
+            'showWinnerModal','showWinnerPopup','winnerStripCycle','winnerStripWinner',
+            'songs','theme','userHasVotedToday','userHasUploadedToday',
+            'todayWinner','tomorrowTheme','dayLocked','uploadForTomorrow',
+            'submitTheme','voteTheme'
+        ));
     }
+
     public function uploadPage(Request $request)
     {
-        $now = \Carbon\Carbon::now();
+        $tz  = config('app.timezone', 'Europe/Bucharest');
+        $now = Carbon::now($tz);
     
-        // OPEN submission cycle (page renders read-only if none)
-        $cycleSubmit = \App\Models\ContestCycle::where('start_at', '<=', $now)
+        $cycleSubmit = ContestCycle::where('start_at', '<=', $now)
             ->where('submit_end_at', '>', $now)
             ->orderByDesc('start_at')
             ->first();
     
-        $songsSubmit            = collect();
-        $submitTheme            = null;
-        $submissionsOpen        = (bool) $cycleSubmit;
-        $userHasUploadedToday   = false;
-        $votingOpensAt          = null;
+        $songsSubmit          = collect();
+        $submitTheme          = null;
+        $submissionsOpen      = (bool) $cycleSubmit;
+        $userHasUploadedToday = false;
+        $votingOpensAt        = null;
+    
+        if (!$cycleSubmit) {
+            $cooldownCycle = ContestCycle::where('start_at', '<=', $now)
+                ->where('vote_start_at', '>', $now)
+                ->orderByDesc('start_at')
+                ->first();
+    
+            if ($cooldownCycle && $cooldownCycle->submit_end_at
+                && $now->between($cooldownCycle->submit_end_at, $cooldownCycle->vote_start_at)) {
+                $cycleSubmit     = $cooldownCycle;
+                $submissionsOpen = false;
+            }
+        }
+    
+        $preSubmit          = false;
+        $submissionsOpensAt = null;
+    
+        if (!$cycleSubmit) {
+            $nextCycle = ContestCycle::where('start_at', '>', $now)
+                ->orderBy('start_at')
+                ->first();
+    
+            if ($nextCycle) {
+                $cycleSubmit        = $nextCycle;
+                $submissionsOpen    = false;
+                $preSubmit          = true;
+                $submissionsOpensAt = $nextCycle->start_at;
+            }
+        }
     
         if ($cycleSubmit) {
-            // songs in this submission cycle
-            $songsSubmit = \App\Models\Song::where('cycle_id', $cycleSubmit->id)
-                ->orderBy('id')->get();
+            if (!$preSubmit) {
+                $songsSubmit = Song::where('cycle_id', $cycleSubmit->id)->orderBy('id')->get();
+            }
     
-            // per-user: already uploaded?
-            if (\Auth::check()) {
-                $userHasUploadedToday = \App\Models\Song::where('user_id', \Auth::id())
+            if (Auth::check() && !$preSubmit) {
+                $userHasUploadedToday = Song::where('user_id', Auth::id())
                     ->where('cycle_id', $cycleSubmit->id)
                     ->exists();
             }
     
-            // theme + likes (for header pill)
             if ($cycleSubmit->contest_theme_id) {
-                $submitTheme = \App\Models\ContestTheme::query()
+                $submitTheme = ContestTheme::query()
                     ->withCount('likes')
-                    ->with(['likes' => fn($q) => $q->where('user_id', \Auth::id() ?? 0)])
+                    ->with(['likes' => fn($q) => $q->where('user_id', Auth::id() ?? 0)])
                     ->find($cycleSubmit->contest_theme_id);
             }
     
-            // when voting will open for THIS cycle (for hint text)
             $votingOpensAt = $cycleSubmit->vote_start_at ?? $cycleSubmit->submit_end_at;
         }
     
@@ -834,55 +298,309 @@ $ct = \App\Models\ContestTheme::firstOrCreate(
             'submitTheme',
             'submissionsOpen',
             'userHasUploadedToday',
-            'votingOpensAt'
+            'votingOpensAt',
+            'preSubmit',
+            'submissionsOpensAt'
         ));
     }
     
-public function votePage(Request $request)
-{
-    $now = \Carbon\Carbon::now();
+    
+    public function votePage(Request $request)
+    {
+        $tz  = config('app.timezone', 'Europe/Bucharest');
+        $now = now($tz);
 
-    // Current OPEN voting cycle (no redirects; page renders read-only if none)
-    $cycleVote = \App\Models\ContestCycle::where('vote_start_at', '<=', $now)
-        ->where('vote_end_at', '>', $now)
-        ->orderByDesc('vote_start_at')
-        ->first();
+        $cycleVote         = null;
+        $songsVote         = collect();
+        $votingOpen        = false;
+        $preVote           = false;
+        $voteOpensAt       = null;
+        $voteTheme         = null;
+        $userHasVotedToday = false;
 
-    $songsVote          = collect();
-    $voteTheme          = null;
-    $votingOpen         = (bool) $cycleVote;
-    $userHasVotedToday  = false;
+        $todayStart = $now->copy()->startOfDay();
+        $today2000  = $todayStart->copy()->setTime(20, 0, 0);
+        $endOfDay   = $now->copy()->endOfDay();
 
-    if ($cycleVote) {
-        // Songs in this voting cycle
-        $songsVote = \App\Models\Song::where('cycle_id', $cycleVote->id)
-            ->orderBy('id')->get();
+        if ($now->between($today2000, $endOfDay)) {
+            $midnightTomorrow = $now->copy()->addDay()->startOfDay();
 
-        // Per-user flag (hide buttons when already voted)
-        if (\Auth::check()) {
-            $userHasVotedToday = \App\Models\Vote::where('user_id', \Auth::id())
+            $previewCycle = ContestCycle::query()
+                ->where('vote_start_at', '=', $midnightTomorrow)
+                ->latest('id')
+                ->first();
+
+            if (!$previewCycle) {
+                $previewCycle = ContestCycle::query()
+                    ->whereBetween('submit_end_at', [
+                        $today2000->copy()->subMinutes(15),
+                        $today2000->copy()->addMinutes(15),
+                    ])
+                    ->latest('id')
+                    ->first();
+            }
+
+            if ($previewCycle) {
+                $cycleVote   = $previewCycle;
+                $songsVote   = $previewCycle->songs()->with(['user:id,name'])->orderBy('id')->get();
+                $votingOpen  = false;
+                $preVote     = true;
+                $voteOpensAt = $previewCycle->vote_start_at;
+            }
+        }
+
+        if (!$cycleVote) {
+            $openCycle = ContestCycle::query()
+                ->where('vote_start_at', '<=', $now)
+                ->where('vote_end_at',   '>',  $now)
+                ->latest('id')
+                ->first();
+
+            if ($openCycle) {
+                $cycleVote   = $openCycle;
+                $songsVote   = $openCycle->songs()->with(['user:id,name'])->orderBy('id')->get();
+                $votingOpen  = true;
+                $preVote     = false;
+                $voteOpensAt = $openCycle->vote_start_at;
+            }
+        }
+
+        if ($cycleVote && method_exists($cycleVote, 'contestTheme')) {
+            $voteTheme = $cycleVote->contestTheme()->withCount('likes')->first();
+        }
+
+        if ($cycleVote && auth()->check()) {
+            $userHasVotedToday = Vote::query()
+                ->where('user_id', auth()->id())
                 ->where('cycle_id', $cycleVote->id)
                 ->exists();
         }
 
-        // Theme + likes (to keep the same header pills/like counts)
-        if ($cycleVote->contest_theme_id) {
-            $voteTheme = \App\Models\ContestTheme::query()
-                ->withCount('likes')
-                ->with(['likes' => fn($q) => $q->where('user_id', \Auth::id() ?? 0)])
-                ->find($cycleVote->contest_theme_id);
-        }
+        return view('concurs.vote', [
+            'cycleVote'         => $cycleVote,
+            'songsVote'         => $songsVote,
+            'votingOpen'        => $votingOpen,
+            'preVote'           => $preVote,
+            'voteOpensAt'       => $voteOpensAt,
+            'voteTheme'         => $voteTheme,
+            'userHasVotedToday' => $userHasVotedToday,
+        ]);
     }
 
-    return view('concurs.vote', compact(
-        'cycleVote',
-        'songsVote',
-        'voteTheme',
-        'votingOpen',
-        'userHasVotedToday'
-    ));
-}
+    public function todayList(Request $request)
+    {
+        $tz  = config('app.timezone', 'Europe/Bucharest');
+        $now = Carbon::now($tz);
 
+        $cycleSubmit = ContestCycle::where('start_at', '<=', $now)
+            ->where('submit_end_at', '>', $now)
+            ->orderByDesc('start_at')
+            ->first();
 
+        if (!$cycleSubmit) {
+            return view('partials.songs_list', [
+                'songs'               => collect(),
+                'userHasVotedToday'   => true,
+                'showVoteButtons'     => false,
+                'hideDisabledButtons' => true,
+            ]);
+        }
 
+        $songs = Song::where('cycle_id', $cycleSubmit->id)->orderBy('id')->get();
+
+        return view('partials.songs_list', [
+            'songs'               => $songs,
+            'userHasVotedToday'   => true,
+            'showVoteButtons'     => false,
+            'hideDisabledButtons' => true,
+        ]);
+    }
+
+    /* -----------------------------------------------------------------------
+     | ACTIONS
+     |-----------------------------------------------------------------------*/
+
+    public function uploadSong(Request $request)
+    {
+        $request->validate([
+            'youtube_url' => 'required|url',
+        ]);
+
+        $user = Auth::user();
+        $tz   = config('app.timezone', 'Europe/Bucharest');
+        $now  = Carbon::now($tz);
+
+        $wantsJson = $request->ajax() || $request->wantsJson();
+
+        // ⛔️ removed weekend block
+
+        $cycleSubmit = ContestCycle::where('start_at', '<=', $now)
+            ->where('submit_end_at', '>', $now)
+            ->orderByDesc('start_at')
+            ->first();
+
+        if (!$cycleSubmit) {
+            $msg = 'Înscrierile nu sunt deschise acum.';
+            return $wantsJson
+                ? response()->json(['message' => $msg], 422)
+                : redirect()->back()->with('error', $msg);
+        }
+
+        $already = Song::where('user_id', $user->id)
+            ->where('cycle_id', $cycleSubmit->id)
+            ->exists();
+        if ($already) {
+            $msg = 'Ai încărcat deja o melodie.';
+            return $wantsJson
+                ? response()->json(['message' => $msg], 403)
+                : redirect()->back()->with('error', $msg);
+        }
+
+        $videoId = $this->ytId($request->youtube_url);
+        if (!$videoId) {
+            $msg = 'Link YouTube invalid.';
+            return $wantsJson
+                ? response()->json(['message' => $msg], 422)
+                : redirect()->back()->with('error', $msg);
+        }
+
+        $yearStart = $now->copy()->startOfYear()->toDateString();
+        $yearEnd   = $now->copy()->endOfYear()->toDateString();
+        $wonThisYear = Winner::query()
+            ->whereBetween('contest_date', [$yearStart, $yearEnd])
+            ->whereHas('song', function ($q) use ($videoId) {
+                $q->where('youtube_id', $videoId);
+            })
+            ->exists();
+        if ($wonThisYear) {
+            $msg = 'Această melodie a câștigat deja anul acesta. Te rog alege altă piesă.';
+            return $wantsJson
+                ? response()->json(['message' => $msg], 409)
+                : redirect()->back()->with('error', $msg);
+        }
+
+        $dupe = Song::where('cycle_id', $cycleSubmit->id)
+            ->get(['youtube_url', 'youtube_id'])
+            ->contains(function ($s) use ($videoId) {
+                if (!empty($s->youtube_id)) return $s->youtube_id === $videoId;
+                return $this->ytId($s->youtube_url) === $videoId;
+            });
+        if ($dupe) {
+            $msg = 'Această melodie este deja înscrisă în această rundă.';
+            return $wantsJson
+                ? response()->json(['message' => $msg], 409)
+                : redirect()->back()->with('error', $msg);
+        }
+
+        $title = 'Melodie YouTube';
+        try {
+            $resp = Http::timeout(6)->get('https://www.youtube.com/oembed', [
+                'url'    => $request->youtube_url,
+                'format' => 'json',
+            ]);
+            if ($resp->ok() && isset($resp['title'])) {
+                $title = (string)$resp['title'];
+            }
+        } catch (\Throwable $e) {}
+
+        Song::create([
+            'user_id'          => $user->id,
+            'youtube_url'      => $request->youtube_url,
+            'youtube_id'       => $videoId,
+            'title'            => $title,
+            'votes'            => 0,
+            'competition_date' => $now->toDateString(),
+            'theme_id'         => null,
+            'cycle_id'         => $cycleSubmit->id,
+        ]);
+
+        $ok = 'Melodie încărcată cu succes.';
+        return $wantsJson
+            ? response()->json(['message' => $ok])
+            : redirect()->back()->with('status', $ok);
+    }
+
+    public function voteForSong(Request $request)
+    {
+        $request->validate([
+            'song_id'  => ['required','integer'],
+            'cycle_id' => ['nullable','integer'],
+        ]);
+
+        $user = $request->user();
+        $tz   = config('app.timezone', 'Europe/Bucharest');
+        $now  = now($tz);
+
+        $song = Song::query()->findOrFail($request->integer('song_id'));
+
+        $cycleId = $request->integer('cycle_id')
+            ?: ($song->cycle_id ?? null);
+
+        if (!$cycleId) {
+            $cycleId = DB::table('contest_cycles')
+                ->where('vote_start_at', '<=', $now)
+                ->where('vote_end_at',   '>',  $now)
+                ->orderByDesc('id')
+                ->value('id');
+        }
+
+        if (!$cycleId) {
+            return response()->json(['message' => 'Runda de vot nu este deschisă acum.'], 422);
+        }
+
+        $cycle = ContestCycle::query()
+            ->select(['id','vote_start_at','vote_end_at'])
+            ->find($cycleId);
+
+        if (!$cycle) {
+            return response()->json(['message' => 'Runda de vot nu a fost găsită.'], 422);
+        }
+
+        $open = $cycle->vote_start_at && $cycle->vote_end_at
+             && $now->between($cycle->vote_start_at, $cycle->vote_end_at);
+        if (!$open) {
+            return response()->json(['message' => 'Votul pentru această melodie nu este deschis.'], 422);
+        }
+
+        if ((int)$song->user_id === (int)$user->id) {
+            return response()->json(['message' => 'Nu poți vota propria melodie.'], 422);
+        }
+
+        $already = Vote::query()
+            ->where('user_id', $user->id)
+            ->where('cycle_id', $cycle->id)
+            ->exists();
+        if ($already) {
+            return response()->json(['message' => 'Ai votat deja în această rundă.'], 422);
+        }
+
+        try {
+            $voteDate = optional($cycle->vote_start_at)->toDateString()
+                     ?: now($tz)->toDateString();
+
+            DB::table('votes')->insert([
+                'user_id'    => $user->id,
+                'song_id'    => $song->id,
+                'cycle_id'   => $cycle->id,
+                'vote_date'  => $voteDate,
+                'created_at' => now($tz),
+                'updated_at' => now($tz),
+            ]);
+        } catch (\Throwable $e) {
+            $msg = strtolower($e->getMessage());
+            if (str_contains($msg, 'unique') || str_contains($msg, 'duplicate')) {
+                return response()->json(['message' => 'Ai votat deja în această rundă.'], 422);
+            }
+            throw $e;
+        }
+
+        return response()->json(['ok' => true, 'message' => 'Vot înregistrat.']);
+    }
+
+    public function voteForSongLegacy($id)
+    {
+        $req = request();
+        $req->merge(['song_id' => (int)$id]);
+        return $this->voteForSong($req);
+    }
 }

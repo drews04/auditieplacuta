@@ -8144,3 +8144,21 @@ body.guest-body {
 .menu-area .main-menu > li:nth-child(4) > .sub-menu > li ul li a {
   display: block; text-align: center; padding: 4px 0;
 }
+/* Mega menu: center lists under their titles (definitive) */
+.gamfi_mega_menu .mega_menu_content .menu_column{
+  padding-left: 0 !important;
+  text-align: center !important;
+}
+.gamfi_mega_menu .mega_menu_content .menu_column h2{
+  margin: 0 auto 10px !important;
+}
+.gamfi_mega_menu .mega_menu_content .menu_column > ul{
+  width: max-content !important;    /* shrink to content */
+  margin: 0 auto !important;        /* center in column */
+  padding-left: 0 !important;       /* kill left indent */
+  list-style: none !important;
+  text-align: left !important;      /* keep items left-aligned */
+}
+.gamfi_mega_menu .mega_menu_content .menu_column > ul > li > a{
+  display: inline-block !important; /* stable width for centering */
+}

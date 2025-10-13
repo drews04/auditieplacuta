@@ -80,22 +80,23 @@
       </div>
     </div>
 
-    <!-- Replies (FLAT, paginated) -->
-    @if($repliesFlat->count() > 0)
+    {{-- Replies (THREADED, paginated by top-level) --}}
+    @if($topPosts->count() > 0)
       <h3 id="replies" class="text-light mb-3">
-        Răspunsuri ({{ $repliesFlat->total() }})
+        Răspunsuri ({{ $allRepliesTotal }})
       </h3>
 
       <div class="mb-3 d-flex justify-content-center">
-  {{ $repliesFlat->onEachSide(1)->fragment('replies')->links('vendor.pagination.neon') }}
-</div>
+        {{ $topPosts->onEachSide(1)->fragment('replies')->links('vendor.pagination.neon') }}
+      </div>
 
-      @foreach($repliesFlat as $post)
-        @include('forum.partials.post', ['post' => $post, 'flat' => true])
+      @foreach($topPosts as $post)
+        {{-- flat=false -> children are rendered inside the partial --}}
+        @include('forum.partials.post', ['post' => $post, 'flat' => false])
       @endforeach
 
       <div class="mt-4 d-flex justify-content-center">
-        {{ $repliesFlat->onEachSide(1)->fragment('replies')->links('vendor.pagination.neon') }}
+        {{ $topPosts->onEachSide(1)->fragment('replies')->links('vendor.pagination.neon') }}
       </div>
     @else
       <p class="text-muted">Nu există răspunsuri încă.</p>
@@ -139,7 +140,7 @@
             </div>
 
             <div class="text-end mb-3">
-              <button type="submit" class="btn btn-new-thread">
+              <button type="submit" id="replySubmitBtn" class="btn btn-new-thread">
                 <i class="fas fa-reply me-2"></i>Răspunde
               </button>
             </div>
@@ -226,5 +227,18 @@
   }
   document.addEventListener('DOMContentLoaded', renderEmojis);
   window.forumRenderEmojis = renderEmojis;
+</script>
+
+<!-- Prevent double submit on reply -->
+<script>
+  (function () {
+    const form = document.getElementById('reply-form');
+    const btn  = document.getElementById('replySubmitBtn');
+    if (!form || !btn) return;
+    form.addEventListener('submit', () => {
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Se trimite…';
+    });
+  })();
 </script>
 @endpush

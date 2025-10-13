@@ -34,7 +34,7 @@ use App\Http\Controllers\Header\Concurs\VoteazaController;
 use App\Http\Controllers\Header\Muzica\MuzicaController;
 use App\Http\Controllers\Header\Muzica\ArtistiController;
 use App\Http\Controllers\Header\Muzica\GenuriMuzicaleController;
-use App\Http\Controllers\Header\Muzica\NoutatiInMuzicaController;
+use App\Http\Controllers\NoutatiInMuzicaController;
 use App\Http\Controllers\Header\Muzica\PlaylistsController;
 
 use App\Http\Controllers\Header\Misiuni\MisiuniController;
@@ -187,24 +187,22 @@ Route::get('/abilitati', [AbilityController::class, 'index'])->name('abilities.i
 // Concurs — core routes (dual-cycle) + legacy aliases
 // ───────────────────────────────────────────────────────────────────────────────
 Route::get('/concurs', [SongController::class, 'showTodaySongs'])
-    ->name('concurs')
-    ->middleware(\App\Http\Middleware\ForceWeekdayIfTesting::class);
+    ->name('concurs');
+   
 
 Route::get('/concurs/songs/today', [SongController::class, 'todayList'])
-    ->name('concurs.songs.today')
-    ->middleware(\App\Http\Middleware\ForceWeekdayIfTesting::class);
+    ->name('concurs.songs.today');
+    
 
 Route::post('/concurs/upload', [SongController::class, 'uploadSong'])
-    ->name('concurs.upload')
-    ->middleware(['auth', \App\Http\Middleware\ForceWeekdayIfTesting::class]);
+    ->name('concurs.upload');
+    
 
 Route::post('/concurs/vote', [SongController::class, 'voteForSong'])
-    ->name('concurs.vote')
-    ->middleware(['auth', \App\Http\Middleware\ForceWeekdayIfTesting::class]);
+    ->name('concurs.vote');
+    
 
-Route::get('/concurs/versus', [SongController::class, 'versus'])
-    ->name('concurs.versus')
-    ->middleware(\App\Http\Middleware\ForceWeekdayIfTesting::class);
+    
 
 // Winner picks theme
 Route::middleware(['auth', \App\Http\Middleware\ForceWeekdayIfTesting::class])->group(function () {
@@ -336,7 +334,7 @@ Route::prefix('evenimente')->as('events.')->group(function () {
 // Forum routes
 // ---------------------------------------
 
-// Forum pages (NO MarkForumSeen here; the Kernel web group middleware stamps forum_seen_at)
+// Forum pages (NO MarkForumSeen here; CategoryController@index hard-resets; Kernel web group stamps seen)
 Route::prefix('forum')->name('forum.')->group(function () {
     // Public
     Route::get('/',                  [CategoryController::class, 'index'])->name('home');
@@ -372,8 +370,12 @@ Route::prefix('forum/alerts')->name('forum.alerts.')->middleware('auth')->group(
     Route::get('/unread-count',  [NotificationController::class, 'unreadCount'])->name('unread-count');
     Route::get('/unread-detail', [NotificationController::class, 'unreadDetail'])->name('unread-detail');
     Route::post('/ack-shown',    [NotificationController::class, 'ackShown'])->name('ack');
+
+    // NEW: hard reset (no conflict with existing paths)
+    Route::post('/mark-seen',    [NotificationController::class, 'markSeen'])->name('mark-seen');
 });
 // -------- End forum routes --------
+
 use App\Http\Controllers\WinnersController;
 
 Route::get('/winners', [WinnersController::class, 'index'])->name('winners.index');
@@ -402,4 +404,32 @@ Route::middleware(['auth', \App\Http\Middleware\AdminOnly::class])
     
         Route::delete('/admin/concurs/poster', [ConcursPosterController::class, 'destroy'])
             ->name('admin.concurs.poster.destroy');
+    });
+
+//Noutati in muzica -----------------------------------------------------------------
+
+
+Route::prefix('muzica/noutati')->group(function () {
+    // current week (auto-detect latest)
+    Route::get('/', [NoutatiInMuzicaController::class, 'index'])->name('releases.index');
+
+    // specific week, e.g. 2025W39
+    Route::get('{week_key}', [NoutatiInMuzicaController::class, 'week'])
+        ->where('week_key', '\d{4}W\d{2}')
+        ->name('releases.week');
+
+    // single “read more”
+    Route::get('r/{slug}', [NoutatiInMuzicaController::class, 'show'])->name('releases.show');
+    // Alias for old menu link
+
+
+});
+use App\Http\Controllers\Admin\ReleaseAdminController;
+
+
+Route::prefix('admin/releases')
+    ->middleware(AdminOnly::class)
+    ->group(function () {
+        Route::get('/create', [ReleaseAdminController::class, 'create'])->name('admin.releases.create');
+        Route::post('/',       [ReleaseAdminController::class, 'store'])->name('admin.releases.store'); // next step
     });

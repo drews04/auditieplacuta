@@ -58,7 +58,8 @@ class ConcursHealthCheck extends Command
         }
 
         // 4) Required commands registered
-        $cmds = ['concurs:declare-winner','concurs:resolve-versus','concurs:fallback-theme'];
+        $needSched = ['concurs:declare-winner','award-points','concurs:fallback-theme','concurs:inherit-poster'];
+
         foreach ($cmds as $c) {
             $found = app('Illuminate\Contracts\Console\Kernel')->all()[$c] ?? null;
             $this->line(sprintf('[Cmd] %-24s : %s', $c, $found ? 'OK' : 'MISSING'));

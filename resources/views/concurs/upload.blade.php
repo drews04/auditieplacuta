@@ -1,15 +1,22 @@
+{{-- resources/views/concurs/upload.blade.php --}}
 @extends('layouts.app')
 
 @push('styles')
   {{-- SAME css includes so styling matches hub --}}
   <link rel="stylesheet" href="{{ asset('assets/css/concurs-winner.css') }}?v={{ filemtime(public_path('assets/css/concurs-winner.css')) }}">
   <link rel="stylesheet" href="{{ asset('assets/css/vote-btn.css') }}?v={{ filemtime(public_path('assets/css/vote-btn.css')) }}">
-@endpush
+  {{-- Heart/likes styles (same as /concurs) --}}
+  <link rel="stylesheet" href="{{ asset('assets/css/theme-like.css') }}?v={{ filemtime(public_path('assets/css/theme-like.css')) }}">
+  <link rel="stylesheet" href="{{ asset('assets/css/concurs-override.css') }}?v={{ time() }}">
+  <link rel="stylesheet" href="{{ asset('assets/css/concurs-mobile.css') }}?v={{ time() }}">
+
+  @endpush
+
 {{-- main site styles (same include as /concurs) --}}
 <link rel="stylesheet" href="{{ asset('css/style.css') }}?v={{ filemtime(public_path('css/style.css')) }}">
 
 @section('title', 'Încarcă — Concurs')
-@section('body_class', 'page-concurs')
+@section('body_class', 'page-concurs page-neon')
 
 @section('content')
 <div class="container py-5">
@@ -44,13 +51,25 @@
 
   <h1 class="mb-3 text-center" style="font-weight:800; letter-spacing:1px;">⬆️ Încarcă melodia pentru azi</h1>
   <p class="text-center mb-4">Adaugă linkul YouTube și intră în concursul de azi.</p>
+ 
 
-  {{-- ===== THEME PILL (today) ===== --}}
+
+
+  {{-- ===== THEME PILL (today or next scheduled) ===== --}}
   @if($cycleSubmit && $cycleSubmit->theme_text)
     @php
       $parts = preg_split('/\s*—\s*/u', $cycleSubmit->theme_text, 2);
       $cat   = trim($parts[0] ?? '');
       $title = trim($parts[1] ?? $cycleSubmit->theme_text);
+
+      // normalize category label (no CSS changes)
+      $catDisp = [
+        'csd'     => 'CSD',
+        'it'      => 'ITC',
+        'itc'     => 'ITC',
+        'artisti' => 'Artisti',
+        'genuri'  => 'Genuri',
+      ][strtolower($cat)] ?? strtoupper($cat);
 
       $submitTheme      = $submitTheme ?? ($cycleSubmit->contestTheme ?? null);
       $submitThemeId    = $submitTheme->id ?? ($cycleSubmit->contest_theme_id ?? 0);
@@ -63,41 +82,69 @@
       <div class="card-body">
         <div class="ap-theme-row">
           <div class="ap-left">
-            @if($cat !== '') <span class="ap-cat-badge">{{ $cat }}</span><span class="ap-dot">🎯</span> @endif
+            @if($cat !== '') <span class="ap-cat-badge">{{ $catDisp }}</span><span class="ap-dot">🎯</span> @endif
             <span class="ap-label">Tema:</span>
             <span class="ap-title">{{ $title }}</span>
-          </div>
 
-          <div class="dropdown d-inline-block theme-like-wrap">
-            <button type="button"
-                    class="btn btn-sm theme-like"
-                    data-likeable-type="contest"
-                    data-likeable-id="{{ $submitThemeId }}"
-                    data-liked="{{ $submitLiked ? 1 : 0 }}"
-                    data-count="{{ $submitLikesCount }}"
-                    @guest data-auth="0" @endguest
-                    data-bs-toggle="dropdown"
-                    aria-expanded="false">
-              <i class="heart-icon"></i>
-              <span class="like-count">{{ $submitLikesCount }}</span>
-            </button>
-            <ul class="dropdown-menu theme-like-dropdown p-2 shadow-sm" style="min-width:180px;">
-              @forelse($submitTheme->likes ?? [] as $like)
-                <li class="small text-muted">❤️ {{ $like->user->name }}</li>
-              @empty
-                <li class="small text-muted">Niciun like încă</li>
-              @endforelse
-            </ul>
+            {{-- HEART: right next to the title (same placement as on /concurs) --}}
+            @if($submitThemeId)
+              <div class="dropdown d-inline-block theme-like-wrap ms-2">
+                <button type="button"
+                        class="btn btn-sm theme-like"
+                        data-likeable-type="contest"
+                        data-likeable-id="{{ $submitThemeId }}"
+                        data-liked="{{ $submitLiked ? 1 : 0 }}"
+                        data-count="{{ $submitLikesCount }}"
+                        @guest data-auth="0" @endguest
+                        data-bs-toggle="dropdown"
+                        aria-expanded="false">
+                  <i class="heart-icon"></i>
+                  <span class="like-count">{{ $submitLikesCount }}</span>
+                </button>
+                <ul class="dropdown-menu theme-like-dropdown p-2 shadow-sm" style="min-width:180px;">
+                  @forelse($submitTheme->likes ?? [] as $like)
+                    <li class="small text-muted">❤️ {{ $like->user->name }}</li>
+                  @empty
+                    <li class="small text-muted">Niciun like încă</li>
+                  @endforelse
+                </ul>
+              </div>
+            @endif
           </div>
         </div>
       </div>
     </div>
   @endif
 
-  {{-- ===== UPLOAD FORM (identical classes/structure) ===== --}}
+  {{-- 19:30–20:00 cooldown banner (today closed, voting soon) --}}
+  @if(
+    empty($preSubmit) &&
+    $cycleSubmit &&
+    now()->between(
+      optional($cycleSubmit->submit_end_at)->timezone(config('app.timezone')),
+      optional($cycleSubmit->vote_start_at)->timezone(config('app.timezone'))
+    )
+  )
+    <div class="alert alert-warning text-center fw-semibold mb-4">
+      Înscrierile s-au închise pentru azi. Votul începe la
+      <strong>{{ optional($cycleSubmit->vote_start_at)->timezone(config('app.timezone'))->format('H:i') ?? '20:00' }}</strong>.
+    </div>
+  @endif
+
+  {{-- ===== PRE-SUBMIT BANNER (winner picked; next cycle scheduled; before 00:00) ===== --}}
+  @if(!empty($preSubmit) && $preSubmit)
+    @php
+      $opensAt = optional($submissionsOpensAt)->timezone(config('app.timezone'));
+    @endphp
+    <div class="alert alert-info text-center fw-semibold mb-4">
+      Înscrierile pentru tema curentă se deschid la
+      <strong>{{ $opensAt ? $opensAt->format('H:i') : '00:00' }}</strong>.
+    </div>
+  @endif
+
+  {{-- ===== UPLOAD FORM (hidden during pre-submit; shows from 00:00) ===== --}}
   @auth
     @php
-      // identical allow rule as hub
       $allowUploadNow = $submissionsOpen && !$userHasUploadedToday;
     @endphp
 
@@ -125,24 +172,26 @@
           </form>
         </div>
       </div>
-    @else
+    @elseif(empty($preSubmit) || !$preSubmit)
       <div class="alert alert-dark mb-4">🕒 Înscrierile sunt închise sau ai încărcat deja o melodie.</div>
     @endif
   @else
     <div class="alert alert-dark mb-4">🔒 Autentifică-te pentru a-ți înscrie melodia.</div>
   @endauth
 
-  {{-- ===== TODAY'S SONG LIST (under upload) — keep wrapper id for AJAX refresh ===== --}}
+  {{-- ===== TODAY/NEXT SONG LIST (read-only during pre-submit) ===== --}}
   <div class="card border-0 shadow-sm mb-4 ap-neon">
     <div class="card-body">
       <div id="song-list">
         @include('partials.songs_list', [
-          'songs'              => $songsSubmit,
-          'userHasVotedToday'  => true,   // no voting on upload page
-          'showVoteButtons'    => false,  // keep buttons hidden here
-          'disabledVoteText'   => $votingOpensAt
-                                  ? 'Votează (se activează la ' . $votingOpensAt->timezone(config('app.timezone'))->format('H:i') . ')'
-                                  : 'Votează (se activează curând)',
+          'songs'               => $songsSubmit,
+          'userHasVotedToday'   => true,   // no voting on upload page
+          'showVoteButtons'     => false,  // keep buttons hidden here
+          'disabledVoteText'    => $votingOpensAt
+                                    ? 'Votează (se activează la ' . $votingOpensAt->timezone(config('app.timezone'))->format('H:i') . ')'
+                                    : 'Votează (se activează curând)',
+          'hideVoteStatus'      => true,   // hide status column entirely
+          'hideDisabledButtons' => true,   // render nothing on the right side
         ])
       </div>
     </div>
@@ -173,12 +222,16 @@
 @endsection
 
 @push('scripts')
+  {{-- IMPORTANT: prevent concurs.js from auto-fetching the list on this page --}}
+  <script>window.skipInitialLoad = true;</script>
+
   {{-- same JS so AJAX upload + list refresh + YT modal behavior are identical --}}
   <script>
     window.songListRoute = "{{ route('concurs.songs.today') }}";
     window.uploadRoute   = "{{ route('concurs.upload') }}";
     window.voteRoute     = "{{ route('concurs.vote') }}"; // harmless here; used by shared JS
     window.csrfToken     = "{{ csrf_token() }}";
+    window.routeThemesLikeToggle = "{{ route('themes.like.toggle') }}";
   </script>
   <script src="{{ asset('js/concurs.js') }}"></script>
   <script src="{{ asset('js/theme-like.js') }}"></script>

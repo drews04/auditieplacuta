@@ -10,19 +10,16 @@ use App\Models\Winner;
 class DeclareDailyWinner extends Command
 {
     protected $signature   = 'concurs:declare-winner';
-    protected $description = 'Declare the daily song contest winner at 20:00 (Mon–Fri)';
+    protected $description = 'Declare the daily song contest winner at vote_end_at. Tie = random pick among leaders.';
 
     public function handle()
     {
-        // Weekdays only
-        if (now()->isWeekend()) {
-            $this->info('Weekend — no contest.');
-            return self::SUCCESS;
-        }
+      
 
         $now = now();
 
-        // Find the most recent cycle whose voting just ended and has no winner yet
+
+        // Find the most recent cycle whose voting ended and has no winner yet
         $cycle = \App\Models\ContestCycle::query()
             ->where('vote_end_at', '<=', $now)
             ->whereNull('winner_decided_at')
@@ -34,7 +31,7 @@ class DeclareDailyWinner extends Command
             return self::SUCCESS;
         }
 
-        // Compute votes inside this cycle
+        // Tally votes for this cycle
         $totals = DB::table('songs')
             ->join('votes', function ($join) use ($cycle) {
                 $join->on('votes.song_id', '=', 'songs.id')
@@ -44,26 +41,28 @@ class DeclareDailyWinner extends Command
             ->groupBy('songs.id')
             ->selectRaw('songs.id as song_id, COUNT(votes.id) as total_votes')
             ->orderByDesc('total_votes')
-            ->orderBy('songs.id') // stable ordering
+            ->orderBy('songs.id') // stable fallback
             ->get();
 
-        // No votes at all → leave undecided so Versus/random or fallback handles it
         if ($totals->isEmpty()) {
-            $this->info('No votes in this cycle — left undecided for Versus or fallback.');
+            $this->info('No votes in this cycle — leaving undecided.');
             return self::SUCCESS;
         }
 
-        // Tie on top → leave undecided so Versus/random handles it
+        // Leaders (if tie on top, random pick)
         $topVotes = (int) $totals->first()->total_votes;
-        $leaders  = $totals->where('total_votes', $topVotes);
+        $leaders  = $totals->where('total_votes', $topVotes)->values();
+
         if ($leaders->count() > 1) {
-            $this->info('Tie detected — left undecided for Versus/random at 20:30.');
-            return self::SUCCESS;
+            $pick = $leaders->random();
+            $winnerSongId = (int) $pick->song_id;
+            $wasTie = true;
+        } else {
+            $winnerSongId = (int) $totals->first()->song_id;
+            $wasTie = false;
         }
 
-        // Winner found
-        $top  = $totals->first();
-        $song = Song::find($top->song_id);
+        $song = Song::find($winnerSongId);
         if (!$song) {
             $this->warn('Winning song not found.');
             return self::SUCCESS;
@@ -75,7 +74,7 @@ class DeclareDailyWinner extends Command
             'user_id'              => $song->user_id,
             'song_id'              => $song->id,
             'vote_count'           => $topVotes,
-            'was_tie'              => false,
+            'was_tie'              => $wasTie,
             'theme_chosen'         => false,
             'contest_date'         => $cycle->vote_end_at?->toDateString(),
             'win_date'             => $now->toDateString(),
@@ -102,7 +101,7 @@ class DeclareDailyWinner extends Command
         app(\App\Services\AwardPoints::class)
             ->awardForDate($cycle->vote_end_at->toDateString());
 
-        $this->info("✅ Winner declared for cycle #{$cycle->id}: song #{$song->id} ({$topVotes} votes).");
+        $this->info("✅ Winner declared for cycle #{$cycle->id}: song #{$song->id} ({$topVotes} votes)" . ($wasTie ? ' [random among tie].' : '.'));
         return self::SUCCESS;
     }
 }

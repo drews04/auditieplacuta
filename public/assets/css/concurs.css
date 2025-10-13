@@ -211,3 +211,111 @@
   border-width: 1px;
   margin: 0;                 /* KILL Bootstrap label margin-bottom */
 }
+/* Unified Concurs background (upload + vote + hub) */
+body.page-concurs,
+body.page-concurs-upload,
+body.page-concurs-vote {
+  background: linear-gradient(180deg, #0b1426 0%, #040610 100%) !important;
+  background-attachment: fixed;
+}
+/* ==========================================
+   Neon Start Concurs Button (Admin only)
+========================================== */
+.admin-start-btn {
+  position: fixed;
+  top: 100px;
+  right: 60px;
+  z-index: 2000;
+}
+
+.neon-start-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 20px;
+  font-weight: 700;
+  font-size: 15px;
+  text-transform: uppercase;
+  color: #16f1d3;
+  background: rgba(10, 25, 45, 0.85);
+  border: 1px solid #16f1d3;
+  border-radius: 12px;
+  text-shadow: 0 0 8px rgba(22, 241, 211, 0.6);
+  box-shadow: 0 0 12px rgba(22, 241, 211, 0.5),
+              inset 0 0 10px rgba(22, 241, 211, 0.2);
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.neon-start-btn:hover {
+  color: #0b1426;
+  background: #16f1d3;
+  box-shadow: 0 0 18px #16f1d3, 0 0 40px rgba(22, 241, 211, 0.6);
+  transform: translateY(-1px);
+}
+/* Poster label — sits centered INSIDE the top edge of the poster */
+#concurs-hero .poster-wrap { position: relative; }
+
+#concurs-hero .poster-label {
+  position: absolute;
+  top: 12px;                /* pushes it a bit inside the poster */
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 3;
+
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 999px;
+
+  background: var(--glass, rgba(8,20,24,0.40));
+  border: 1px solid var(--neon, rgba(22,241,211,0.85));
+  box-shadow: 0 0 12px var(--neon-glow, rgba(22,241,211,0.28)),
+              inset 0 0 6px var(--neon-glow-inset, rgba(22,241,211,0.10));
+  color: #e6f1fb;
+  font-weight: 700;
+  font-size: 13px;
+}
+/* === Winner strip – match Tema lunii card === */
+.ap-winner-strip.card {
+  background: rgba(8, 20, 24, 0.40);
+  border: 1px solid rgba(22, 241, 211, 0.25);
+  border-radius: 22px;
+  box-shadow:
+    0 0 8px rgba(22, 241, 211, 0.20),
+    inset 0 0 8px rgba(22, 241, 211, 0.10);
+  color: #e6f1fb;
+  padding: 14px 18px;
+}
+
+/* Inner spacing alignment */
+.ap-winner-strip .card-body {
+  padding: 0;
+}
+/* Center the old neon button under the subtitle */
+.page-concurs .admin-toolbar{
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  margin: 8px 0 14px;
+}
+
+/* Keep icon+text aligned nicely */
+.page-concurs .admin-toolbar .neon-start-btn{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+}
+
+/* On phones, let it stretch full width if you want */
+@media (max-width: 576.98px){
+  .page-concurs .admin-toolbar{
+    padding: 0 16px;
+  }
+  .page-concurs .admin-toolbar .neon-start-btn{
+    width:100%;
+    justify-content:center;
+  }
+}

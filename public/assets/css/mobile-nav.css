@@ -1,0 +1,93 @@
+/* ===============================
+   Global Mobile Nav (site-wide)
+   - Does NOT change header/logo size
+   - Desktop unaffected
+   =============================== */
+
+/* Keep header visible and clickable backgrounds on scroll */
+.gamfi-header-section,
+.transparent-header,
+#gamfi-header {
+  position: sticky;
+  top: 0;
+  z-index: 1060;
+  background: rgba(6,14,18,.92);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+/* Do not force heights; let your theme control it */
+.menu-area .heaader-inner-area,
+.gamfi-header-section .heaader-inner-area {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+/* Right cluster (greeting + hamburger) */
+.ap-header-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  white-space: nowrap;
+}
+
+/* Mobile-only hamburger that lives INSIDE the header */
+@media (max-width: 991.98px) {
+  .ap-hamburger {
+    position: static;               /* align naturally next to "Salut, user" */
+    width: 40px; height: 40px;
+    border-radius: 12px;
+    border: 1px solid rgba(22,241,211,.35);
+    background: rgba(8,20,24,.6);
+    box-shadow: 0 0 10px rgba(22,241,211,.25);
+    display: inline-flex; align-items: center; justify-content: center;
+  }
+  .ap-hamburger .bars,
+  .ap-hamburger .bars::before,
+  .ap-hamburger .bars::after {
+    content:""; display:block; position:relative;
+    width:22px; height:2px; background:#e6f1fb; border-radius:2px;
+  }
+  .ap-hamburger .bars::before { position:absolute; top:-6px; left:0; }
+  .ap-hamburger .bars::after  { position:absolute; top: 6px; left:0; }
+
+  /* Optional: hide giant desktop nav list on phones; drawer will replace it */
+  .menu-area nav { display: none; }
+}
+
+/* Drawer above header so links are clickable */
+.offcanvas { z-index: 3000; }
+
+/* Drawer link styles (neon-ish) */
+.offcanvas .nav-link {
+  color: #e9f7ff;
+  padding: .5rem .25rem;
+  border-radius: 8px;
+}
+.offcanvas .nav-link:hover {
+  color: #0a1418;
+  background: linear-gradient(90deg, #1df7ff 0%, #00e3a6 100%);
+  box-shadow: 0 0 12px rgba(29,247,255,.25), inset 0 0 8px rgba(0,227,166,.25);
+}
+
+/* Green neon button (login) */
+.ap-btn-neon {
+  display:inline-flex; align-items:center; justify-content:center;
+  width:100%; font-weight:700; color:#0a1418!important; border:0; border-radius:12px;
+  padding:.7rem 1rem;
+  background: linear-gradient(90deg, #1df7ff 0%, #00e3a6 100%);
+  box-shadow: 0 0 18px rgba(29,247,255,.25), inset 0 0 10px rgba(0,227,166,.25);
+}
+.ap-btn-neon:hover { filter: brightness(1.04); }
+
+/* RED neon button (logout) */
+.ap-btn-danger {
+  display:inline-flex; align-items:center; justify-content:center;
+  width:100%; font-weight:700; color:#0a1418!important; border:0; border-radius:12px;
+  padding:.7rem 1rem;
+  background: linear-gradient(90deg, #ff5a5a 0%, #ff2e2e 100%);
+  box-shadow: 0 0 18px rgba(255,90,90,.25), inset 0 0 10px rgba(255,46,46,.25);
+}
+.ap-btn-danger:hover { filter: brightness(1.05); }

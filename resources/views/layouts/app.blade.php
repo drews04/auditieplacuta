@@ -27,6 +27,7 @@
   <link rel="stylesheet" href="{{ $cssv('assets/css/style.css') }}" />
   <link rel="stylesheet" href="{{ $cssv('assets/css/responsive.css') }}" />
   <link rel="stylesheet" href="{{ $cssv('logo.css') }}" />
+  <link rel="stylesheet" href="{{ asset('assets/css/modal-neon.css') }}?v={{ filemtime(public_path('assets/css/modal-neon.css')) }}">
 
   <!-- Our tiny core (last so it normalizes sizes & neon look) -->
   <link rel="stylesheet" href="{{ $cssv('assets/css/ap-core.css') }}" />
@@ -63,6 +64,8 @@
     <link rel="stylesheet" href="{{ $cssv('assets/css/winner.css') }}">
     <link rel="stylesheet" href="{{ $cssv('assets/css/leaderboard.css') }}">
     <link rel="stylesheet" href="{{ $cssv('assets/css/pagination-neon.css') }}">
+    <link rel="stylesheet" href="{{ asset('assets/css/neon-bg.css') }}?v={{ filemtime(public_path('assets/css/neon-bg.css')) }}">
+    
     @if(file_exists(public_path('assets/css/vote-btn.css')))
       <link rel="stylesheet" href="{{ $cssv('assets/css/vote-btn.css') }}">
     @endif
@@ -106,28 +109,66 @@
   {{-- Page-level CSS (for one-off needs: magnific-popup, owl.carousel, etc.) --}}
   @stack('styles')
 
-  <!-- Tiny layout skeleton -->
-  <style>
-    html, body { height: 100%; margin: 0; }
-    body.site { min-height: 100%; display: flex; flex-direction: column; }
-    main.site-main { flex: 1 0 auto; }
 
-    /* smooth fade-out for flash alerts (used globally below) */
-    .alert.fade-out{
-      opacity: 0;
-      transform: translateY(-4px);
-      transition: opacity .6s ease, transform .6s ease;
-    }
-  </style>
 </head>
 
 <body class="site @yield('body_class')">
   @include('partials.header')
-  {{-- YouTube player modal markup --}}
-@include('partials.youtube_modal')
+  @include('partials.mobile_nav')
 
-{{-- External script – do NOT @include the file contents --}}
-<script defer src="{{ asset('assets/js/youtube-modal.js') }}?v={{ time() }}"></script>
+  
+
+
+<div class="offcanvas offcanvas-end text-bg-dark" tabindex="-1" id="apMobileNav" aria-labelledby="apMobileNavLabel">
+  <div class="offcanvas-header">
+    <h5 class="offcanvas-title" id="apMobileNavLabel">Meniu</h5>
+    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Închide"></button>
+  </div>
+
+  <div class="offcanvas-body">
+    <ul class="nav flex-column gap-2 fs-6" id="mobileNavList">
+      @if(View::exists('partials.nav.mobile'))
+        {{-- Prefer a dedicated mobile nav (plain URLs) --}}
+        @include('partials.nav.mobile')
+      @else
+        {{-- Safe fallback: plain URLs only (no named routes) --}}
+        <li class="nav-item"><a class="nav-link" href="{{ url('/') }}">Acasă</a></li>
+        <li class="nav-item">
+          <a class="nav-link"
+             href="{{ \Illuminate\Support\Facades\Route::has('concurs') ? route('concurs') : url('/concurs') }}">
+            Concurs
+          </a>
+        </li>
+        <li class="nav-item"><a class="nav-link" href="{{ url('/muzica') }}">Muzică</a></li>
+        <li class="nav-item"><a class="nav-link" href="{{ url('/arena') }}">Arena</a></li>
+        <li class="nav-item"><a class="nav-link" href="{{ url('/magazin') }}">Magazin</a></li>
+      @endif
+    </ul>
+
+    <div class="mt-3 border-top pt-3">
+      @auth
+        <div class="small text-white-50 mb-2">Salut, {{ auth()->user()->name }}</div>
+
+        {{-- Neon button instead of Bootstrap blue --}}
+        <a href="{{ route('logout') }}" class="nav-link logout-link"
+          onclick="event.preventDefault(); document.getElementById('logout-form-main').submit();">
+          Deconectează-te
+        </a>
+        <form id="logout-form-main" action="{{ route('logout') }}" method="POST" class="d-none">@csrf</form>
+      @else
+        <a href="{{ route('login') }}" class="ap-btn-neon">Autentificare</a>
+      @endauth
+    </div>
+  </div>
+</div>
+
+  {{-- ========== /MOBILE NAV ========== --}}
+
+  {{-- YouTube player modal markup --}}
+  @include('partials.youtube_modal')
+
+  {{-- External script – do NOT @include the file contents --}}
+  <script defer src="{{ asset('assets/js/youtube-modal.js') }}?v={{ time() }}"></script>
 
   {{-- Pages decide if they want container or full-width --}}
   <main class="site-main">
@@ -236,9 +277,7 @@
   <!-- GLOBAL: auto-dismiss all success alerts after 5s. -->
   <script>
     document.addEventListener('DOMContentLoaded', () => {
-      const candidates = document.querySelectorAll(
-        '.alert-success, .alert[data-auto-dismiss="true"]'
-      );
+      const candidates = document.querySelectorAll('.alert-success, .alert[data-auto-dismiss="true"]');
       candidates.forEach(el => {
         const msAttr = el.getAttribute('data-dismiss-ms');
         const delay = Number.isFinite(parseInt(msAttr, 10)) ? parseInt(msAttr, 10) : 5000;
@@ -249,6 +288,7 @@
       });
     });
   </script>
+<script src="{{ asset('js/mobile-login.js') }}?v={{ filemtime(public_path('js/mobile-login.js')) }}"></script>
 
 @auth
   @php $isForum = request()->is('forum*'); @endphp
@@ -258,5 +298,8 @@
     <script defer src="{{ asset('js/pill-alert.js') }}?v={{ file_exists(public_path('js/pill-alert.js')) ? filemtime(public_path('js/pill-alert.js')) : time() }}"></script>
   @endif
 @endauth
+<script src="{{ asset('js/user-menu.js') }}?v={{ filemtime(public_path('js/user-menu.js')) }}"></script>
+@stack('scripts')
+
 </body>
 </html>

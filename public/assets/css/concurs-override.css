@@ -1,0 +1,23 @@
+/* Kill Bootstrap card tint used for the theme + song rows on Concurs */
+.page-concurs .card,
+.page-concurs .card::before,
+.page-concurs .card::after,
+.page-concurs .card-body,
+.page-concurs .ap-neon {
+  /* Bootstrap vars */
+  --bs-card-bg: transparent !important;
+  --bs-card-border-color: transparent !important;
+  --bs-card-cap-bg: transparent !important;
+
+  /* Actual paint */
+  background: transparent !important;
+  background-color: transparent !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+}
+/* ----------- Fix: readable muted text on dark background ----------- */
+.page-concurs .text-muted {
+    color: #9ec7d3 !important;  /* brighter aqua-gray */
+    opacity: 0.9;
+  }

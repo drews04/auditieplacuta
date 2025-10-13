@@ -12351,3 +12351,21 @@ body.page-concurs #winnerReminder #confetti-bg{
 }
 /* hide the teaser buttons completely */
 .list-group .btn.opacity-60[disabled] { display: none !important; }
+
+/* Arena mega-menu: center lists under titles */
+.mega_menu_hov .gamfi_mega_menu_sect .gamfi_mega_menu .mega_menu_content .menu_column{
+  text-align: center !important;
+}
+
+.mega_menu_hov .gamfi_mega_menu_sect .gamfi_mega_menu .mega_menu_content .menu_column > ul{
+  width: max-content !important;      /* shrink to content */
+  margin: 12px auto 0 !important;     /* center under the H2 */
+  padding: 0 !important;              /* remove UL indent */
+  list-style: none !important;
+}
+
+/* THIS is the culprit: anchors had left padding from global nav */
+.mega_menu_hov .gamfi_mega_menu_sect .gamfi_mega_menu .mega_menu_content .menu_column > ul > li > a{
+  padding-left: 0 !important;         /* remove offset */
+  display: inline-block !important;   /* keeps UL width tight */
+}
