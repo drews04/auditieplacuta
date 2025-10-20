@@ -1,0 +1,80 @@
+/* ===== AuditiePlacuta — Neon Modal Skin ===== */
+.modal-backdrop.show{
+    background: rgba(6,14,18,.88);
+    backdrop-filter: blur(2px);
+  }
+  
+  .modal-content{
+    background: radial-gradient(120% 120% at 20% 10%, rgba(16,28,34,.9) 0%, rgba(6,14,18,.96) 55%, rgba(4,10,13,.98) 100%);
+    border: 1px solid rgba(22,241,211,.35);
+    box-shadow:
+      0 0 0 1px rgba(22,241,211,.12) inset,
+      0 0 32px rgba(22,241,211,.22),
+      0 20px 60px rgba(0,0,0,.75);
+    color: #e6f1fb;
+    border-radius: 16px;
+  }
+  
+  .modal-header{
+    border-bottom: 1px solid rgba(22,241,211,.18);
+    background: linear-gradient(180deg, rgba(22,241,211,.06), rgba(22,241,211,0));
+  }
+  .modal-title{
+    font-weight: 800;
+    letter-spacing: .3px;
+    color: #e6f1fb;
+    text-shadow: 0 0 12px rgba(22,241,211,.25);
+  }
+  .modal-header .btn-close{
+    filter: invert(86%) sepia(6%) saturate(469%) hue-rotate(168deg) brightness(105%) contrast(92%);
+    opacity: .8;
+  }
+  .modal-header .btn-close:hover{ opacity: 1; }
+  
+  .modal-body{
+    padding: 18px 20px;
+  }
+  .modal-footer{
+    border-top: 1px solid rgba(22,241,211,.14);
+    background: linear-gradient(0deg, rgba(22,241,211,.06), rgba(22,241,211,0));
+  }
+  
+  /* iframe/player card */
+  .ap-player-frame{
+    border-radius: 12px;
+    overflow: hidden;
+    background: #0b1418;
+    border: 1px solid rgba(22,241,211,.22);
+    box-shadow: 0 0 0 1px rgba(22,241,211,.08) inset;
+  }
+  
+  /* Neon primary button */
+  .btn-neon{
+    --ap: #16f1d3;
+    color: #062126;
+    background: var(--ap);
+    border: 1px solid rgba(22,241,211,.65);
+    box-shadow: 0 0 20px rgba(22,241,211,.35);
+    font-weight: 700;
+  }
+  .btn-neon:hover{
+    filter: brightness(1.06);
+    box-shadow: 0 0 28px rgba(22,241,211,.5);
+  }
+  
+  /* Ghost/secondary */
+  .btn-neon-ghost{
+    color: #e6f1fb;
+    background: rgba(22,241,211,.08);
+    border: 1px solid rgba(22,241,211,.35);
+  }
+  .btn-neon-ghost:hover{
+    background: rgba(22,241,211,.12);
+  }
+  
+  /* Small helpers if your iframe lacks wrapper */
+  .modal-body iframe{
+    border-radius: 12px;
+    border: 1px solid rgba(22,241,211,.18);
+  }
+  

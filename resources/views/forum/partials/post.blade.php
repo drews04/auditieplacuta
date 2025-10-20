@@ -1,5 +1,26 @@
 {{-- resources/views/forum/partials/post.blade.php --}}
-@php $flat = $flat ?? false; @endphp
+@php
+  $flat = $flat ?? false;
+
+  // Simple linkifier: turns http(s):// or www. into clickable links, keeps newlines
+  $linkify = function (string $text): string {
+      $escaped = e($text);
+
+      // Autolink http(s) and www.
+      $linked = preg_replace(
+          '~(?i)\b((?:https?://|www\.)[^\s<]+)~',
+          '<a href="$1" target="_blank" rel="noopener noreferrer" class="text-neon">$1</a>',
+          $escaped
+      );
+
+      // Ensure www.* gets https://
+      $linked = preg_replace('~href="www\.~i', 'href="https://www.', $linked);
+
+      // Preserve line breaks
+      return nl2br($linked);
+  };
+@endphp
+
 <div class="forum-thread-card forum-post" id="post-{{ $post->id }}">
     <div class="forum-post-header mb-3">
         <div class="d-flex justify-content-between align-items-center">
@@ -18,7 +39,7 @@
     </div>
 
     <div class="forum-post-body post-body">
-        {!! nl2br(e($post->body)) !!}
+        {!! $linkify($post->body) !!}
     </div>
 
     <div class="forum-post-actions mt-3 d-flex align-items-center gap-2">
@@ -73,7 +94,7 @@
                                 Răspunzi lui <strong>&#64;{{ $child->parent->user->name }}</strong>
                             </div>
                         @endif
-                        {!! nl2br(e($child->body)) !!}
+                        {!! $linkify($child->body) !!}
                     </div>
 
                     <div class="forum-post-actions mt-2 d-flex align-items-center gap-2">

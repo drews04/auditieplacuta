@@ -4,11 +4,10 @@ namespace App\Console;
 
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
-use App\Console\Commands\DeclareDailyWinner;
-use App\Console\Commands\ConcursFallbackTheme;
-use App\Console\Commands\ConcursDaySimulator;
-use App\Console\Commands\ConcursHealthCheck;
-use App\Console\Commands\ConcursInheritPoster;
+use App\Console\Commands\Concurs\DeclareWinner;
+use App\Console\Commands\Concurs\FallbackTheme;
+use App\Console\Commands\Concurs\HealthCheck;
+use App\Console\Commands\Concurs\InheritPoster;
 use App\Services\AwardPoints;
 
 class Kernel extends ConsoleKernel
@@ -17,11 +16,10 @@ class Kernel extends ConsoleKernel
      * Register Artisan commands.
      */
     protected $commands = [
-        DeclareDailyWinner::class,
-        ConcursFallbackTheme::class,
-        ConcursDaySimulator::class,
-        ConcursHealthCheck::class,
-        ConcursInheritPoster::class,
+        DeclareWinner::class,
+        FallbackTheme::class,
+        HealthCheck::class,
+        InheritPoster::class,
     ];
 
     /**

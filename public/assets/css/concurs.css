@@ -319,3 +319,33 @@ body.page-concurs-vote {
     justify-content:center;
   }
 }
+/* Neon winner button */
+.btn-neon {
+  background: transparent;
+  color: #16f1d3;
+  border: 1.5px solid #16f1d3;
+  font-weight: 600;
+  border-radius: 12px;
+  text-transform: uppercase;
+  transition: all 0.25s ease-in-out;
+  box-shadow: 0 0 10px rgba(22, 241, 211, 0.3);
+}
+
+.btn-neon:hover {
+  background: rgba(22, 241, 211, 0.15);
+  box-shadow: 0 0 18px rgba(22, 241, 211, 0.55);
+  transform: translateY(-1px);
+}
+
+.btn-glow {
+  box-shadow: 0 0 22px rgba(22, 241, 211, 0.85) !important;
+}
+
+/* “Ai timp până la 21:00” text */
+.pick-theme-deadline {
+  color: #16f1d3;
+  font-weight: 500;
+  letter-spacing: 0.3px;
+  margin-top: 0.8rem;
+  font-size: 0.95rem;
+}

@@ -23,7 +23,8 @@
   @forelse($events as $ev)
     <article class="event-card neon-card mb-5">
       <div class="event-poster-wrap">
-        <img class="event-poster" src="{{ asset('storage/'.$ev->poster_path) }}" alt="{{ $ev->title }}">
+      <img class="event-poster" src="{{ Storage::url($ev->poster_path) }}" alt="{{ $ev->title }}">
+
       </div>
       <div class="p-3 p-md-4">
         <h2 class="h4 fw-bold mb-2">{{ $ev->title }}</h2>

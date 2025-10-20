@@ -18,7 +18,7 @@
   // Routes / tokens injected by Blade (with safe fallbacks)
   const CSRF  = window.csrfToken || (document.querySelector('meta[name="csrf-token"]')?.content || '');
   const R_UPLOAD = window.uploadRoute || (typeof uploadRoute !== 'undefined' ? uploadRoute : '/concurs/upload');
-  const R_SONGS  = window.songListRoute || (typeof songListRoute !== 'undefined' ? songListRoute : '/concurs/songs/today');
+  // R_SONGS removed - not needed, page loads songs directly via controller
   const R_VOTE   = window.voteRoute   || (typeof voteRoute   !== 'undefined' ? voteRoute   : '/concurs/vote');
 
   // Upload page sets: <script>window.skipInitialLoad = true;</script>
@@ -70,11 +70,18 @@
 
     function hidePopup(){
       popup.style.display = 'none';
+    
+      // NEW: snooze for 60 minutes so it doesn't re-open immediately
+      try {
+        localStorage.setItem('apWinnerModalSnoozeUntil', new Date(Date.now() + 60*60*1000).toISOString());
+      } catch (_) {}
+    
       if (btnReopen) {
         btnReopen.style.display = 'inline-block';
         lsSet(KEY_CLOSED, '1');
       }
     }
+    
 
     btnClose && btnClose.addEventListener('click', hidePopup);
     btnOpen  && btnOpen.addEventListener('click', () => { window.location.href = '/concurs/alege-tema'; });
@@ -137,19 +144,8 @@
   }
 
   /* --------------------- GENERIC SONG LIST LOADER ------------------------ */
-  async function loadSongList() {
-    try {
-      const res = await fetch(R_SONGS, { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
-      const html = await res.text();
-      const list = document.getElementById('song-list');
-      if (list) list.innerHTML = html;   // REPLACE (no append!) => prevents duplicates
-    } catch (_) {}
-  }
-
-  // Only auto-load on pages that did NOT set window.skipInitialLoad=true
-  document.addEventListener('DOMContentLoaded', () => {
-    if (!AP_SKIP_INIT) loadSongList();
-  });
+  // REMOVED: loadSongList() - Not needed, pages load songs directly via controller
+  // Upload/Vote pages render songs server-side, no dynamic loading needed
 
   /* ---------------------- UPLOAD FORM (AJAX) ----------------------------- */
   document.addEventListener('DOMContentLoaded', function () {
@@ -190,8 +186,8 @@
           setTimeout(() => { if (document.body.contains(card)) removeCard(); }, 900);
         }
 
-        // After the dust effect, REFRESH list (replace, not append)
-        return new Promise(r => setTimeout(r, 160)).then(loadSongList);
+        // Reload page to show updated song list
+        return new Promise(r => setTimeout(r, 700)).then(() => window.location.reload());
       })
       .catch(async err => {
         let msg = 'Eroare la încărcare.';
@@ -325,3 +321,22 @@
     );
   });
 })();
+// ─────────────────────────────────────────────────────────────
+// Winner "Alege Tema" button → opens pick-theme modal
+// ─────────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  const btn = document.getElementById('openPickThemeModal');
+  if (!btn) return;
+
+  btn.addEventListener('click', () => {
+      const modal = document.getElementById('pickThemeModal');
+      if (!modal) return;
+
+      const modalInstance = new bootstrap.Modal(modal, { backdrop: 'static' });
+      modalInstance.show();
+
+      // subtle neon pulse when clicked
+      btn.classList.add('btn-glow');
+      setTimeout(() => btn.classList.remove('btn-glow'), 800);
+  });
+});

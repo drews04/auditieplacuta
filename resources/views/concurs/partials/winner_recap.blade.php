@@ -9,7 +9,7 @@
           🏆 {{ $lastWinner->song->title ?? 'Melodie' }}
           <span class="text-muted">de</span>
           <span class="fw-semibold">{{ $lastWinner->user->name ?? 'necunoscut' }}</span>
-          <span class="ms-2 badge bg-success"> {{ $lastWinner->vote_count }} voturi</span>
+          <span class="ms-2 badge bg-success">{{ $lastWinner->vote_count }} voturi</span>
         </div>
         @if($lastFinishedCycle->theme_text)
           <div class="small text-muted mt-1">Tema: {{ $lastFinishedCycle->theme_text }}</div>
@@ -23,3 +23,4 @@
     </div>
   </div>
 @endif
+

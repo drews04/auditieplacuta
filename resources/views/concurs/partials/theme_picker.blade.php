@@ -1,6 +1,6 @@
 {{-- Styled Theme picker (same look as your old modal / winner UI) --}}
 <div class="ap-theme-picker p-3">
-  <form method="POST" action="{{ $action }}">
+<form method="POST" action="{{ route('concurs.theme.pick') }}">
     @csrf
 
     <div class="d-flex flex-wrap justify-content-center gap-2 alege-tema-inputs">
@@ -52,3 +52,4 @@
   update();
 })();
 </script>
+
