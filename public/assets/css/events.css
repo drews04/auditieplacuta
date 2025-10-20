@@ -134,10 +134,17 @@
 .btn-neon {
   border:1px solid #16f1d3;
   background:rgba(22,241,211,.12);
+  color:#0a0a0a !important;
   border-radius:14px; font-weight:700;
   box-shadow:0 0 18px rgba(22,241,211,.18), inset 0 0 8px rgba(22,241,211,.15);
+  transition: all 0.2s ease;
 }
-.btn-neon:hover { transform: translateY(-1px); color:#e6f1fb; box-shadow:0 10px 24px rgba(22,241,211,.25); }
+.btn-neon:hover { 
+  transform: translateY(-1px); 
+  color:#000000 !important; 
+  background:rgba(22,241,211,.22);
+  box-shadow:0 10px 24px rgba(22,241,211,.25); 
+}
 
 /* Event card visuals */
 .neon-card {
@@ -147,8 +154,21 @@
   box-shadow:0 0 24px rgba(22,241,211,.12);
   overflow:hidden;
 }
-.event-poster-wrap{ width:100%; background:#071718; }
-.event-poster{ display:block; width:100%; height:auto; }
+.event-poster-wrap{ 
+  width:100%; 
+  background:#071718;
+  min-height: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.event-poster{ 
+  display:block; 
+  width:100%; 
+  height:auto;
+  max-width: 100%;
+  object-fit: contain;
+}
 .event-body { white-space:pre-wrap; line-height:1.6; }
 .alert-neon{
   border:1px solid #16f1d3; color:#e6f1fb; background:rgba(22,241,211,.08);
@@ -231,3 +251,4 @@
   width: 100%;
   z-index: 1;
 }
+  

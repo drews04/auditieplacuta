@@ -114,18 +114,23 @@ class ThemeController extends Controller
                 ['value' => null, 'updated_at' => $now]
             );
 
-            // Audit log
-            DB::table('contest_audit_logs')->insert([
-                'event_type' => 'winner_theme_pick',
-                'cycle_id'   => $lastVoting->id,
-                'details'    => json_encode([
-                    'theme_id'   => $themeId,
-                    'theme_name' => $themeText,
-                    'category'   => $category,
-                    'user_id'    => auth()->id(),
-                ]),
-                'created_at' => $now,
-            ]);
+            // Audit log (optional - skip if table doesn't exist)
+            try {
+                DB::table('contest_audit_logs')->insert([
+                    'event_type' => 'winner_theme_pick',
+                    'cycle_id'   => $lastVoting->id,
+                    'details'    => json_encode([
+                        'theme_id'   => $themeId,
+                        'theme_name' => $themeText,
+                        'category'   => $category,
+                        'user_id'    => auth()->id(),
+                    ]),
+                    'created_at' => $now,
+                ]);
+            } catch (\Throwable $e) {
+                // Table doesn't exist yet, skip audit log
+                \Log::warning('contest_audit_logs table missing: ' . $e->getMessage());
+            }
 
             DB::commit();
         } catch (\Throwable $e) {

@@ -56,7 +56,6 @@
                     @endif
                   </a>
                 </li>
-                <li><a href="{{ route('forum.home') }}">Forum</a></li>
                 <li><a href="{{ route('about') }}">Despre noi</a></li>
               </ul>
             </li>
@@ -74,10 +73,24 @@
             </li>
 
             {{-- Muzica --}}
-            <li>
-              <a href="{{ route('muzica') }}">Muzică</a>
+            <li class="position-relative">
+              <a href="{{ route('muzica') }}" class="nav-new-anchor"
+                 style="--new-top:-10px; --new-right:-22px;">
+                Muzică
+                @if($hasNewEvents)
+                  <span class="nav-new-badge">NEW</span>
+                @endif
+              </a>
               <ul class="sub-menu">
-                <li><a href="{{ route('releases.index') }}" class="dropdown-item">Noutăți</a></li>
+                <li class="position-relative">
+                  <a class="dropdown-item nav-new-anchor pe-4" href="{{ route('releases.index') }}"
+                     style="--new-top:-6px; --new-right:-14px;">
+                    Noutăți In muzica
+                    @if($hasNewEvents)
+                      <span class="nav-new-badge">NEW</span>
+                    @endif
+                  </a>
+                </li>
                 <li><a href="{{ route('muzica.artisti') }}">Artiști</a></li>
                 <li><a href="{{ route('muzica.genuri') }}">Genuri muzicale</a></li>
                 <li><a href="{{ route('muzica.playlists') }}">Playlists</a></li>
@@ -128,6 +141,11 @@
                   </div>
                 </div>
               </div>
+            </li>
+
+            {{-- Forum --}}
+            <li>
+              <a href="{{ route('forum.home') }}">Forum</a>
             </li>
 
             {{-- Magazin --}}

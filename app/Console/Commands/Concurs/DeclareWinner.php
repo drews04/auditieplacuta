@@ -33,7 +33,94 @@ class DeclareWinner extends Command
             return self::SUCCESS;
         }
 
-        // 1) Find voting cycle that should close now
+        // ═══════════════════════════════════════════════════════════════════════════════
+        // STEP 1: ROTATE SUBMISSION → VOTING (if needed)
+        // ═══════════════════════════════════════════════════════════════════════════════
+        
+        $submissionCycle = DB::table('contest_cycles')
+            ->where('lane', 'submission')
+            ->where('status', 'open')
+            ->where('submit_end_at', '<=', $now)
+            ->orderBy('submit_end_at')
+            ->first();
+
+        if ($submissionCycle) {
+            $this->info("Found submission cycle {$submissionCycle->id} that ended. Rotating to voting...");
+            
+            DB::beginTransaction();
+            try {
+                $tomorrow2000 = Carbon::parse($submissionCycle->submit_end_at, $tz)->addDay()->setTime(20, 0, 0);
+                
+                // Promote submission → voting
+                DB::table('contest_cycles')
+                    ->where('id', $submissionCycle->id)
+                    ->update([
+                        'lane'        => 'voting',
+                        'vote_end_at' => $tomorrow2000,
+                        'updated_at'  => $now,
+                    ]);
+                
+                $this->info("Promoted cycle {$submissionCycle->id} to voting. Vote ends: {$tomorrow2000}");
+                
+                // Get Theme B from cache (or fallback)
+                $nextThemeId   = cache()->pull('concurs_next_theme_id');
+                $nextThemeText = cache()->pull('concurs_next_theme_text');
+                
+                if (!$nextThemeId || !$nextThemeText) {
+                    $this->warn('No Theme B in cache. Creating fallback theme...');
+                    
+                    // Fallback: pick random theme
+                    $poolTheme = DB::table('theme_pools')
+                        ->where('is_active', 1)
+                        ->inRandomOrder()
+                        ->value('text');
+                    
+                    $categories = ['CSD', 'ITC', 'Artiști', 'Genuri'];
+                    $category = $categories[array_rand($categories)];
+                    
+                    if ($poolTheme) {
+                        $nextThemeText = "{$category} - {$poolTheme}";
+                    } else {
+                        $defaultThemes = ['Kickoff', 'Neon Dreams', 'Lost Frequencies', 'Silent Waves'];
+                        $nextThemeText = "{$category} - " . $defaultThemes[array_rand($defaultThemes)];
+                    }
+                    
+                    $nextThemeId = DB::table('contest_themes')->insertGetId([
+                        'name'              => $nextThemeText,
+                        'chosen_by_user_id' => null,
+                        'created_at'        => $now,
+                    ]);
+                }
+                
+                // Create new submission cycle with Theme B
+                $next2000 = $tomorrow2000->copy(); // same as voting end = next 20:00
+                
+                DB::table('contest_cycles')->insert([
+                    'theme_id'      => $nextThemeId,
+                    'theme_text'    => $nextThemeText,
+                    'lane'          => 'submission',
+                    'status'        => 'open',
+                    'start_at'      => $now,
+                    'submit_end_at' => $next2000,
+                    'vote_end_at'   => null,
+                    'created_at'    => $now,
+                    'updated_at'    => $now,
+                ]);
+                
+                $this->info("Created new submission cycle with theme: {$nextThemeText}");
+                
+                DB::commit();
+            } catch (\Throwable $e) {
+                DB::rollBack();
+                $this->error("Rotation failed: {$e->getMessage()}");
+                return self::FAILURE;
+            }
+        }
+
+        // ═══════════════════════════════════════════════════════════════════════════════
+        // STEP 2: DECLARE WINNER (if there's a voting cycle to close)
+        // ═══════════════════════════════════════════════════════════════════════════════
+
         $votingCycle = DB::table('contest_cycles')
             ->where('lane', 'voting')
             ->where('status', 'open')
@@ -187,18 +274,23 @@ class DeclareWinner extends Command
                 ['value' => 'waiting_theme', 'updated_at' => $now]
             );
 
-            // 8) AUDIT LOG
-            DB::table('contest_audit_logs')->insert([
-                'event_type' => 'declare_winner',
-                'cycle_id'   => $votingCycle->id,
-                'seed'       => $rngSeed,
-                'details'    => json_encode([
-                    'method'  => $decideMethod,
-                    'song_id' => $winnerSongId,
-                    'user_id' => $winnerUserId,
-                ]),
-                'created_at' => $now,
-            ]);
+            // 8) AUDIT LOG (optional - skip if table doesn't exist)
+            try {
+                DB::table('contest_audit_logs')->insert([
+                    'event_type' => 'declare_winner',
+                    'cycle_id'   => $votingCycle->id,
+                    'seed'       => $rngSeed,
+                    'details'    => json_encode([
+                        'method'  => $decideMethod,
+                        'song_id' => $winnerSongId,
+                        'user_id' => $winnerUserId,
+                    ]),
+                    'created_at' => $now,
+                ]);
+            } catch (\Throwable $e) {
+                // Table doesn't exist yet, skip audit log
+                \Log::warning('contest_audit_logs table missing: ' . $e->getMessage());
+            }
 
             DB::commit();
         } catch (\Illuminate\Database\QueryException $e) {

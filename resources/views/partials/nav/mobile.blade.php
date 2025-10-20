@@ -10,4 +10,5 @@
 
 <li class="nav-item"><a class="nav-link text-white" href="{{ url('/muzica') }}">Muzică</a></li>
 <li class="nav-item"><a class="nav-link text-white" href="{{ url('/arena') }}">Arena</a></li>
+<li class="nav-item"><a class="nav-link text-white" href="{{ url('/forum') }}">Forum</a></li>
 <li class="nav-item"><a class="nav-link text-white" href="{{ url('/magazin') }}">Magazin</a></li>

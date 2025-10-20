@@ -139,18 +139,23 @@ class CycleController extends Controller
                 ['value' => null, 'updated_at' => $now]
             );
 
-            // 7) AUDIT LOG
-            DB::table('contest_audit_logs')->insert([
-                'event_type' => 'start_button',
-                'cycle_id'   => null,
-                'details'    => json_encode([
-                    'theme_a' => $themeTextA,
-                    'theme_b' => $themeTextB,
-                    'next_20' => $next2000->toDateTimeString(),
-                    'is_first_iteration' => true,
-                ]),
-                'created_at' => $now,
-            ]);
+            // 7) AUDIT LOG (optional - skip if table doesn't exist)
+            try {
+                DB::table('contest_audit_logs')->insert([
+                    'event_type' => 'start_button',
+                    'cycle_id'   => null,
+                    'details'    => json_encode([
+                        'theme_a' => $themeTextA,
+                        'theme_b' => $themeTextB,
+                        'next_20' => $next2000->toDateTimeString(),
+                        'is_first_iteration' => true,
+                    ]),
+                    'created_at' => $now,
+                ]);
+            } catch (\Throwable $e) {
+                // Table doesn't exist yet, skip audit log
+                \Log::warning('contest_audit_logs table missing: ' . $e->getMessage());
+            }
 
             DB::commit();
         } catch (\Throwable $e) {
