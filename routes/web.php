@@ -265,6 +265,9 @@ Route::middleware('auth')->prefix('contul-meu')->group(function () {
 Route::post('/setari/email',  [UserSettingsController::class, 'updateEmail'])->name('user.settings.updateEmail');
 Route::post('/setari/parola', [UserSettingsController::class, 'updatePassword'])->name('user.settings.updatePassword');
 
+// Profile photo upload
+Route::post('/profil/upload-photo', [UserProfileController::class, 'uploadPhoto'])->name('user.profile.uploadPhoto')->middleware('auth');
+
 // ═══════════════════════════════════════════════════════════════════════════════
 // CONCURS SYSTEM
 // ═══════════════════════════════════════════════════════════════════════════════
