@@ -21,7 +21,7 @@
 <!-- FULL-WIDTH HERO-BLUE WRAPPER (covers the body's #111111) -->
 <div class="w-full" style="background-color:#151625;">
   <!-- changed mt-* to pt-* so no black strip shows above -->
-  <section class="container mx-auto px-3 md:px-4 pt-28 md:pt-36 relative">
+  <section class="container mx-auto px-3 md:px-4 pt-8 md:pt-12 relative">
     <div class="rounded-2xl p-5 md:p-6 overflow-hidden"
          style="background:
                 radial-gradient(1000px 500px at 0% -10%, rgba(16,185,129,.15), transparent),
