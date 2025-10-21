@@ -16,11 +16,9 @@ body.page-forum {
     --forum-dim: rgba(230, 241, 251, 0.68);
     --forum-muted: rgba(230, 241, 251, 0.45);
   
-    background: linear-gradient(180deg, #061016, #0b1220 60%, #0a111b);
+    background: transparent;
     min-height: 100vh;
-  
-    /* exact gap under the (fixed) header */
-    padding: 300px 0 2rem; /* <-- 300px as requested */
+    padding: 2rem 0;
   }
   
   /* ---------- Forum Header ---------- */
@@ -354,34 +352,11 @@ body.page-forum .topbar::after {
 }
 
 /* Ensure page content sits under a fixed header by 300px */
-body.page-forum .forum-container {
-  margin-top: 300px !important;             /* the gap you asked for */
-}
-
-/* Safety: if any wrapper adds an extra thin divider under header, hide it */
-body.page-forum .header-divider,
-body.page-forum hr.header-line {
-  display: none !important;
-}
-
-/* --- Forum page spacing under fixed header --- */
+/* Forum container spacing - clean and simple */
 .page-forum .forum-container {
-    /* Ensure a comfortable gap below the fixed header */
-    margin-top: 250px !important;
-  }
-  /* ---- Forum page layout fix ---- */
-
-/* Move the gradient to the page itself so header + gap + content share the SAME paint */
-.page-forum {
-    background: linear-gradient(180deg, #061016, #0b1220 60%, #0a111b) !important;
-  }
-  
-  /* Make the container transparent so there's no double gradient seam,
-     and reduce the top offset to a sane value. */
-  .page-forum .forum-container {
-    background: transparent !important;
-    margin-top: 180px !important;   /* adjust here if you want a bit more/less */
-    padding-top: 0 !important;      /* remove the extra ~32px of top padding */
+    background: transparent;
+    margin-top: 0;
+    padding-top: 2rem;
   }
   /* Emoji sizing (Twemoji) */
 .post-body img.emoji,
