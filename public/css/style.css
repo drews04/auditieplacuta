@@ -641,7 +641,7 @@ body .modal-backdrop {
 
 /* --- Gamfi previous Section CSS ---*/
 .gamfi-previous-section {
-  background: #090b1a;
+  background: #151625;
 }
 
 .gamfi-previous-section .project-right-menu .access i {
@@ -1142,7 +1142,7 @@ body .modal-backdrop {
   background: url("../images/bg/team-bg.jpg");
   background-repeat: no-repeat;
   background-position: center bottom;
-  background-color: #090A1A;
+  background-color: #151625;
 }
 
 .team-item {
@@ -1258,7 +1258,7 @@ body .modal-backdrop {
   position: relative;
   z-index: 2;
   margin-bottom: 200px;
-  background: #090A1A;
+  background: #151625;
 }
 
 .gamfi_header_v2 {
@@ -1644,7 +1644,7 @@ body .modal-backdrop {
   /*
   background: url(../images/bg/project-bg.jpg);
   */
-  background: #090A1A;
+  background: #151625;
   padding-top: 115px;
   padding-bottom: 105px;
 }
@@ -1733,7 +1733,7 @@ body .modal-backdrop {
   }
 }
 .key_points_section {
-  background: #090A1A;
+  background: #151625;
   padding-top: 115px;
   padding-bottom: 105px;
   position: relative;
@@ -1773,7 +1773,7 @@ body .modal-backdrop {
 }
 
 .tier_system_section {
-  background: #090A1A;
+  background: #151625;
   padding-top: 0px;
   padding-bottom: 105px;
 }
@@ -1960,7 +1960,7 @@ body .modal-backdrop {
 }
 
 .multi_chain_support_sect {
-  background: #090A1A;
+  background: #151625;
   padding-top: 0px;
   padding-bottom: 105px;
 }
@@ -2023,7 +2023,7 @@ body .modal-backdrop {
 }
 
 .gamfi_our_mentor_section {
-  background: #090A1A;
+  background: #151625;
   padding-top: 0px;
   padding-bottom: 105px;
 }
@@ -2101,7 +2101,7 @@ body .modal-backdrop {
 }
 
 .our_partners_content_sect .overlay {
-  background: linear-gradient(180deg, rgba(9, 10, 26, 0) 0%, #090A1A 100%);
+  background: linear-gradient(180deg, rgba(9, 10, 26, 0) 0%, #151625 100%);
   height: 158px;
   width: 100%;
   z-index: 2;
@@ -2582,7 +2582,7 @@ body .modal-backdrop {
   }
 }
 .how_to_participate_sect {
-  background: #090A1A;
+  background: #151625;
   position: relative;
   display: flex;
   align-items: center;
@@ -2965,7 +2965,7 @@ body .modal-backdrop {
 /*--- Project page style ---*/
 /*--- Gamfi Project Details Section CSS ---*/
 .project-details-conent {
-  background: #090A1A;
+  background: #151625;
 }
 .project-details-conent .game-price-item {
   margin-top: -90px;
@@ -3544,7 +3544,7 @@ body .modal-backdrop {
 
 /*--- Gamfi Explore Content Section CSS ---*/
 .gamfi-explore-content {
-  background: #090A1A;
+  background: #151625;
 }
 .gamfi-explore-content .project-menu-area {
   margin-bottom: 45px;
@@ -4258,7 +4258,7 @@ body .gamfi-explore-content .project-item {
 }
 /*--- project clasic style ---*/
 .gamfi_project_clasic_project_sect {
-  background: #090A1A;
+  background: #151625;
   padding-top: 50px;
   padding-bottom: 92px;
 }
@@ -4851,7 +4851,7 @@ body .gamfi-explore-content .project-item {
 
 /*--- ProjectDetails2 ---*/
 .project_details2_section {
-  background: #090A1A;
+  background: #151625;
   padding-top: 100px;
   padding-bottom: 140px;
   position: relative;
@@ -5279,7 +5279,7 @@ body .gamfi-explore-content .project-item {
 /*--- IGO Ranking page style ---*/
 /*--- Gamfi Igo-Rankging Section CSS ---*/
 .igo-rankging-table-list {
-  background: #090A1A;
+  background: #151625;
 }
 
 .igo-rankging-table-list table {
@@ -5356,7 +5356,7 @@ body .gamfi-explore-content .project-item {
 /*--- blog style ---*/
 .latest_articles_sect {
   padding: 71px 0px 100px 0px;
-  background: #090A1A;
+  background: #151625;
 }
 
 .latest_articles_card {
@@ -5524,7 +5524,7 @@ body .gamfi-explore-content .project-item {
 .blog-detail-conent {
   padding-top: 60px;
   padding-bottom: 140px;
-  background: #090A1A;
+  background: #151625;
 }
 
 .blog-detail-conent .blog-area .blog-description .des {
@@ -6016,7 +6016,7 @@ div.latest-item .hover-shape-bg {
 .latest-details-content {
   padding-top: 70px;
   padding-bottom: 140px;
-  background: #090A1A;
+  background: #151625;
 }
 .latest-details-content .latest-content {
   padding-right: 30px;
@@ -6120,7 +6120,7 @@ div.latest-item .hover-shape-bg {
 }
 
 .staking_flip_card_sect {
-  background: #090A1A;
+  background: #151625;
   padding-bottom: 110px;
 }
 
@@ -6676,7 +6676,7 @@ div.latest-item .hover-shape-bg {
 }
 
 .staking4_table_sect {
-  background: #090A1A;
+  background: #151625;
 }
 
 .table_col1 {
@@ -6888,7 +6888,7 @@ div.latest-item .hover-shape-bg {
 }
 
 .gamfi-farming-table {
-  background: #090A1A;
+  background: #151625;
 }
 
 .gamfi-farming-table table {
@@ -6933,7 +6933,7 @@ div.latest-item .hover-shape-bg {
 /*--- leaderboard page style ---*/
 /*--- Gamfi Leaderboard Section CSS ---*/
 .leaderboard-table-list {
-  background: #090A1A;
+  background: #151625;
 }
 
 .leaderboard-table-list table {
@@ -6984,7 +6984,7 @@ div.latest-item .hover-shape-bg {
 /*--- FAQ screen css ---*/
 .faq_screen_sect {
   padding: 64px 0px 140px 0px;
-  background: #090a1a;
+  background: #151625;
 }
 
 .faq_screen_tab_sect {
@@ -7107,7 +7107,7 @@ div.latest-item .hover-shape-bg {
 /*--- tier pages style ---*/
 /*--- Tier ---*/
 .gamfi_tier_sect {
-  background: #090A1A;
+  background: #151625;
   padding-top: 70px;
   padding-bottom: 110px;
   position: relative;
@@ -7325,7 +7325,7 @@ div.latest-item .hover-shape-bg {
 
 /*--- Tier V3 ---*/
 .gamfi_tier_v3_sect {
-  background: #090A1A;
+  background: #151625;
   padding-top: 70px;
   padding-bottom: 140px;
 }
@@ -7472,7 +7472,7 @@ div.latest-item .hover-shape-bg {
 }
 
 .tokenomics_section {
-  background: #090A1A;
+  background: #151625;
   padding-top: 0px;
   padding-bottom: 105px;
 }
@@ -7635,7 +7635,7 @@ div.latest-item .hover-shape-bg {
 }
 
 .governanc_content_section {
-  background: #090A1A;
+  background: #151625;
   padding-bottom: 140px;
   position: relative;
   z-index: 3;
@@ -8589,7 +8589,7 @@ div.latest-item .hover-shape-bg {
 /*--- connect wallet pages style ---*/
 /*--- Connect Wallet CSS ---*/
 .connect_wallet_section {
-  background: #090A1A;
+  background: #151625;
   padding-top: 96px;
   padding-bottom: 140px;
   -webkit-backdrop-filter: blur(10px);
@@ -8776,7 +8776,7 @@ div.latest-item .hover-shape-bg {
 
 .kyc_form_sect {
   padding-top: 56px;
-  background: #090A1A;
+  background: #151625;
   padding-bottom: 140px;
 }
 
@@ -9341,7 +9341,7 @@ div.latest-item .hover-shape-bg {
 /*--- team details pages style ---*/
 /*--- Team Details css ---*/
 .team_details_sect {
-  background: #090B1A;
+  background: #151625;
   width: 100%;
   padding-top: 70px;
   padding-bottom: 140px;
@@ -9447,12 +9447,12 @@ div.latest-item .hover-shape-bg {
 
 .gamfi_roadmap {
   padding-bottom: 120px;
-  background: #090A1A;
+  background: #151625;
   position: relative;
 }
 
 .roadmap_sect {
-  background: #090A1A;
+  background: #151625;
   padding-top: 40px;
   position: relative;
   display: flex;
@@ -10007,7 +10007,7 @@ div.latest-item .hover-shape-bg {
 
 .white-bg-btn {
   background: #FFFFFF;
-  color: #090a1a;
+  color: #151625;
   border: 2px solid #FFFFFF;
   padding: 10px 20px;
 }
@@ -10026,7 +10026,7 @@ div.latest-item .hover-shape-bg {
 
 .white-btn {
   background: #FFFFFF;
-  color: #090A1A;
+  color: #151625;
   margin-left: 25px;
   padding: 13px 32px 11px;
   border: none;
@@ -10045,7 +10045,7 @@ div.latest-item .hover-shape-bg {
   transition: all 0.4s ease-in-out;
   font-family: "Russo One", sans-serif;
   background: #A3FF12;
-  color: #090A1A;
+  color: #151625;
   padding: 19px 50px;
 }
 .banner-btn .hover-shape1,
@@ -10054,7 +10054,7 @@ div.latest-item .hover-shape-bg {
   background: rgba(0, 0, 0, 0.1);
 }
 .banner-btn:hover {
-  color: #090A1A;
+  color: #151625;
 }
 .banner-btn:hover .hover-shape1 {
   left: 44%;
@@ -10099,7 +10099,7 @@ div.latest-item .hover-shape-bg {
   line-height: 19px;
   text-align: center;
   text-transform: uppercase;
-  color: #090A1A;
+  color: #151625;
 }
 
 .apply-project-btn {
@@ -10244,7 +10244,7 @@ div.latest-item .hover-shape-bg {
   font-family: "Russo One", sans-serif;
   font-size: 16px;
   font-weight: 400;
-  color: #090a1a;
+  color: #151625;
   position: relative;
   overflow: hidden;
   transition: 0.3s;
@@ -10270,7 +10270,7 @@ div.latest-item .hover-shape-bg {
   width: 11px;
 }
 .theme-btn:hover {
-  color: #090a1a;
+  color: #151625;
 }
 .theme-btn:hover .hover-shape1 {
   left: 44%;
@@ -10571,7 +10571,7 @@ div.latest-item .hover-shape-bg {
 .gamfi-header-section .mobile-navbar-menu .nav-menu li a {
   border-bottom: 1px solid rgba(0, 0, 0, 0.06);
   display: block;
-  color: #090b1a;
+  color: #151625;
   padding: 10px 0;
   line-height: 30px;
   width: 100%;
@@ -11076,7 +11076,7 @@ div.latest-item .hover-shape-bg {
 /*--- project breadcrumb style ---*/
 .project-clasic-breadcum-sect {
   height: auto;
-  background: #090A1A;
+  background: #151625;
   position: relative;
 }
 
@@ -11127,7 +11127,7 @@ div.latest-item .hover-shape-bg {
 
 /*--- account style ---*/
 .account__area {
-  background: #090A1A;
+  background: #151625;
   position: relative;
   padding: 96px 0px 0px 0px;
 }
@@ -11415,7 +11415,7 @@ div.latest-item .hover-shape-bg {
 
 /*--- Gamfi Form Content Section CSS ---*/
 .apply-section {
-  background-color: #090A1A;
+  background-color: #151625;
 }
 
 .input-list {
@@ -11459,7 +11459,7 @@ div.latest-item .hover-shape-bg {
 
 /* --- Gamfi footer Section CSS ---*/
 .gamfi-footer-section {
-  background-color: #090A1A;
+  background-color: #151625;
   position: relative;
 }
 .gamfi-footer-section .footer-cta-area {
