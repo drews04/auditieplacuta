@@ -1,13 +1,13 @@
 /* Evenimente Page Styles */
 
 body.page-evenimente {
-    background: #090A1A;
+    background: #151625;
     min-height: 100vh;
 }
 
 /* Ensure proper spacing like forum and concurs */
 body.page-evenimente .in-constructie-page-wrapper {
-    background: #090A1A;
+    background: #151625;
     padding-top: 0;
     margin-top: 0;
 }

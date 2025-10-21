@@ -35,7 +35,7 @@
 
 <style>
 .in-constructie-page-wrapper {
-  background-color: #090A1A;
+  background-color: #151625;
   min-height: 100vh;
   width: 100%;
 }

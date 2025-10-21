@@ -33,7 +33,7 @@ body {
   line-height: 1.6;
   font-weight: 500;
   overflow-x: hidden;
-  background-color: #090A1A;
+  background-color: #151625;
 }
 .header-menu {
   flex: 1 1 auto; /* Let it grow to take remaining space */
@@ -10301,19 +10301,19 @@ div.latest-item .hover-shape-bg {
 
 /*--- Gamfi Header Section CSS ---*/
 .gamfi-header-section {
-  background-color: #090A1A;
+  background-color: #151625;
   padding: 25px 0;
   position: relative;
   z-index: 9999;
 }
 .gamfi-header-section.transparent-header {
-  background: #090A1A;
+  background: #151625;
   position: relative;
   width: 100%;
   z-index: 9999;
 }
 .gamfi-header-section.default-header {
-  background: #090A1A;
+  background: #151625;
   position: relative;
   z-index: 9999;
 }
