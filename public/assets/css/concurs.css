@@ -215,7 +215,7 @@
 body.page-concurs,
 body.page-concurs-upload,
 body.page-concurs-vote {
-  background: linear-gradient(180deg, #0b1426 0%, #040610 100%) !important;
+  background: #151625 !important;
   background-attachment: fixed;
 }
 /* ==========================================
