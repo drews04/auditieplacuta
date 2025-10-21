@@ -254,7 +254,7 @@ body .modal-backdrop {
   position: relative;
   z-index: 9;
   overflow: hidden;
-  padding: 170px 0 225px;
+  padding: 60px 0 225px;
   background: url("../images/bg/banner-bg.jpg");
   background-size: cover;
   background-repeat: no-repeat;
