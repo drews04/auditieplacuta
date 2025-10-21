@@ -33,7 +33,7 @@ body {
   line-height: 1.6;
   font-weight: 500;
   overflow-x: hidden;
-  background-color: #151625;
+  background-color: #090A1A;
 }
 .header-menu {
   flex: 1 1 auto; /* Let it grow to take remaining space */
@@ -261,7 +261,7 @@ body .modal-backdrop {
   position: relative;
   z-index: 9;
   overflow: hidden;
-  padding: 60px 0 225px;
+  padding: 60px 0 80px;
   background: url("../images/bg/banner-bg.jpg");
   background-size: cover;
   background-repeat: no-repeat;

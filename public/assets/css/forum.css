@@ -2,18 +2,8 @@
 
 /* ---------- Page backdrop + header blending on forum pages ---------- */
 body.page-forum {
-    background: linear-gradient(180deg, #061016, #0b1220 60%, #0a111b);
+    background: #090A1A;
     min-height: 100vh;
-  }
-  
-  /* Make header/nav transparent on forum pages so the gradient shows through */
-  body.page-forum .navbar,
-  body.page-forum header.site-header,
-  body.page-forum .app-header {
-    background: transparent !important;
-    border-bottom: 1px solid rgba(22, 241, 211, 0.12);
-    box-shadow: none !important;
-    z-index: 1040; /* make sure header stays above content */
   }
   
   /* ---------- Forum wrapper ---------- */

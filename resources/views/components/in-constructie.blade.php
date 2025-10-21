@@ -1,6 +1,7 @@
 {{-- resources/views/components/in-constructie.blade.php --}}
-<div class="container py-5">
-  <div class="in-constructie-wrapper">
+<div class="in-constructie-page-wrapper">
+  <div class="container py-5">
+    <div class="in-constructie-wrapper">
     <div class="in-constructie-content">
       {{-- Icon --}}
       <div class="in-constructie-icon">
@@ -28,10 +29,17 @@
         Înapoi la pagina principală
       </a>
     </div>
+    </div>
   </div>
 </div>
 
 <style>
+.in-constructie-page-wrapper {
+  background-color: #090A1A;
+  min-height: 100vh;
+  width: 100%;
+}
+
 .in-constructie-wrapper {
   min-height: 60vh;
   display: flex;
