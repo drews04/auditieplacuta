@@ -5600,10 +5600,10 @@ div.latest-item .hover-shape-bg {
   padding: 25px 0;
 }
 .gamfi-header-section.transparent-header {
-  background: transparent;
-  position: absolute;
+  background: #090A1A;
+  position: relative;
   width: 100%;
-  z-index: 12;
+  z-index: 9999;
 }
 .gamfi-header-section.default-header {
   background: #090A1A;
