@@ -1,5 +1,7 @@
 @extends('layouts.app')
 
+@section('title', 'Premium – Magazin')
+
 @section('content')
-    {{-- Paste your page-specific content here --}}
+    @include('components.in-constructie')
 @endsection

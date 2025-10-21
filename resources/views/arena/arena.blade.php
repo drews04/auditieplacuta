@@ -1,5 +1,7 @@
 @extends('layouts.app')
 
+@section('title', 'Arena – Auditie Placuta')
+
 @section('content')
-    {{-- Paste your page-specific content here --}}
+    @include('components.in-constructie')
 @endsection
