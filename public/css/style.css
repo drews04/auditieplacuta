@@ -10303,17 +10303,19 @@ div.latest-item .hover-shape-bg {
 .gamfi-header-section {
   background-color: #090A1A;
   padding: 25px 0;
+  position: relative;
+  z-index: 9999;
 }
 .gamfi-header-section.transparent-header {
   background: transparent;
-  position: absolute;
+  position: relative;
   width: 100%;
-  z-index: 12;
+  z-index: 9999;
 }
 .gamfi-header-section.default-header {
   background: #090A1A;
   position: relative;
-  z-index: 11;
+  z-index: 9999;
 }
 .gamfi-header-section.default-header::after, .gamfi-header-section.default-header::before {
   width: 252px;
@@ -11932,18 +11934,7 @@ div.latest-item .hover-shape-bg {
    Concurs page — FINAL STYLES (scoped)
    ------------------------------------------- */
 
-/* Keep the header in normal flow on Concurs so content doesn't sit under it */
-body.page-concurs header,
-body.page-concurs .gamfi-header-section,
-body.page-concurs .transparent-header {
-  position: static !important;
-  top: auto !important;
-  left: auto !important;
-  right: auto !important;
-  z-index: auto !important;
-}
-
-/* Container safety + width - using global standard */
+/* Container safety - small top padding */
 body.page-concurs .container {
   padding-top: 8px;
 }
