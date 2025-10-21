@@ -4646,7 +4646,7 @@ body .gamfi-explore-content .project-item {
 }
 .list-menu .sub-menu {
   position: absolute;
-  z-index: 10;
+  z-index: 9999;
   transition: 0.3s;
   opacity: 0;
   visibility: hidden;
@@ -10365,7 +10365,7 @@ div.latest-item .hover-shape-bg {
   transform: scaleY(0);
   transform-origin: 0 0 0;
   transition: all 0.3s ease-in-out;
-  z-index: 10;
+  z-index: 9999;
 }
 .gamfi-header-section .heaader-inner-area ul li ul li {
   display: block;
@@ -10446,6 +10446,7 @@ div.latest-item .hover-shape-bg {
   transform: scaleY(0);
   transform-origin: 0 0 0;
   transition: all 0.3s ease-in-out;
+  z-index: 9999;
 }
 .gamfi-header-section .header-menu ul li ul.sub-menu li:hover .sub-menu {
   opacity: 1;
@@ -11955,6 +11956,9 @@ body.page-concurs .container {
   justify-content:space-between;
   margin:0 0 14px 0;
 }
+.page-concurs .ap-theme-section{
+  margin-bottom:35px;
+}
 .page-concurs .ap-left{
   display:flex;
   align-items:center;
@@ -11988,6 +11992,13 @@ body.page-concurs .container {
 .page-concurs .ap-popup__title{ font-weight:900; letter-spacing:.3px; }
 .page-concurs .ap-popup__text{ opacity:.9; }
 @keyframes apPop{ from{ transform:translate(-50%,-8px); opacity:0 } to{ transform:translate(-50%,0); opacity:1 } }
+
+/* ------- Clear badge text (more visible) ------- */
+.page-concurs .ap-badge-clear{
+  color:#ffffff !important;
+  font-weight:700;
+  opacity:1;
+}
 
 /* ------- Upload card & controls ------- */
 .page-concurs .card{
@@ -12121,10 +12132,17 @@ body.page-concurs .container {
   color: #e8f0f7;
 }
 
-/* Highlight ONLY my own song */
+/* Highlight ONLY my own song (teal/green glow) */
 .page-concurs .song-item.my-song {
   background: radial-gradient(120% 120% at 10% 10%, rgba(0,255,200,0.10), rgba(0,0,0,0)) , #0f1216;
   box-shadow: 0 0 0 1px rgba(0,255,200,0.18) inset, 0 6px 20px rgba(0,255,200,0.08);
+}
+
+/* Highlight song I voted for (violet/magenta glow) */
+.page-concurs .song-item.voted-song {
+  background: radial-gradient(120% 120% at 10% 10%, rgba(162,109,242,0.18), rgba(0,0,0,0)) , #0f1216;
+  box-shadow: 0 0 0 1px rgba(162,109,242,0.35) inset, 0 6px 20px rgba(162,109,242,0.15), 0 0 10px rgba(162,109,242,0.25);
+  border-left: 3px solid #a26df2;
 }
 
 /* Title spacing */
@@ -12352,20 +12370,3 @@ body.page-concurs #winnerReminder #confetti-bg{
 /* hide the teaser buttons completely */
 .list-group .btn.opacity-60[disabled] { display: none !important; }
 
-/* Arena mega-menu: center lists under titles */
-.mega_menu_hov .gamfi_mega_menu_sect .gamfi_mega_menu .mega_menu_content .menu_column{
-  text-align: center !important;
-}
-
-.mega_menu_hov .gamfi_mega_menu_sect .gamfi_mega_menu .mega_menu_content .menu_column > ul{
-  width: max-content !important;      /* shrink to content */
-  margin: 12px auto 0 !important;     /* center under the H2 */
-  padding: 0 !important;              /* remove UL indent */
-  list-style: none !important;
-}
-
-/* THIS is the culprit: anchors had left padding from global nav */
-.mega_menu_hov .gamfi_mega_menu_sect .gamfi_mega_menu .mega_menu_content .menu_column > ul > li > a{
-  padding-left: 0 !important;         /* remove offset */
-  display: inline-block !important;   /* keeps UL width tight */
-}

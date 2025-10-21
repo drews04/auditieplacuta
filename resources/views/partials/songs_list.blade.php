@@ -7,20 +7,24 @@
     $hideDisabledButtons  = $hideDisabledButtons  ?? false;   // when true: render NOTHING on the right side
     $disabledVoteText     = $disabledVoteText     ?? null;    // custom disabled label
     $hideVoteStatus       = $hideVoteStatus       ?? false;   // hide entire right-side status area
+    $votedSongId          = $votedSongId          ?? null;    // ID of song user voted for (purple glow)
 @endphp
 
 <div class="list-group">
 @forelse ($songs as $song)
     @php
-        $title  = trim($song->title ?? '');
-        $label  = $title !== '' ? $title : 'Melodie YouTube';
-        $yt     = trim($song->youtube_url ?? '');
-        $isMine = auth()->check() && (int) ($song->user_id ?? 0) === (int) auth()->id();
+        $title     = trim($song->title ?? '');
+        $label     = $title !== '' ? $title : 'Melodie YouTube';
+        $yt        = trim($song->youtube_url ?? '');
+        $isMine    = auth()->check() && (int) ($song->user_id ?? 0) === (int) auth()->id();
+        $isVoted   = $votedSongId && (int) ($song->id ?? 0) === (int) $votedSongId;
 
         $canVote = $showVoteButtons && !$userHasVotedToday && !$isMine && auth()->check();
+        
+        $itemClass = $isMine ? 'my-song' : ($isVoted ? 'voted-song' : '');
     @endphp
 
-    <div class="list-group-item d-flex justify-content-between align-items-center song-item {{ $isMine ? 'my-song' : '' }}">
+    <div class="list-group-item d-flex justify-content-between align-items-center song-item {{ $itemClass }}">
         <div class="d-flex align-items-center gap-3">
             {{-- Play button (keeps your 3D styles) --}}
             <button

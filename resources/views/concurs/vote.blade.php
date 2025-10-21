@@ -7,6 +7,7 @@
   <link rel="stylesheet" href="{{ asset('assets/css/vote-btn.css') }}?v={{ filemtime(public_path('assets/css/vote-btn.css')) }}">
   {{-- Heart/likes styles (match /concurs + upload) --}}
   <link rel="stylesheet" href="{{ asset('assets/css/theme-like.css') }}?v={{ filemtime(public_path('assets/css/theme-like.css')) }}">
+  <link rel="stylesheet" href="{{ asset('assets/css/concurs-override.css') }}?v={{ time() }}">
   <link rel="stylesheet" href="{{ asset('assets/css/concurs-mobile.css') }}?v={{ time() }}">
 @endpush
 
@@ -54,7 +55,7 @@
         <h5 class="card-title mb-2 d-flex align-items-center gap-2">
           ★ Votează
           @if(!empty($votingOpen) && $votingOpen)
-            <span class="badge text-bg-success">Deschis până la {{ $voteClosesAt?->format('H:i') ?? '20:00' }}</span>
+            <span class="badge text-bg-success ap-badge-clear">Deschis până la {{ $voteClosesAt?->format('H:i') ?? '20:00' }}</span>
           @elseif($isPreVote)
             <span class="badge text-bg-secondary">
               Previzualizare — începe la {{ $voteOpensAtTZ?->format('H:i') ?? '00:00' }}
@@ -72,7 +73,7 @@
 
         {{-- THEME ROW --}}
         @if($cycleVote->theme_text)
-          <div class="ap-theme-row mb-3">
+          <div class="ap-theme-row ap-theme-section">
             <div class="ap-left">
               @if($cat !== '') <span class="ap-cat-badge">{{ $catDisp }}</span><span class="ap-dot">🎯</span> @endif
               <span class="ap-label">Tema:</span>
@@ -120,6 +121,7 @@
                                     ? 'Votul începe la ' . ($voteOpensAtTZ ? $voteOpensAtTZ->format('H:i') : '00:00')
                                     : ((!empty($votingOpen) && $votingOpen) ? 'Ai votat deja' : 'Vot închis'),
           'userHasVotedToday'   => $userHasVotedToday ?? false,
+          'votedSongId'         => $votedSongId ?? null,
         ])
 
         @if(!( !empty($votingOpen) && $votingOpen ) && !$isPreVote)

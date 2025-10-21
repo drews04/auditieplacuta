@@ -146,12 +146,21 @@ Route::get('/_ping', fn () => response('pong', 200)->header('Content-Type', 'tex
 // Login / Logout
 Route::get('/login',  [\App\Http\Controllers\CustomAuthController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [\App\Http\Controllers\CustomAuthController::class, 'login'])->name('login.attempt');
+
+// Logout (POST with CSRF + GET fallback for expired tokens)
 Route::post('/logout', function () {
     auth()->logout();
     request()->session()->invalidate();
     request()->session()->regenerateToken();
-    return redirect()->route('home');
+    return redirect()->route('home')->with('status', 'Te-ai deconectat cu succes.');
 })->name('logout');
+
+Route::get('/logout', function () {
+    auth()->logout();
+    request()->session()->invalidate();
+    request()->session()->regenerateToken();
+    return redirect()->route('home')->with('status', 'Te-ai deconectat cu succes.');
+})->name('logout.get');
 
 // Guest-only flows
 Route::middleware('guest')->group(function () {

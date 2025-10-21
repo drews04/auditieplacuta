@@ -178,12 +178,13 @@
       .then(data => {
         showToast(data.message || 'Melodia a fost încărcată cu succes.', 'success');
 
-        const card = form.closest('.card');
-        if (card) {
-          card.style.animation = 'apDustVanish 0.65s ease forwards';
-          const removeCard = () => card.remove();
-          card.addEventListener('animationend', removeCard, { once:true });
-          setTimeout(() => { if (document.body.contains(card)) removeCard(); }, 900);
+        // Only animate the upload form wrapper, not the entire card
+        const formWrapper = form.closest('.ap-upload-form-wrapper');
+        if (formWrapper) {
+          formWrapper.style.animation = 'apDustVanish 0.65s ease forwards';
+          const removeWrapper = () => formWrapper.remove();
+          formWrapper.addEventListener('animationend', removeWrapper, { once:true });
+          setTimeout(() => { if (document.body.contains(formWrapper)) removeWrapper(); }, 900);
         }
 
         // Reload page to show updated song list
@@ -259,6 +260,19 @@
         const data = await res.json().catch(() => ({}));
 
         if (res.ok && (data.ok || data.success || data.message)) {
+          // ===== INSTANT PURPLE GLOW =====
+          // Remove voted-song class from all songs
+          document.querySelectorAll('.song-item.voted-song').forEach(el => {
+            el.classList.remove('voted-song');
+          });
+          
+          // Remove my-song class from the voted song (can't be both)
+          const votedSongItem = btn.closest('.song-item');
+          if (votedSongItem) {
+            votedSongItem.classList.remove('my-song');
+            votedSongItem.classList.add('voted-song');
+          }
+          
           apStaggerVanishVoteButtons();
           showToast(data.message || 'Vot înregistrat.', 'success');
           return;

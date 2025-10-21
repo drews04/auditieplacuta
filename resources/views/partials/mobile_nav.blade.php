@@ -26,7 +26,7 @@
       @auth
         <div class="ap-greet">Salut, {{ auth()->user()->name }}</div>
 
-        <a href="{{ route('logout') }}" class="nav-link logout-link text-danger fw-semibold"
+        <a href="{{ route('logout.get') }}" class="nav-link logout-link text-danger fw-semibold"
            onclick="event.preventDefault(); document.getElementById('logout-form-main').submit();">
           Deconectează-te
         </a>

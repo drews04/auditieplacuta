@@ -47,8 +47,25 @@
   <h1 class="mb-3 text-center fw-bold" style="letter-spacing:1px;">⬆️ Încarcă melodia pentru azi</h1>
   <p class="text-center mb-4">Adaugă linkul YouTube și intră în concursul de azi.</p>
 
-  {{-- ===== THEME PILL (today or next scheduled) ===== --}}
-  @if($cycleSubmit && $cycleSubmit->theme_text)
+  {{-- ===== UPLOAD BLOCK (same look/classes as on /concurs vote) ===== --}}
+  @php
+    $tz = config('app.timezone', 'Europe/Bucharest');
+    $submitClosesAt = ($cycleSubmit && $cycleSubmit->submit_end_at) ? \Carbon\Carbon::parse($cycleSubmit->submit_end_at)->timezone($tz) : null;
+  @endphp
+
+  <div class="card border-0 shadow-sm mb-4 ap-neon">
+    <div class="card-body">
+      <h5 class="card-title mb-2 d-flex align-items-center gap-2">
+        ★ Încarcă
+        @if(!empty($submissionsOpen) && $submissionsOpen)
+          <span class="badge text-bg-success ap-badge-clear">Deschis până la {{ $submitClosesAt?->format('H:i') ?? '20:00' }}</span>
+        @else
+          <span class="badge text-bg-secondary">Închis</span>
+        @endif
+      </h5>
+
+      {{-- ===== THEME PILL (today or next scheduled) ===== --}}
+      @if($cycleSubmit && $cycleSubmit->theme_text)
     @php
       // Parse "Category - Theme Name" from theme_text (hyphen, not em dash)
       $parts = preg_split('/\s*[-—]\s*/u', (string)$cycleSubmit->theme_text, 2);
@@ -66,86 +83,68 @@
       $submitLikesCount = $submitTheme->likes_count ?? 0;
       $submitLiked      = $submitTheme->liked_by_me ?? false;
     @endphp
-    <div class="card border-0 shadow-sm mb-4 ap-neon">
-      <div class="card-body">
-        <div class="ap-theme-row">
-          <div class="ap-left">
-            @if($cat !== '') <span class="ap-cat-badge">{{ $catDisp }}</span><span class="ap-dot">🎯</span> @endif
-            <span class="ap-label">Tema:</span>
-            <span class="ap-title">{{ $title }}</span>
+    <div class="ap-theme-row ap-theme-section">
+      <div class="ap-left">
+        @if($cat !== '') <span class="ap-cat-badge">{{ $catDisp }}</span><span class="ap-dot">🎯</span> @endif
+        <span class="ap-label">Tema:</span>
+        <span class="ap-title">{{ $title }}</span>
 
-            {{-- HEART button --}}
-            @if($submitThemeId)
-              <div class="dropdown d-inline-block theme-like-wrap ms-2">
-                <button type="button"
-                        class="btn btn-sm theme-like {{ $submitLiked ? 'is-liked' : '' }}"
-                        data-likeable-type="contest"
-                        data-likeable-id="{{ $submitThemeId }}"
-                        data-liked="{{ $submitLiked ? 1 : 0 }}"
-                        data-count="{{ (int)$submitLikesCount }}"
-                        @guest data-auth="0" @endguest>
-                  <i class="heart-icon"></i>
-                  <span class="like-count">{{ (int)$submitLikesCount }}</span>
-                </button>
-                <ul class="dropdown-menu theme-like-dropdown p-2 shadow-sm" style="min-width:180px;">
-                  @forelse(($submitTheme->likes ?? []) as $like)
-                    <li class="small text-muted">❤️ {{ $like->user->name }}</li>
-                  @empty
-                    <li class="small text-muted">Niciun like încă</li>
-                  @endforelse
-                </ul>
-              </div>
-            @endif
+        {{-- HEART button --}}
+        @if($submitThemeId)
+          <div class="dropdown d-inline-block theme-like-wrap ms-2">
+            <button type="button"
+                    class="btn btn-sm theme-like {{ $submitLiked ? 'is-liked' : '' }}"
+                    data-likeable-type="contest"
+                    data-likeable-id="{{ $submitThemeId }}"
+                    data-liked="{{ $submitLiked ? 1 : 0 }}"
+                    data-count="{{ (int)$submitLikesCount }}"
+                    @guest data-auth="0" @endguest>
+              <i class="heart-icon"></i>
+              <span class="like-count">{{ (int)$submitLikesCount }}</span>
+            </button>
+            <ul class="dropdown-menu theme-like-dropdown p-2 shadow-sm" style="min-width:180px;">
+              @forelse(($submitTheme->likes ?? []) as $like)
+                <li class="small text-muted">❤️ {{ $like->user->name }}</li>
+              @empty
+                <li class="small text-muted">Niciun like încă</li>
+              @endforelse
+            </ul>
           </div>
-        </div>
+        @endif
       </div>
     </div>
   @endif
 
-  {{-- ===== UPLOAD FORM / CLOSE STATES ===== --}}
-  @auth
-    @php $allowUploadNow = $submissionsOpen && !$userHasUploadedToday; @endphp
-    @if($allowUploadNow)
-      <div class="card border-0 shadow-sm mb-4 ap-neon">
-        <div class="card-body">
-          <h5 class="card-title mb-3">📤 Înscrie-ți melodia (YouTube URL)</h5>
-          <form id="song-upload-form" action="{{ route('concurs.upload') }}" method="POST">
-            @csrf
-            <div class="row g-2">
-              <div class="col-md-9">
-                <input type="url" name="youtube_url" id="youtube_url"
-                       class="form-control" placeholder="https://www.youtube.com/watch?v=…" required>
+      {{-- ===== UPLOAD FORM / CLOSE STATES ===== --}}
+      @auth
+        @php $allowUploadNow = $submissionsOpen && !$userHasUploadedToday; @endphp
+        @if($allowUploadNow)
+          <div class="mb-3 ap-upload-form-wrapper">
+            <h6 class="fw-bold mb-2">📤 Înscrie-ți melodia (YouTube URL)</h6>
+            <form id="song-upload-form" action="{{ route('concurs.upload') }}" method="POST">
+              @csrf
+              <div class="row g-2">
+                <div class="col-md-9">
+                  <input type="url" name="youtube_url" id="youtube_url"
+                         class="form-control" placeholder="https://www.youtube.com/watch?v=…" required>
+                </div>
+                <div class="col-md-3 d-grid">
+                  <button type="submit" class="btn btn-success">Trimite</button>
+                </div>
               </div>
-              <div class="col-md-3 d-grid">
-                <button type="submit" class="btn btn-success">Trimite</button>
-              </div>
-            </div>
-            <small class="text-muted d-block mt-2">
-              Înscrierile se închid la
-              <strong>{{ $cycleSubmit && $cycleSubmit->submit_end_at ? \Carbon\Carbon::parse($cycleSubmit->submit_end_at)->timezone(config('app.timezone'))->format('H:i') : '20:00' }}</strong>.
-            </small>
-          </form>
-        </div>
-      </div>
-    @else
-      <div class="alert alert-dark mb-4">🕒 Înscrierile sunt închise sau ai încărcat deja o melodie.</div>
-    @endif
-  @else
-    <div class="alert alert-dark mb-4">🔒 Autentifică-te pentru a-ți înscrie melodia.</div>
-  @endauth
+            </form>
+          </div>
+        @endif
+      @endauth
 
-  {{-- SONG LIST --}}
-  <div class="card border-0 shadow-sm mb-4 ap-neon">
-    <div class="card-body">
-      <div id="song-list">
-        @include('partials.songs_list', [
-          'songs' => $songsSubmit,
-          'userHasVotedToday'=>true,
-          'showVoteButtons'=>false,
-          'hideVoteStatus'=>true,
-          'hideDisabledButtons'=>true,
-        ])
-      </div>
+      {{-- SONG LIST --}}
+      @include('partials.songs_list', [
+        'songs' => $songsSubmit,
+        'userHasVotedToday'=>true,
+        'showVoteButtons'=>false,
+        'hideVoteStatus'=>true,
+        'hideDisabledButtons'=>true,
+      ])
     </div>
   </div>
 </div>

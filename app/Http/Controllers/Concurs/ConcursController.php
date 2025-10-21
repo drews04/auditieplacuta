@@ -72,12 +72,17 @@ class ConcursController extends Controller
 
         $authId = auth()->id();
         
-        $userHasVotedToday = $authId && $cycleVote
-            ? DB::table('votes')
+        $votedSongId = null;
+        $userHasVotedToday = false;
+        if ($authId && $cycleVote) {
+            $userVote = DB::table('votes')
                 ->where('user_id', $authId)
                 ->where('cycle_id', $cycleVote->id)
-                ->exists()
-            : false;
+                ->first(['song_id']);
+            
+            $userHasVotedToday = (bool)$userVote;
+            $votedSongId = $userVote->song_id ?? null;
+        }
 
         $userHasUploadedToday = $authId && $cycleSubmit
             ? DB::table('songs')
@@ -139,6 +144,7 @@ class ConcursController extends Controller
             'submissionsOpen', 'votingOpen',
             'winnerStripCycle', 'winnerStripWinner',
             'userHasVotedToday', 'userHasUploadedToday',
+            'votedSongId',
             'gapBetweenPhases',
             'isWinner', 'window', 'tomorrowPicked',
             'showWinnerModal', 'showWinnerPopup'

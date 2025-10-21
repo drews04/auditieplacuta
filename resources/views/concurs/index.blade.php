@@ -29,7 +29,10 @@
 @section('body_class', 'page-concurs')
 
 {{-- Winner recap banner (safe) --}}
-@includeWhen(isset($lastFinishedCycle, $lastWinner) && $lastFinishedCycle && $lastWinner, 'concurs.partials.winner_recap')
+@includeWhen(isset($winnerStripCycle, $winnerStripWinner) && $winnerStripCycle && $winnerStripWinner, 'concurs.partials.winner_recap', [
+    'lastFinishedCycle' => $winnerStripCycle,
+    'lastWinner' => $winnerStripWinner
+])
 
 {{-- Winner pick-theme button --}}
 @if($isWinner ?? false)

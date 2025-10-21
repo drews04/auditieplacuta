@@ -36,6 +36,7 @@ class VoteController extends Controller
         $songsVote         = collect();
         $voteTheme         = null;
         $userHasVotedToday = false;
+        $votedSongId       = null;
         $voteOpensAt       = null;
 
         if ($cycleVote) {
@@ -73,17 +74,22 @@ class VoteController extends Controller
                 ];
             }
 
+            $votedSongId = null;
             if (auth()->check()) {
-                $userHasVotedToday = DB::table('votes')
+                $userVote = DB::table('votes')
                     ->where('user_id', auth()->id())
                     ->where('cycle_id', $cycleVote->id)
-                    ->exists();
+                    ->first(['song_id']);
+                
+                $userHasVotedToday = (bool)$userVote;
+                $votedSongId = $userVote->song_id ?? null;
             }
         }
 
         return view('concurs.vote', compact(
             'cycleVote', 'songsVote', 'votingOpen',
-            'voteOpensAt', 'voteTheme', 'userHasVotedToday', 'window'
+            'voteOpensAt', 'voteTheme', 'userHasVotedToday', 'window',
+            'votedSongId'
         ));
     }
 

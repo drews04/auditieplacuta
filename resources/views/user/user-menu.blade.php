@@ -10,7 +10,7 @@
             <li><a href="{{ route('abilities.index') }}">Abilitățile mele</a></li>
             <li><a href="{{ route('user.settings') }}">Setări cont</a></li>
             <li class="logout">
-                <a href="#" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">Deconectare</a>
+                <a href="{{ route('logout.get') }}" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">Deconectare</a>
                 <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display:none;">@csrf</form>
             </li>
         </ul>
