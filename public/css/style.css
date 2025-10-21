@@ -11943,10 +11943,9 @@ body.page-concurs .transparent-header {
   z-index: auto !important;
 }
 
-/* Container safety + width */
+/* Container safety + width - using global standard */
 body.page-concurs .container {
   padding-top: 8px;
-  max-width: 1080px;
 }
 
 /* ------- Tomorrow theme: simple inline row ------- */
@@ -12316,6 +12315,49 @@ body.page-concurs .container {
 .song-item.vs-item .btn {
   padding: 10px 18px;
   font-weight: 700;
+}
+
+/* ========================================================================== */
+/* === GLOBAL LAYOUT STANDARDS (applied site-wide for consistency)      === */
+/* ========================================================================== */
+
+/* Standardize container width across all pages */
+.container {
+  max-width: 1200px !important;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 15px;
+  padding-right: 15px;
+}
+
+@media (max-width: 1400px) {
+  .container {
+    max-width: 1140px !important;
+  }
+}
+
+@media (max-width: 1200px) {
+  .container {
+    max-width: 960px !important;
+  }
+}
+
+@media (max-width: 992px) {
+  .container {
+    max-width: 720px !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .container {
+    max-width: 540px !important;
+  }
+}
+
+@media (max-width: 576px) {
+  .container {
+    max-width: 100% !important;
+  }
 }
 /* ==========================================================================
    apDustVanish upload youtube — "sand/dust" vanish animation
