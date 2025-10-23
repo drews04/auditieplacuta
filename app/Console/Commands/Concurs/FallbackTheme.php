@@ -7,42 +7,43 @@ use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 
 /**
- * Fallback theme picker if winner doesn't choose by 21:00
- * REBUILT PER COMPENDIUM V2 (2025-10-20)
+ * BULLETPROOF FALLBACK THEME - SPEC COMPLIANT
  * 
- * LOGIC:
- * 1. Only run if window='waiting_theme'
- * 2. Pick random theme from theme_pools + random category
- * 3. Create NEW submission cycle (opens immediately)
- * 4. Unlock window
- * 5. Contest continues seamlessly
+ * LOGIC (BULLETPROOF):
+ * 1. STRICT GUARDS: Require exactly 1 open submission with theme_id=NULL
+ * 2. Only run after 21:00 (winner had their chance)
+ * 3. Pick random theme from theme_pools + random category
+ * 4. UNFREEZE submission (theme_id = non-NULL) - THE UNFREEZE SWITCH
+ * 5. Contest continues seamlessly - no more contest_flags needed
  */
 class FallbackTheme extends Command
 {
-    protected $signature   = 'concurs:fallback-theme';
-    protected $description = "Auto-generate fallback theme if winner doesn't choose by 21:00";
+    protected $signature   = 'concurs:fallback-theme {--force : Run regardless of time}';
+    protected $description = 'BULLETPROOF: Auto-generate fallback theme if winner doesn\'t choose by 21:00';
 
     public function handle(): int
     {
         $tz  = config('app.timezone', 'Europe/Bucharest');
         $now = Carbon::now($tz);
 
-        // Guard: only run when window='waiting_theme'
-        $window = DB::table('contest_flags')->where('name', 'window')->value('value');
-        if ($window !== 'waiting_theme') {
-            $this->info('Window not waiting_theme. Skipping.');
-            return self::SUCCESS;
+        // ═══════════════════════════════════════════════════════════════════════════════
+        // BULLETPROOF GUARDS: Exactly 1 open submission with theme_id=NULL (frozen)
+        // ═══════════════════════════════════════════════════════════════════════════════
+        if (!$this->guardInvariants()) {
+            return self::FAILURE;
         }
 
-        // Guard: only run after 21:00
-        if ($now->hour < 21) {
-            $this->info('Not yet 21:00. Skipping.');
+        // Guard: only run after 21:00 (winner had their chance) unless --force
+        if (!$this->option('force') && $now->hour < 21) {
+            $this->info('Not yet 21:00. Winner still has time to choose.');
             return self::SUCCESS;
         }
 
         DB::beginTransaction();
         try {
-            // 1) PICK RANDOM THEME from theme_pools
+            // ═══════════════════════════════════════════════════════════════════════════════
+            // PICK RANDOM FALLBACK THEME
+            // ═══════════════════════════════════════════════════════════════════════════════
             $categories = ['CSD', 'ITC', 'Artiști', 'Genuri'];
             
             $poolTheme = DB::table('theme_pools')
@@ -66,56 +67,83 @@ class FallbackTheme extends Command
             $category = $categories[array_rand($categories)];
             $themeText = "{$category} — {$poolTheme}";
 
-            // 2) CREATE THEME in contest_themes
+            // Create theme in contest_themes
             $themeId = DB::table('contest_themes')->insertGetId([
                 'name'              => $themeText,
                 'chosen_by_user_id' => null, // Fallback (system-generated)
                 'created_at'        => $now,
             ]);
 
-            // 3) CREATE NEW SUBMISSION CYCLE
-            $next2000 = $now->copy()->addDay()->setTime(20, 0, 0);
-            
+            // Find the NEWEST frozen submission opened at 20:00
+            $frozen = DB::table('contest_cycles')
+                ->where('lane', 'submission')
+                ->where('status', 'open')
+                ->whereNull('theme_id')
+                ->orderByDesc('id')
+                ->first(['id', 'submit_end_at', 'theme_text']);
+
+            if (!$frozen) {
+                throw new \Exception('No frozen submission found to unfreeze.');
+            }
+
+            // Compute next 20:00 (voting end for promoted cycle, and submit_end for new submission)
+            $tomorrow2000 = Carbon::parse($frozen->submit_end_at, $tz)->addDay()->setTime(20, 0, 0);
+
+            // PROMOTE the frozen submission to voting WITHOUT changing its theme fields
+            DB::table('contest_cycles')
+                ->where('id', $frozen->id)
+                ->update([
+                    'lane'        => 'voting',
+                    'status'      => 'open',
+                    'vote_end_at' => $tomorrow2000,
+                    // keep theme_id/theme_text as-is to preserve yesterday's theme on the vote page
+                    'updated_at'  => $now,
+                ]);
+
+            // OPEN a fresh submission for uploads with the FALLBACK theme (this is the unfreeze)
             DB::table('contest_cycles')->insert([
-                'theme_id'      => $themeId,
-                'theme_text'    => $themeText,
                 'lane'          => 'submission',
                 'status'        => 'open',
+                'theme_id'      => $themeId,
+                'theme_text'    => $themeText,
                 'start_at'      => $now,
-                'submit_end_at' => $next2000,
-                'vote_end_at'   => null, // Will be set when promoted to voting
+                'submit_end_at' => $tomorrow2000,
+                'vote_end_at'   => null,
                 'created_at'    => $now,
                 'updated_at'    => $now,
             ]);
 
-            // 4) UNLOCK WINDOW
-            DB::table('contest_flags')->updateOrInsert(
-                ['name' => 'window'],
-                ['value' => null, 'updated_at' => $now]
-            );
-
-            // 5) AUDIT LOG
-            $seed = crc32("fallback|{$themeText}|" . $now->format('Y-m-d'));
-            DB::table('contest_audit_logs')->insert([
-                'event_type' => 'fallback_theme',
-                'cycle_id'   => null,
-                'seed'       => $seed,
-                'details'    => json_encode([
-                    'theme_id'   => $themeId,
-                    'theme_name' => $themeText,
-                    'category'   => $category,
-                ]),
-                'created_at' => $now,
-            ]);
-
             DB::commit();
-            $this->info("✅ Fallback theme created: {$themeText}");
+            $this->info("[FALLBACK] Theme created: {$themeText}");
+            $this->info('[PROMOTE] Frozen submission promoted to voting; vote page available.');
+            $this->info('[UNFREEZE] New submission opened with fallback theme; uploads open.');
+            
         } catch (\Throwable $e) {
             DB::rollBack();
-            $this->error("❌ Error creating fallback theme: " . $e->getMessage());
+            $this->error("[FALLBACK] Error applying fallback theme: " . $e->getMessage());
             return self::FAILURE;
         }
 
         return self::SUCCESS;
+    }
+
+    /**
+     * BULLETPROOF GUARDS: Exactly 1 open submission with theme_id=NULL (frozen)
+     */
+    private function guardInvariants(): bool
+    {
+        $frozenSubmission = DB::table('contest_cycles')
+            ->where('lane', 'submission')
+            ->where('status', 'open')
+            ->whereNull('theme_id')
+            ->count();
+
+        if ($frozenSubmission !== 1) {
+            $this->error("[FALLBACK] ABORT — expected 1 frozen submission (theme_id=NULL); found {$frozenSubmission}");
+            return false;
+        }
+
+        $this->info("[FALLBACK] Guards passed: 1 frozen submission found ✅");
+        return true;
     }
 }

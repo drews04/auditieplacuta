@@ -37,9 +37,13 @@ class ConcursController extends Controller
             ->orderByDesc('start_at')
             ->first();
 
-        // Gap detection (read-only window between 20:00 and theme pick)
-        $window = DB::table('contest_flags')->where('name', 'window')->value('value');
-        $gapBetweenPhases = ($window === 'waiting_theme');
+        // BULLETPROOF FREEZE DETECTION: Check if submission.theme_id is NULL
+        $submissionCycle = DB::table('contest_cycles')
+            ->where('lane', 'submission')
+            ->where('status', 'open')
+            ->first();
+        
+        $gapBetweenPhases = $submissionCycle && is_null($submissionCycle->theme_id);
 
         // ========== SONGS ==========
 
@@ -99,6 +103,11 @@ class ConcursController extends Controller
             ->orderByDesc('vote_end_at')
             ->first();
 
+        // Normalize to Carbon so blades can call ->timezone() safely
+        if ($winnerStripCycle && $winnerStripCycle->vote_end_at) {
+            $winnerStripCycle->vote_end_at = \Carbon\Carbon::parse($winnerStripCycle->vote_end_at);
+        }
+
         $winnerStripWinner = null;
         if ($winnerStripCycle) {
             $winnerStripWinner = DB::table('winners')
@@ -113,17 +122,23 @@ class ConcursController extends Controller
                 $winnerStripWinner->song = DB::table('songs')
                     ->where('id', $winnerStripWinner->song_id)
                     ->first(['id', 'title', 'youtube_url']);
+
+                // Add vote_count so blade can display votes
+                $winnerStripWinner->vote_count = DB::table('votes')
+                    ->where('cycle_id', $winnerStripCycle->id)
+                    ->where('song_id',  $winnerStripWinner->song_id)
+                    ->count();
             }
         }
 
-        // ========== WINNER MODAL (20:00-21:00 window) ==========
+        // ========== BULLETPROOF WINNER MODAL ==========
 
         $isWinner = false;
-        $tomorrowPicked = ($window !== 'waiting_theme'); // Theme has been picked if not waiting
+        $tomorrowPicked = !$gapBetweenPhases; // Theme has been picked if not frozen
         $showWinnerModal = false;
         $showWinnerPopup = false;
 
-        if (auth()->check() && $window === 'waiting_theme') {
+        if (auth()->check() && $gapBetweenPhases) {
             // Check if current user is the last winner
             $latestWin = DB::table('winners')
                 ->join('contest_cycles', 'winners.cycle_id', '=', 'contest_cycles.id')
@@ -134,7 +149,8 @@ class ConcursController extends Controller
             
             if ($latestWin && (int)$latestWin->user_id === (int)auth()->id()) {
                 $isWinner = true;
-                $showWinnerModal = !session('winner_chose_theme'); // Show modal if they haven't chosen yet
+                // Always allow modal when frozen and user is winner (admin included)
+                $showWinnerModal = true;
             }
         }
 
@@ -146,7 +162,7 @@ class ConcursController extends Controller
             'userHasVotedToday', 'userHasUploadedToday',
             'votedSongId',
             'gapBetweenPhases',
-            'isWinner', 'window', 'tomorrowPicked',
+            'isWinner', 'tomorrowPicked',
             'showWinnerModal', 'showWinnerPopup'
         ));
     }

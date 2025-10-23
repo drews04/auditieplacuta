@@ -15,7 +15,7 @@
 
 .page-events,
 .page-events-create {
-    background: linear-gradient(180deg, #061016, #0b1220 60%, #0a111b);
+    background: #151625 !important;
     min-height: 100vh;
 }
 

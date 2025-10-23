@@ -31,8 +31,13 @@ class HealthCheck extends Command
         $this->line('Time: ' . $now->toDateTimeString());
 
         // Window flag
-        $window = DB::table('contest_flags')->where('name', 'window')->value('value') ?? '(none)';
-        $this->line('Window: ' . $window);
+        // BULLETPROOF: Check if submission is frozen
+        $submissionCycle = DB::table('contest_cycles')
+            ->where('lane', 'submission')
+            ->where('status', 'open')
+            ->first();
+        $isFrozen = $submissionCycle && is_null($submissionCycle->theme_id);
+        $this->line('Frozen: ' . ($isFrozen ? 'YES (theme_id=NULL)' : 'NO'));
         $this->newLine();
 
         // Open cycles
@@ -139,10 +144,7 @@ class HealthCheck extends Command
                     'updated_at'    => $now,
                 ]);
 
-                DB::table('contest_flags')->updateOrInsert(
-                    ['name' => 'window'],
-                    ['value' => null, 'updated_at' => $now]
-                );
+                // BULLETPROOF: No more contest_flags needed
 
                 DB::commit();
                 $this->info('✅ Initial submission cycle created.');
@@ -153,9 +155,9 @@ class HealthCheck extends Command
             }
         }
 
-        // REPAIR 2: Stuck in waiting_theme past 21:00 → trigger fallback
-        if ($window === 'waiting_theme' && $now->hour >= 21) {
-            $this->warn('⚠️  Stuck in waiting_theme past 21:00. Triggering fallback...');
+        // REPAIR 2: Stuck frozen past 21:00 → trigger fallback
+        if ($isFrozen && $now->hour >= 21) {
+            $this->warn('⚠️  Stuck frozen (theme_id=NULL) past 21:00. Triggering fallback...');
             try {
                 \Artisan::call('concurs:fallback-theme');
                 $this->info('✅ Fallback theme triggered.');

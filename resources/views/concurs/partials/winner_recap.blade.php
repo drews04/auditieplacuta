@@ -1,9 +1,16 @@
 @if($lastFinishedCycle && $lastWinner)
+  @php
+    $tz = config('app.timezone');
+    $voteEndAt = $lastFinishedCycle->vote_end_at ?? null;
+    if ($voteEndAt && !($voteEndAt instanceof \Carbon\Carbon)) {
+      $voteEndAt = \Carbon\Carbon::parse($voteEndAt);
+    }
+  @endphp
   <div class="card border-0 shadow-sm mb-4">
     <div class="card-body d-flex align-items-center justify-content-between">
       <div class="d-flex flex-column">
         <div class="small text-muted mb-1">
-          Rezultatele de ieri — {{ $lastFinishedCycle->vote_end_at->timezone(config('app.timezone'))->format('D, d M Y') }}
+          Rezultatele de ieri — {{ $voteEndAt ? $voteEndAt->timezone($tz)->format('D, d M Y') : '—' }}
         </div>
         <div class="fw-bold">
           🏆 {{ $lastWinner->song->title ?? 'Melodie' }}
@@ -17,7 +24,7 @@
       </div>
 
       <a class="btn btn-outline-info"
-         href="{{ route('concurs.arhiva.show', $lastFinishedCycle->vote_end_at->toDateString()) }}">
+         href="{{ route('concurs.arhiva.show', $voteEndAt ? $voteEndAt->toDateString() : now()->toDateString()) }}">
         Vezi rezultatele complete
       </a>
     </div>

@@ -62,9 +62,13 @@ class ConcursController extends Controller
         $tz   = config('app.timezone', 'Europe/Bucharest');
         $user = auth()->user();
 
-        // Must be in waiting_theme window
-        $window = DB::table('contest_flags')->where('name', 'window')->value('value');
-        if ($window !== 'waiting_theme') {
+        // BULLETPROOF: Must be frozen submission (theme_id=NULL)
+        $submissionCycle = DB::table('contest_cycles')
+            ->where('lane', 'submission')
+            ->where('status', 'open')
+            ->first();
+            
+        if (!$submissionCycle || !is_null($submissionCycle->theme_id)) {
             return back()->with('error', 'Nu este fereastră de alegere a temei.');
         }
 
@@ -118,11 +122,14 @@ class ConcursController extends Controller
                 'updated_at' => now($tz),
             ]);
 
-            // 3️⃣ Unlock window
-            DB::table('contest_flags')->updateOrInsert(
-                ['name' => 'window'],
-                ['value' => null, 'updated_at' => now($tz)]
-            );
+            // 3️⃣ BULLETPROOF UNFREEZE: Set theme_id (the unfreeze switch)
+            DB::table('contest_cycles')
+                ->where('id', $submissionCycle->id)
+                ->update([
+                    'theme_id'   => $themeId,
+                    'theme_text' => $themeText,
+                    'updated_at' => now($tz),
+                ]);
 
             // 4️⃣ Audit
             DB::table('contest_audit_logs')->insert([
@@ -142,10 +149,14 @@ class ConcursController extends Controller
         } catch (\Illuminate\Database\QueryException $e) {
             DB::rollBack();
             if (($e->errorInfo[1] ?? null) === 1062) {
-                DB::table('contest_flags')->updateOrInsert(
-                    ['name' => 'window'],
-                    ['value' => null, 'updated_at' => now($tz)]
-                );
+                // BULLETPROOF UNFREEZE: Set theme_id (the unfreeze switch)
+                DB::table('contest_cycles')
+                    ->where('id', $submissionCycle->id)
+                    ->update([
+                        'theme_id'   => $themeId,
+                        'theme_text' => $themeText,
+                        'updated_at' => now($tz),
+                    ]);
                 return back()->with('status', 'Tema a fost deja setată.');
             }
             throw $e;

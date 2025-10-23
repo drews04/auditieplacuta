@@ -8,7 +8,7 @@ body.page-releases,
 body.page-release-show {
   overflow-y: auto !important;
   overflow-x: hidden;
-  background: linear-gradient(180deg, #080e14, #0b1220 60%, #0a111b);
+  background: #151625 !important;
 }
 
 /* Content spacing BELOW the header: 300px */

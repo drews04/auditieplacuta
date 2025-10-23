@@ -21,7 +21,7 @@ class VoteController extends Controller
         $tz  = config('app.timezone', 'Europe/Bucharest');
         $now = Carbon::now($tz);
 
-        // Query VOTING lane
+        // Query VOTING lane (prefer open; during freeze we will fall back to last closed)
         $cycleVote = DB::table('contest_cycles')
             ->where('lane', 'voting')
             ->where('status', 'open')
@@ -29,9 +29,24 @@ class VoteController extends Controller
             ->orderByDesc('start_at')
             ->first();
 
-        // Check read-only window
-        $window = DB::table('contest_flags')->where('name', 'window')->value('value');
-        $votingOpen = (bool)$cycleVote && ($window !== 'waiting_theme');
+        // BULLETPROOF FREEZE CHECK: voting open if submission is NOT frozen
+        $submissionCycle = DB::table('contest_cycles')
+            ->where('lane', 'submission')
+            ->where('status', 'open')
+            ->first();
+        
+        $isFrozen = $submissionCycle && is_null($submissionCycle->theme_id);
+
+        // If frozen and no open voting cycle (normal after 20:00), show last closed cycle READ-ONLY
+        if (!$cycleVote) {
+            $cycleVote = DB::table('contest_cycles')
+                ->where('lane', 'voting')
+                ->where('status', 'closed')
+                ->orderByDesc('vote_end_at')
+                ->first();
+        }
+
+        $votingOpen = (bool)$cycleVote && !$isFrozen && ($cycleVote->status === 'open');
 
         $songsVote         = collect();
         $voteTheme         = null;
@@ -88,7 +103,7 @@ class VoteController extends Controller
 
         return view('concurs.vote', compact(
             'cycleVote', 'songsVote', 'votingOpen',
-            'voteOpensAt', 'voteTheme', 'userHasVotedToday', 'window',
+            'voteOpensAt', 'voteTheme', 'userHasVotedToday',
             'votedSongId'
         ));
     }
@@ -114,8 +129,14 @@ class VoteController extends Controller
         $now  = Carbon::now($tz);
 
         // 1) CHECK READ-ONLY WINDOW
-        $window = DB::table('contest_flags')->where('name', 'window')->value('value');
-        if ($window === 'waiting_theme') {
+        // BULLETPROOF FREEZE CHECK: Block voting if submission is frozen
+        $submissionCycle = DB::table('contest_cycles')
+            ->where('lane', 'submission')
+            ->where('status', 'open')
+            ->first();
+        
+        $isFrozen = $submissionCycle && is_null($submissionCycle->theme_id);
+        if ($isFrozen) {
             return response()->json(['message' => 'Votul este blocat temporar (așteptăm tema nouă).'], 422);
         }
 

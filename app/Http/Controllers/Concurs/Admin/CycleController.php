@@ -80,26 +80,36 @@ class CycleController extends Controller
                 'genuri'  => 'Genuri',
             ];
             
-            // THEME A (opens NOW)
+            // Helper: pick a random theme text from theme_pools (fallback to wordbank)
+            $pickRandomTheme = function (): string {
+                $pool = DB::table('theme_pools')
+                    ->where('is_active', 1)
+                    ->inRandomOrder()
+                    ->value('text');
+
+                if ($pool) return $pool;
+
+                $wordbank = [
+                    'Neon Dreams', 'Lost Frequencies', 'Silent Waves', 'Echoes of Time',
+                    'Retro Pulse', 'Urban Nights', 'Velvet Sky', 'Digital Mirage',
+                    'Parallel Lines', 'Infinite Loop', 'Golden Hour', 'Electric Soul',
+                    'Midnight City', 'Crystal Castles', 'Analog Sunset', 'Moonlight Drive'
+                ];
+                return $wordbank[array_rand($wordbank)];
+            };
+
+            // THEME A (opens NOW) — allow empty name → random from pools
             $catA = strtolower(trim($request->input('theme_a_category', '')));
             $nameA = trim($request->input('theme_a_name', ''));
-            
-            if (empty($nameA)) {
-                return back()->with('error', 'Tema A este obligatorie!');
-            }
-            
             $categoryA = $categoryMap[$catA] ?? 'CSD';
+            if ($nameA === '') { $nameA = $pickRandomTheme(); }
             $themeTextA = "{$categoryA} - {$nameA}";
             
-            // THEME B (will be used at 20:00)
+            // THEME B (will be used at 20:00) — allow empty name → random from pools
             $catB = strtolower(trim($request->input('theme_b_category', '')));
             $nameB = trim($request->input('theme_b_name', ''));
-            
-            if (empty($nameB)) {
-                return back()->with('error', 'Tema B este obligatorie!');
-            }
-            
             $categoryB = $categoryMap[$catB] ?? 'CSD';
+            if ($nameB === '') { $nameB = $pickRandomTheme(); }
             $themeTextB = "{$categoryB} - {$nameB}";
 
             // 3) CREATE THEME A IN contest_themes
@@ -134,10 +144,7 @@ class CycleController extends Controller
             cache()->put('concurs_next_theme_text', $themeTextB, now()->addDays(2));
 
             // 5) RESET WINDOW FLAG
-            DB::table('contest_flags')->updateOrInsert(
-                ['name' => 'window'],
-                ['value' => null, 'updated_at' => $now]
-            );
+            // BULLETPROOF: No more contest_flags needed - theme_id is the switch
 
             // 7) AUDIT LOG (optional - skip if table doesn't exist)
             try {
@@ -174,7 +181,12 @@ class CycleController extends Controller
         $tz  = config('app.timezone', 'Europe/Bucharest');
         $now = Carbon::now($tz);
 
-        $window = DB::table('contest_flags')->where('name', 'window')->value('value');
+        // BULLETPROOF: Check if submission is frozen (theme_id=NULL)
+        $submissionCycle = DB::table('contest_cycles')
+            ->where('lane', 'submission')
+            ->where('status', 'open')
+            ->first();
+        $isFrozen = $submissionCycle && is_null($submissionCycle->theme_id);
 
         $submit = DB::table('contest_cycles')
             ->where('lane', 'submission')
@@ -198,7 +210,7 @@ class CycleController extends Controller
 
         return response()->json([
             'time'   => $now->toDateTimeString(),
-            'window' => $window ?? '(none)',
+            'frozen' => $isFrozen ? 'YES (theme_id=NULL)' : 'NO',
             'lanes'  => [
                 'submission' => $submit ? [
                     'id'          => $submit->id,
@@ -241,12 +253,16 @@ class CycleController extends Controller
         $tz  = config('app.timezone', 'Europe/Bucharest');
         $now = Carbon::now($tz)->setTime(20, 0, 0);
 
-        // Set waiting_theme window
-        DB::table('contest_flags')->updateOrInsert(
-            ['name' => 'window'],
-            ['value' => 'waiting_theme', 'updated_at' => $now]
-        );
+        // BULLETPROOF: Freeze submission (theme_id = NULL)
+        DB::table('contest_cycles')
+            ->where('lane', 'submission')
+            ->where('status', 'open')
+            ->update([
+                'theme_id'   => null,
+                'theme_text' => null,
+                'updated_at' => $now,
+            ]);
 
-        return back()->with('status', 'Window set to waiting_theme.');
+        return back()->with('status', 'Submission frozen (theme_id=NULL). Winner can pick theme.');
     }
 }

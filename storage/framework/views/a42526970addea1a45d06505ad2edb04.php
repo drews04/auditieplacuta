@@ -1,7 +1,7 @@
-{{-- Styled Theme picker (same look as your old modal / winner UI) --}}
+
 <div class="ap-theme-picker p-3">
-<form method="POST" action="{{ $action ?? route('concurs.alege-tema.store') }}">
-    @csrf
+<form method="POST" action="<?php echo e($action ?? route('concurs.alege-tema.store')); ?>">
+    <?php echo csrf_field(); ?>
 
     <div class="d-flex flex-wrap justify-content-center gap-2 alege-tema-inputs">
       <select name="category" class="form-select alege-tema-select" style="max-width:220px;">
@@ -28,12 +28,12 @@
 
     <div class="d-flex justify-content-end gap-2 mt-3">
       <button type="button" class="btn btn-light btn-sm" data-bs-dismiss="modal">Anulează</button>
-      <button type="submit" class="btn btn-success btn-sm">{{ $submitLabel ?? 'Salvează' }}</button>
+      <button type="submit" class="btn btn-success btn-sm"><?php echo e($submitLabel ?? 'Salvează'); ?></button>
     </div>
   </form>
 </div>
 
-{{-- Scope the preview logic to THIS block only --}}
+
 <script>
 (() => {
   const root = document.currentScript.previousElementSibling; // .ap-theme-picker
@@ -53,3 +53,4 @@
 })();
 </script>
 
+<?php /**PATH C:\xampp\htdocs\auditieplacuta\resources\views/concurs/partials/theme_picker.blade.php ENDPATH**/ ?>

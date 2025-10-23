@@ -89,6 +89,12 @@
 
     const now = new Date();
     if (force) { showPopup(); return; }
+    // New rule: if server says user is winner AND site is frozen, show immediately
+    try {
+      const flags = window.concursFlags || {};
+      if (flags.isWinner && !flags.tomorrowPicked) { showPopup(); return; }
+    } catch (_) {}
+    // Fallback: time-based window (kept for safety)
     if (isWeekday(now) && inWinnerWindow(now) && !alreadyShownToday()) { showPopup(); return; }
     if (isWeekday(now) && now.getHours() < 20) {
       const at = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 20, 0, 0, 0);

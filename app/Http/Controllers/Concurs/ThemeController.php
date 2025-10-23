@@ -18,7 +18,7 @@ class ThemeController extends Controller
      */
     public function create(Request $request)
     {
-        return view('concurs.theme.pick', [
+        return view('concurs.alege-tema', [
             'winnerName' => auth()->user()->name ?? 'campion',
             'categories' => [
                 ['code' => 'CSD',     'label' => 'CSD — Cu și despre'],
@@ -52,9 +52,13 @@ class ThemeController extends Controller
         $tz        = config('app.timezone', 'Europe/Bucharest');
         $now       = Carbon::now($tz);
 
-        // 1) VERIFY WINDOW='waiting_theme'
-        $window = DB::table('contest_flags')->where('name', 'window')->value('value');
-        if ($window !== 'waiting_theme') {
+        // 1) BULLETPROOF VERIFY: submission must be frozen (theme_id=NULL)
+        $submissionCycle = DB::table('contest_cycles')
+            ->where('lane', 'submission')
+            ->where('status', 'open')
+            ->first();
+            
+        if (!$submissionCycle || !is_null($submissionCycle->theme_id)) {
             return $this->respondError('Nu este fereastră de alegere a temei.');
         }
 
@@ -93,26 +97,44 @@ class ThemeController extends Controller
                 'created_at'        => $now,
             ]);
 
-            // Create new submission cycle (opens immediately)
-            $next2000 = $now->copy()->addDay()->setTime(20, 0, 0);
-            
+            // Find the NEWEST frozen submission opened at 20:00
+            $frozen = DB::table('contest_cycles')
+                ->where('lane', 'submission')
+                ->where('status', 'open')
+                ->whereNull('theme_id')
+                ->orderByDesc('id')
+                ->first(['id', 'submit_end_at']);
+
+            if (!$frozen) {
+                throw new \Exception('Nu am găsit runda înghețată pentru setarea temei.');
+            }
+
+            // UNFREEZE + ADVANCE NOW: Promote frozen submission → voting, open new submission with chosen theme
+            $tomorrow2000 = Carbon::parse($frozen->submit_end_at, $tz)->addDay()->setTime(20, 0, 0);
+
+            // Promote frozen submission to voting immediately
+            DB::table('contest_cycles')
+                ->where('id', $frozen->id)
+                ->update([
+                    'lane'        => 'voting',
+                    'status'      => 'open',
+                    'vote_end_at' => $tomorrow2000,
+                    // keep existing theme_id/theme_text so vote page shows yesterday's theme
+                    'updated_at'  => $now,
+                ]);
+
+            // Open a fresh submission for uploads with the same theme
             DB::table('contest_cycles')->insert([
-                'theme_id'      => $themeId,
-                'theme_text'    => $themeText,
                 'lane'          => 'submission',
                 'status'        => 'open',
+                'theme_id'      => $themeId,
+                'theme_text'    => $themeText,
                 'start_at'      => $now,
-                'submit_end_at' => $next2000,
-                'vote_end_at'   => null, // Will be set when promoted to voting
+                'submit_end_at' => $tomorrow2000,
+                'vote_end_at'   => null,
                 'created_at'    => $now,
                 'updated_at'    => $now,
             ]);
-
-            // Unlock window
-            DB::table('contest_flags')->updateOrInsert(
-                ['name' => 'window'],
-                ['value' => null, 'updated_at' => $now]
-            );
 
             // Audit log (optional - skip if table doesn't exist)
             try {

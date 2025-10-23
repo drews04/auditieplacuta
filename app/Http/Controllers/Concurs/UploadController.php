@@ -31,9 +31,8 @@ class UploadController extends Controller
             ->orderByDesc('start_at')
             ->first();
 
-        // Check read-only window
-        $window = DB::table('contest_flags')->where('name', 'window')->value('value');
-        $submissionsOpen = (bool)$cycleSubmit && ($window !== 'waiting_theme');
+        // BULLETPROOF FREEZE CHECK: submissions open if theme is NOT null
+        $submissionsOpen = (bool)$cycleSubmit && !is_null($cycleSubmit->theme_id);
 
         $songsSubmit          = collect();
         $submitTheme          = null;
@@ -85,7 +84,7 @@ class UploadController extends Controller
 
         return view('concurs.upload', compact(
             'cycleSubmit', 'songsSubmit', 'submitTheme', 'submissionsOpen',
-            'userHasUploadedToday', 'votingOpensAt', 'window'
+            'userHasUploadedToday', 'votingOpensAt'
         ));
     }
 
@@ -109,8 +108,13 @@ class UploadController extends Controller
         $wantsJson = $request->ajax() || $request->wantsJson();
 
         // 1) CHECK READ-ONLY WINDOW
-        $window = DB::table('contest_flags')->where('name', 'window')->value('value');
-        if ($window === 'waiting_theme') {
+        // BULLETPROOF FREEZE CHECK: Block uploads if submission is frozen
+        $submissionCycle = DB::table('contest_cycles')
+            ->where('lane', 'submission')
+            ->where('status', 'open')
+            ->first();
+        
+        if (!$submissionCycle || is_null($submissionCycle->theme_id)) {
             $msg = 'Înscrierile sunt blocate temporar (așteptăm tema nouă).';
             return $wantsJson ? response()->json(['message' => $msg], 422)
                               : back()->with('error', $msg);
