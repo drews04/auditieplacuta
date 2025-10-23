@@ -1,0 +1,220 @@
+/* ==========================================================================
+   NOUTĂȚI ÎN MUZICĂ — clean, scrollable, header on top
+   ========================================================================== */
+
+/* Global fixes: allow scrolling; no fullscreen locks */
+html, body { height: auto; }
+body.page-releases,
+body.page-release-show {
+  overflow-y: auto !important;
+  overflow-x: hidden;
+  background: #151625 !important;
+}
+
+/* Content spacing BELOW the header: 300px */
+body.page-releases  .container,
+body.page-release-show .container {
+  padding-top: 300px;          /* distance under header */
+  margin-top: 0 !important;    /* kill previous hacks */
+  position: relative;
+  z-index: 1;                   /* normal stacking */
+}
+
+/* Neon card */
+.page-releases .neon-card,
+.page-release-show .neon-card {
+  background: #0c1117;
+  border: 1px solid rgba(22,241,211,.55);
+  border-radius: 16px;
+  box-shadow: 0 0 14px rgba(22,241,211,.25), inset 0 0 8px rgba(22,241,211,.12);
+  overflow: hidden;
+}
+
+/* Accent/meta */
+.text-accent { color: #16f1d3; opacity: .95; }
+.page-releases .small,
+.page-release-show .small { font-size: .95rem; color: #cfe7ff; opacity: .95; }
+
+/* --------------------------------------------------------------------------
+   HERO (poster left, content right)
+   -------------------------------------------------------------------------- */
+/* --- HERO: poster LEFT, text RIGHT, button at BOTTOM --- */
+.hero-release{
+  display:flex !important;
+  flex-wrap:nowrap !important;   /* stop wrapping under the poster */
+  gap:32px;
+}
+
+.hero-release .hero-poster{
+  flex:0 0 420px;                /* fixed poster column */
+  max-width:420px;
+  overflow:hidden;
+  border-right:1px solid rgba(22,241,211,.25);
+  background: radial-gradient(70% 70% at 50% 50%, rgba(22,241,211,.08), transparent);
+}
+.hero-release .hero-poster img{
+  display:block;
+  width:100%;
+  height:auto;                   /* keep aspect; no full-height stretch */
+  object-fit:cover;
+}
+
+.hero-release .hero-body{
+  flex:1 1 auto;                 /* text column */
+  display:flex;
+  flex-direction:column;
+  min-width:0;
+}
+.hero-release .btn-neon{
+  margin-top:auto;               /* stick button to bottom of text column */
+  align-self:flex-start;         /* keep it left, not full width */
+  min-width:220px;
+}
+
+/* Mobile: stack poster top, text below */
+@media (max-width: 992px){
+  .hero-release{ flex-wrap:wrap !important; gap:16px; }
+  .hero-release .hero-poster{ flex:0 0 100%; max-width:100%; border-right:0; border-bottom:1px solid rgba(22,241,211,.25); }
+  .hero-release .btn-neon{ align-self:stretch; }
+}
+
+/* Title bar button must stay small on the right */
+.page-releases .title-bar .btn-neon{
+  position:absolute; right:0; top:50%; transform:translateY(-50%);
+  width:auto !important; display:inline-block !important; padding:.6rem 1rem;
+}
+
+/* CTA */
+.page-releases .btn-neon,
+.page-release-show .btn-neon {
+  border: 1px solid #16f1d3;
+  background: linear-gradient(180deg, #0a1a22, #0f1e28);
+  color: #e6f1fb;
+  border-radius: 14px;
+  font-weight: 700;
+  padding: .9rem 1.2rem;
+  box-shadow: 0 0 18px rgba(22,241,211,.18), inset 0 0 8px rgba(22,241,211,.18);
+  transition: transform .15s ease, box-shadow .15s ease;
+}
+.hero-release .btn-neon { display: block; width: 100%; text-align: center; margin-top: .75rem; }
+.page-releases .btn-neon:hover,
+.page-release-show .btn-neon:hover { transform: translateY(-1px); box-shadow: 0 10px 24px rgba(22,241,211,.25), inset 0 0 8px rgba(22,241,211,.2); }
+
+/* Weekly list */
+.page-releases article.neon-card img {
+  border-radius: 10px;
+  border: 1px solid rgba(22,241,211,.25);
+  box-shadow: 0 0 10px rgba(22,241,211,.15);
+}
+.page-releases article.neon-card h5 { color: #e6f1fb; margin-bottom: .25rem; }
+
+/* Prev/Next */
+.week-nav { display: flex; justify-content: space-between; gap: 1rem; margin-top: 2rem; }
+
+/* Responsive */
+@media (max-width: 1200px) { .hero-release .hero-poster { width: 380px; } }
+@media (max-width: 992px)  {
+  .hero-release { display: block; }
+  .hero-release .hero-poster { width: 100%; border-right: 0; border-bottom: 1px solid rgba(22,241,211,.25); }
+  .hero-release .hero-body { padding-top: 1rem; }
+}
+@media (max-width: 576px)  { .page-releases h1 { font-size: 1.6rem; } }
+/* Fix: header on top; content starts 300px below; allow scroll */
+body.page-releases .site-main,
+body.page-release-show .site-main { padding-top: 300px !important; }
+
+body.page-releases, body.page-release-show { overflow-y: auto !important; overflow-x: hidden; }
+
+body.page-releases .container,
+body.page-release-show .container {
+  margin-top: 0 !important;
+  padding-top: 0 !important;
+  position: static !important;
+  z-index: auto !important;
+}
+/* Center the Noutăți în muzică title */
+.page-releases h1,
+.page-release-show h1 {
+  text-align: center;
+  width: 100%;
+}
+/* Spacing for title + admin add button */
+.page-releases .title-bar {
+  margin-bottom: 2.5rem; /* gap below the whole title row */
+}
+
+.page-releases .title-bar h1 {
+  margin-bottom: 0 !important; /* keep title tight with button row */
+}
+
+.page-releases .title-bar .btn {
+  margin-left: 1rem;
+}
+/* ====== Title + Admin button (stacked, button under title) ====== */
+.page-releases .title-bar{
+  display:flex;
+  flex-direction:column;    /* title on top, button under it */
+  align-items:center;
+  gap:1rem;
+  margin-bottom:2.5rem;
+}
+.page-releases .title-bar .btn-neon{
+  position: static !important;   /* cancel previous absolute-right */
+  transform:none !important;
+  width:auto !important;
+  display:inline-block !important;
+  padding:.6rem 1rem;
+}
+
+/* ====== Hero CTA at bottom-left, not full width ====== */
+.hero-release .btn-neon{
+  margin-top:auto;                /* pins to bottom of text column */
+  align-self:flex-start;          /* left-aligned */
+  width:auto !important;          /* cancel old width:100% */
+  display:inline-block !important;
+}
+/* ===== Neon Artist Ribbon ===== */
+.artist-ribbon{
+  position: relative;
+  display: inline-block;
+  margin: .25rem 0 1rem;
+  line-height: 1;
+}
+.artist-ribbon span{
+  position: relative;
+  z-index: 1;
+  padding: .35rem .85rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: .03em;
+  color: #e6f7ff;
+  text-shadow: 0 0 6px rgba(22,241,211,.35);
+}
+.artist-ribbon::before{
+  content: "";
+  position: absolute;
+  left: -.5rem;
+  right: -.5rem;
+  top: 50%;
+  transform: translateY(-50%) skewX(-8deg);
+  height: 2.2rem;
+  background: linear-gradient(90deg, rgba(22,241,211,.20), rgba(22,241,211,.50));
+  border: 1px solid rgba(22,241,211,.85);
+  border-radius: 12px;
+  box-shadow:
+    0 0 22px rgba(22,241,211,.45),
+    inset 0 0 14px rgba(22,241,211,.30);
+  filter: drop-shadow(0 6px 12px rgba(0,0,0,.35));
+}
+
+/* keep layout tidy next to poster */
+.hero-release .artist-ribbon{
+  align-self: flex-start;
+}
+
+/* mobile: make ribbon less skewed and full width if tight */
+@media (max-width: 576px){
+  .artist-ribbon::before{
+    left: 0; right: 0; transform: translateY(-50%) skewX(-4deg);
+  }
+}

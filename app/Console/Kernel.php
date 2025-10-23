@@ -4,7 +4,10 @@ namespace App\Console;
 
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
-use App\Console\Commands\DeclareDailyWinner;
+use App\Console\Commands\Concurs\DeclareWinner;
+use App\Console\Commands\Concurs\FallbackTheme;
+use App\Console\Commands\Concurs\HealthCheck;
+use App\Console\Commands\Concurs\InheritPoster;
 use App\Services\AwardPoints;
 
 class Kernel extends ConsoleKernel
@@ -13,37 +16,49 @@ class Kernel extends ConsoleKernel
      * Register Artisan commands.
      */
     protected $commands = [
-        DeclareDailyWinner::class,
-        \App\Console\Commands\ConcursFallbackTheme::class,
-        \App\Console\Commands\ConcursDaySimulator::class,
+        DeclareWinner::class,
+        FallbackTheme::class,
+        HealthCheck::class,
+        InheritPoster::class,
     ];
 
     /**
      * Define the application's command schedule.
      */
-    protected function schedule(\Illuminate\Console\Scheduling\Schedule $schedule): void
+    protected function schedule(Schedule $schedule): void
 {
-    // 20:00 — declare winner (Mon–Fri)
+    // 20:00 — declare winner (daily, no weekend pause)
     $schedule->command('concurs:declare-winner')
-             ->weekdays()
-             ->dailyAt('20:00')
-             ->timezone(config('app.timezone'));
+        ->dailyAt('20:00')
+        ->timezone(config('app.timezone', 'Europe/Bucharest'))
+        ->withoutOverlapping()
+        ->onOneServer();
 
-    // 20:35 — award position points (Mon–Fri)
+    // 20:35 — award points
     $schedule->call(function () {
         app(\App\Services\AwardPoints::class)->awardForDate(now()->toDateString());
     })
-    ->weekdays()
-    ->dailyAt('20:35')
-    ->timezone(config('app.timezone'));
+        ->name('award-points')
+        ->dailyAt('20:35')
+        ->timezone(config('app.timezone', 'Europe/Bucharest'))
+        ->withoutOverlapping()
+        ->onOneServer();
 
-    // 21:01 — fallback theme (if winner didn’t pick one) (Mon–Fri)
-$schedule->command('concurs:fallback-theme')
-->weekdays()
-->timezone('Europe/Bucharest')
-->at('21:01')
-->withoutOverlapping();
+    // 21:00 — fallback theme (daily)
+    $schedule->command('concurs:fallback-theme')
+        ->dailyAt('21:00')
+        ->timezone(config('app.timezone', 'Europe/Bucharest'))
+        ->withoutOverlapping()
+        ->onOneServer();
+
+    // 00:02 — inherit poster (daily)
+    $schedule->command('concurs:inherit-poster')
+        ->dailyAt('00:02')
+        ->timezone(config('app.timezone', 'Europe/Bucharest'))
+        ->withoutOverlapping()
+        ->onOneServer();
 }
+
 
     /**
      * Register the commands for the application.

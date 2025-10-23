@@ -7,7 +7,23 @@
     {{-- Profile Info Card --}}
     <div class="card user-card mb-4 shadow-sm">
         <div class="text-center mb-4">
-            <img src="{{ $user->profile_photo_url ?? asset('assets/images/default-user.png') }}" alt="Profile Photo" class="rounded-circle" width="120" height="120">
+            <div class="position-relative d-inline-block">
+                <img src="{{ $user->profile_photo_url ?? asset('assets/images/default-user.png') }}" 
+                     alt="Profile Photo" 
+                     class="rounded-circle" 
+                     width="150" 
+                     height="150"
+                     style="object-fit: cover; border: 3px solid #16f1d3;">
+                
+                {{-- Upload Photo Button --}}
+                <button type="button" 
+                        class="btn btn-sm btn-primary position-absolute bottom-0 end-0 rounded-circle" 
+                        style="width: 40px; height: 40px; padding: 0;"
+                        data-bs-toggle="modal" 
+                        data-bs-target="#uploadPhotoModal">
+                    <i class="fas fa-camera"></i>
+                </button>
+            </div>
         </div>
 
         <ul class="list-group list-group-flush text-white">
@@ -119,14 +135,73 @@
         {{-- Ultima victorie (rezumat) --}}
         <div class="mt-3 px-3">
             <div class="d-flex flex-wrap align-items-center gap-3">
-                <div><strong>Ultima victorie:</strong> {{ optional($stats->last_win_date)->format('d M Y') ?? '—' }}</div>
-                <div><strong>Melodie:</strong> {{ $stats->last_win_song_title ?? '—' }}</div>
+                <div><strong>Ultima victorie:</strong> {{ optional($stats)->last_win_date ? $stats->last_win_date->format('d M Y') : '—' }}</div>
+                <div><strong>Melodie:</strong> {{ optional($stats)->last_win_song_title ?? '—' }}</div>
                 <div>
                     <a href="{{ route('me.wins') }}" class="btn btn-sm btn-outline-light">Vezi toate victoriile</a>
                 </div>
             </div>
         </div>
     </div>
+
+{{-- Upload Photo Modal --}}
+<div class="modal fade" id="uploadPhotoModal" tabindex="-1" aria-labelledby="uploadPhotoModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content bg-dark text-white">
+            <div class="modal-header border-secondary">
+                <h5 class="modal-title" id="uploadPhotoModalLabel">Schimbă poza de profil</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form action="{{ route('user.profile.uploadPhoto') }}" method="POST" enctype="multipart/form-data">
+                @csrf
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="profile_photo" class="form-label">Alege o poză</label>
+                        <input type="file" 
+                               class="form-control" 
+                               id="profile_photo" 
+                               name="profile_photo" 
+                               accept="image/jpeg,image/png,image/jpg,image/webp" 
+                               required>
+                        <div class="form-text text-muted">
+                            Max 2MB. Format: JPG, PNG, WEBP
+                        </div>
+                    </div>
+                    
+                    {{-- Preview --}}
+                    <div id="imagePreview" class="text-center mb-3" style="display: none;">
+                        <img id="previewImg" src="" alt="Preview" class="rounded-circle" style="width: 150px; height: 150px; object-fit: cover; border: 3px solid #16f1d3;">
+                    </div>
+                    
+                    @if($errors->any())
+                        <div class="alert alert-danger">
+                            {{ $errors->first() }}
+                        </div>
+                    @endif
+                </div>
+                <div class="modal-footer border-secondary">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Anulează</button>
+                    <button type="submit" class="btn btn-primary">Salvează poza</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+// Image preview
+document.getElementById('profile_photo').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            document.getElementById('previewImg').src = e.target.result;
+            document.getElementById('imagePreview').style.display = 'block';
+        };
+        reader.readAsDataURL(file);
+    }
+});
+</script>
 
     {{-- Abilități Active Preview --}}
     <div class="card user-card mt-4 shadow-sm">

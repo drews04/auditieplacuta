@@ -1,0 +1,27 @@
+/* Evenimente Page Styles - EXACT Forum Match */
+
+body.page-evenimente {
+    background: #151625 !important;
+    min-height: 100vh;
+}
+
+/* COPY EXACTLY from forum-container */
+body.page-evenimente .in-constructie-page-wrapper {
+    background: transparent;
+    min-height: 100vh;
+    padding: 2rem 0;
+}
+
+body.page-evenimente .in-constructie-page-wrapper .container {
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+    margin-top: 0;
+}
+
+body.page-evenimente h1 {
+    color: #16f1d3;
+    text-shadow: 0 0 10px rgba(22, 241, 211, 0.3);
+    margin-bottom: 2rem;
+    margin-top: 0;
+}
+

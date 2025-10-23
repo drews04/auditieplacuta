@@ -27,7 +27,7 @@
 
           {{-- Reuse the same picker used by the admin Start modal --}}
           <div class="mt-3 d-flex flex-column align-items-center">
-            @include('partials.theme_picker', [
+            @include('concurs.partials.theme_picker', [
               'action'      => route('concurs.alege-tema.store'),
               'submitLabel' => 'Salvează tema'
             ])

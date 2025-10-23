@@ -1,0 +1,102 @@
+/* ======================================================
+   Home — Mobile & Tablet (keeps desktop intact)
+   Scope: .page-home only
+   ====================================================== */
+
+/* ---------- Phones (≤576px) ---------- */
+@media (max-width: 576.98px) {
+    .page-home .container { padding-left: 14px; padding-right: 14px; }
+  
+    /* Titles / section headers */
+    .page-home h1,
+    .page-home .hero-title { font-size: clamp(24px, 8vw, 30px); line-height: 1.15; margin-bottom: 8px; text-align: center; }
+    .page-home h2,
+    .page-home .section-title { font-size: clamp(18px, 6.2vw, 22px); margin: 10px 0; }
+  
+    /* Global cards spacing */
+    .page-home .card,
+    .page-home .ap-neon-card { margin-bottom: 14px; }
+  
+    /* Hero block */
+    .page-home .home-hero { margin-top: 8px; margin-bottom: 14px; }
+    .page-home .home-hero .btn,
+    .page-home .home-hero .ap-btn-neon,
+    .page-home .home-hero .neon-start-btn {
+      width: 100%; max-width: 420px; justify-content: center;
+    }
+  
+    /* Generic grid sections → 1 column on phone */
+    .page-home .cards-grid,
+    .page-home .poster-grid,
+    .page-home .list-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+    }
+  
+    /* Event posters / “Evenimente” */
+    .page-home .event-card,
+    .page-home .poster-card { width: 100%; }
+    .page-home .event-card img,
+    .page-home .poster-card img { width: 100%; height: auto; display: block; border-radius: 16px; }
+  
+    /* Forum list items */
+    .page-home .forum-thread { padding: 12px; }
+    .page-home .forum-thread .meta { font-size: 12px; opacity: .9; }
+  
+    /* Music / “Noutăți” cards */
+    .page-home .release-card .title { font-size: 16px; }
+    .page-home .release-card .artist { font-size: 14px; opacity: .9; }
+  
+    /* Buttons in rows → full width */
+    .page-home .ap-btn-neon,
+    .page-home .btn { width: 100%; max-width: 420px; justify-content: center; }
+  
+    /* Badges (NEW indicator) */
+    .page-home .nav-new-badge,
+    .page-home .new-badge { transform: translateY(-1px); }
+  
+    /* Muted text on dark bg */
+    .page-home .text-muted { color: #9ec7d3 !important; opacity: .9; }
+  
+    /* iOS safe area */
+    @supports (padding: max(0px)) {
+      .page-home .container {
+        padding-left: max(14px, env(safe-area-inset-left));
+        padding-right: max(14px, env(safe-area-inset-right));
+      }
+    }
+  }
+  
+  /* ---------- Small tablets (577–767px) ---------- */
+  @media (min-width: 577px) and (max-width: 767.98px) {
+    .page-home .container { padding-left: 16px; padding-right: 16px; }
+  
+    .page-home h1,
+    .page-home .hero-title { font-size: clamp(26px, 5.5vw, 36px); text-align: center; }
+  
+    .page-home .cards-grid,
+    .page-home .poster-grid,
+    .page-home .list-grid {
+      display: grid; grid-template-columns: 1fr; gap: 14px;
+    }
+  
+    .page-home .ap-btn-neon,
+    .page-home .btn { max-width: 520px; margin-left: auto; margin-right: auto; }
+  }
+  
+  /* ---------- Tablets (768–991px) ---------- */
+  @media (min-width: 768px) and (max-width: 991.98px) {
+    .page-home .cards-grid,
+    .page-home .poster-grid,
+    .page-home .list-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 18px;
+    }
+    .page-home .ap-btn-neon,
+    .page-home .btn { width: auto; }
+  }
+  
+  /* ---------- Desktop (≥992px) ----------
+     No changes; desktop remains as-is.
+  */
+  

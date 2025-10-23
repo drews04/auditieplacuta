@@ -10,10 +10,12 @@ class ContestTheme extends Model
     protected $table = 'contest_themes';
 
     protected $fillable = [
-        'contest_cycle_id',
-        'category',
         'name',
+        'category',
         'active',
+        'contest_date',
+        'chosen_by_user_id',
+        'theme_pool_id',
     ];
 
     protected $casts = [

@@ -1,5 +1,7 @@
 @extends('layouts.app')
 
+@section('title', 'Cumpără APBuckși – Magazin')
+
 @section('content')
-    {{-- Paste your page-specific content here --}}
+    @include('components.in-constructie')
 @endsection

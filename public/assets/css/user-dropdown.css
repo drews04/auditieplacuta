@@ -1,0 +1,63 @@
+/* ===== User dropdown – neon modal look ===== */
+.user-menu-container { position: relative; }
+
+.user-dropdown-toggle {
+  color: #16f1d3;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+/* Clean modal-like panel */
+#user-dropdown.user-dropdown-list {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  min-width: 240px;
+  padding: 14px 18px;
+  margin: 0;
+  list-style: none;
+  z-index: 999;
+
+  background: rgba(6,14,18,.94);
+  border: none !important;          /* kill old border */
+  border-radius: 16px;
+  box-shadow:
+    0 12px 40px rgba(0,0,0,.55),
+    0 0 26px rgba(22,241,211,.18);
+  backdrop-filter: blur(3px);
+}
+
+/* Items tighter and consistent */
+#user-dropdown li {
+  margin: 4px 0;
+}
+#user-dropdown a {
+  display: block;
+  padding: 4px 0;
+  color: #e6f1fb;
+  text-decoration: none;
+  transition: color .15s ease;
+}
+#user-dropdown a:hover {
+  color: #16f1d3;
+}
+
+/* Logout red */
+#user-dropdown li.logout a {
+  color: #ff5b5b;
+  font-weight: 700;
+}
+#user-dropdown li.logout a:hover {
+  filter: brightness(1.1);
+}
+
+/* Hidden class */
+#user-dropdown.hidden {
+  display: none;
+}
+/* Animations */
+@keyframes apFadeScaleIn { from{opacity:0; transform:scale(.96);} to{opacity:1; transform:scale(1);} }
+@keyframes apFadeScaleOut{ from{opacity:1; transform:scale(1);}   to{opacity:0; transform:scale(.96);} }
+
+#user-dropdown.user-dropdown-list.showing   { animation: apFadeScaleIn .14s ease both; }
+#user-dropdown.user-dropdown-list.hiding    { animation: apFadeScaleOut .12s ease both; }

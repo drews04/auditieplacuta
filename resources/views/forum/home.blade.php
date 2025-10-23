@@ -98,15 +98,13 @@
         </div>
 
         <!-- Pagination -->
-        @if($threads->hasPages())
-            <div class="forum-pagination">
-                {{ $threads->links() }}
-            </div>
-        @endif
+        <div class="forum-pagination">
+            <x-pagination :paginator="$threads" />
+        </div>
     </div>
 </div>
 @endsection
 
 @push('scripts')
-    <script src="{{ asset('assets/js/forum.js') }}"></script>
+    <script src="{{ asset('js/forum.js') }}"></script>
 @endpush

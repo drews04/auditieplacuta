@@ -1,0 +1,137 @@
+/* --- Forum page: make header match forum background + remove seam --- */
+.page-forum header,
+.page-forum .site-header,
+.page-forum .navbar,
+.page-forum .header {
+  background: linear-gradient(180deg, #061016, #0b1220 60%, #0a111b) !important;
+  border-bottom: 0 !important;
+  box-shadow: none !important;
+  width: 100% !important; /* avoid 100vw covering the scrollbar channel */
+}
+
+/* Some themes add a divider via pseudo-elements; kill them on forum pages */
+.page-forum header::before,
+.page-forum header::after,
+.page-forum .site-header::before,
+.page-forum .site-header::after,
+.page-forum .navbar::before,
+.page-forum .navbar::after,
+.page-forum .header::before,
+.page-forum .header::after {
+  content: none !important;
+}
+
+/* ---- Forum page: let the header be transparent so the page gradient shows through ---- */
+.page-forum header,
+.page-forum .site-header,
+.page-forum .navbar,
+.page-forum .header {
+  background: transparent !important;  /* reveal the body gradient */
+  border-bottom: 0 !important;
+  box-shadow: none !important;
+  margin-bottom: 0 !important;
+  width: 100% !important;              /* avoid 100vw covering the scrollbar channel */
+}
+
+/* Kill any decorative pseudo-element dividers some themes add */
+.page-forum header::before,
+.page-forum header::after,
+.page-forum .site-header::before,
+.page-forum .site-header::after,
+.page-forum .navbar::before,
+.page-forum .navbar::after,
+.page-forum .header::before,
+.page-forum .header::after {
+  content: none !important;
+}
+/* Reusable NEW badge — attach to any link by:
+   <a class="nav-new-anchor" style="--new-top:-8px; --new-right:-22px;">
+     Label
+     <span class="nav-new-badge">NEW</span>
+   </a>
+*/
+/* Reusable neon NEW badge */
+.nav-new-anchor{ position:relative; display:inline-block; }
+
+.nav-new-badge{
+  position:absolute;
+  top: var(--new-top, -12px);
+  right: var(--new-right, -22px);
+  left: var(--new-left, auto);
+  bottom: var(--new-bottom, auto);
+
+  padding: 2px 7px;
+  font: 800 10px/1 Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial;
+  letter-spacing: .6px;
+  color:#001018;
+  background: radial-gradient(80% 140% at 50% 50%, #16f1d3 0%, #0eead1 60%, #0ad0ba 100%);
+  border:1px solid rgba(22,241,211,.85);
+  border-radius: 7px;
+  box-shadow:
+    0 0 0 1px rgba(22,241,211,.25),
+    0 0 12px rgba(22,241,211,.75),
+    inset 0 0 10px rgba(0,0,0,.35);
+  text-shadow:none;
+  pointer-events:none;
+  z-index:3;
+  animation: navNewBlink 1.8s linear infinite, navNewFloat 3s ease-in-out infinite;
+}
+
+@keyframes navNewBlink { 0%,60%{opacity:1} 78%{opacity:.35} 100%{opacity:1} }
+@keyframes navNewFloat { 0%,100%{transform: translateY(0)} 50%{transform: translateY(-1px)} }
+.menu-area ul li a,
+.nav-menu > li > a {
+  transition: color .25s ease, text-shadow .25s ease;
+}
+
+.menu-area ul li a:hover,
+.nav-menu > li > a:hover,
+.menu-area ul li.current-menu-item > a {
+  color: #16f1d3 !important;            /* neon aqua */
+  text-shadow:
+    0 0 6px #16f1d3,
+    0 0 12px rgba(22,241,211,0.6);
+}
+/* === Arena mega menu — HARD center lists under titles === */
+.mega_menu_hov .gamfi_mega_menu_sect .gamfi_mega_menu .mega_menu_content .menu_column{
+  position: relative;
+  text-align: center !important;
+}
+
+.mega_menu_hov .gamfi_mega_menu_sect .gamfi_mega_menu .mega_menu_content .menu_column > ul{
+  position: relative !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;  /* true centering */
+  margin: 12px 0 0 0 !important;
+  padding: 0 !important;
+  list-style: none !important;
+  width: max-content !important;           /* shrink to content */
+  text-align: left !important;             /* keep items left-aligned */
+}
+
+/* kill global nav paddings that push anchors left */
+.mega_menu_hov .gamfi_mega_menu_sect .gamfi_mega_menu .mega_menu_content .menu_column > ul > li > a{
+  display: inline-block !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+/* Arena mega menu — center lists under titles (final) */
+.mega_menu_hov .gamfi_mega_menu_sect .mega_menu_content .menu_column{
+  text-align: center !important;
+}
+
+.mega_menu_hov .gamfi_mega_menu_sect .mega_menu_content .menu_column > ul{
+  float: none !important;              /* kill legacy float */
+  display: table !important;           /* shrink to content for easy centering */
+  width: auto !important;
+  margin: 12px auto 0 !important;      /* center under H2 */
+  padding-left: 0 !important;
+  list-style: none !important;
+  text-align: left !important;
+}
+
+.mega_menu_hov .gamfi_mega_menu_sect .mega_menu_content .menu_column > ul > li > a{
+  background: none !important;         /* some themes add bullets via bg */
+  padding-left: 0 !important;          /* kill left indent */
+  margin-left: 0 !important;
+}

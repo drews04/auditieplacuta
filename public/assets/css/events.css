@@ -1,0 +1,254 @@
+/* --- Evenimente page layout sanity --- */
+.events-page-wrap {
+  position: relative;
+  z-index: 5;              /* above any decorative header layers */
+  padding-top: 200px;      /* 200px from top as requested */
+}
+
+/* Consistent max width + center */
+.page-events .container,
+.page-events-create .container {
+  max-width: 980px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.page-events,
+.page-events-create {
+    background: #151625 !important;
+    min-height: 100vh;
+}
+
+/* Typography - consolidated with title glow below */
+
+/* Cards - consolidated with event card visuals below */
+
+/* Event Cards */
+.event-card {
+    margin-bottom: 2rem;
+}
+
+.event-poster-wrap { 
+    width: 100%; 
+    background: #071718; 
+}
+
+.event-poster { 
+    display: block; 
+    width: 100%; 
+    height: auto; 
+}
+
+.event-body { 
+    white-space: pre-wrap; 
+    line-height: 1.6; 
+    color: #e6f1fb;
+    margin-top: 1rem;
+}
+
+/* Alerts */
+.alert-neon {
+  border: 1px solid #16f1d3; 
+  color: #e6f1fb; 
+  background: rgba(22,241,211,.08);
+  border-radius: 14px; 
+  padding: .75rem 1rem; 
+  box-shadow: 0 0 12px rgba(22,241,211,.2) inset;
+}
+
+/* Buttons - consolidated with button styles below */
+
+/* Form Elements */
+.form-control {
+    background: linear-gradient(180deg, #0a1a22, #0f1e28);
+    border: 2px solid rgba(22,241,211,.35);
+    border-radius: 12px;
+    color: #e6f1fb !important;
+    padding: 0.75rem 1rem;
+    font-size: 1rem;
+    width: 100%;
+    transition: all 0.3s ease;
+}
+
+.form-control:focus {
+    border-color: #16f1d3;
+    box-shadow: 0 0 20px rgba(22,241,211,.3);
+    outline: none;
+}
+
+.form-control::placeholder {
+    color: rgba(230,241,251,.6) !important;
+}
+
+.form-label {
+    color: #e6f1fb;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .page-events .container, 
+    .page-events-create .container {
+        margin-top: 100px;
+        padding: 2rem 1rem;
+    }
+    
+    .neon-card {
+        margin-bottom: 1.5rem;
+    }
+    
+    .event-poster-wrap {
+        background: #0a1a22;
+    }
+    
+    .d-flex.flex-wrap {
+        flex-direction: column;
+        align-items: stretch !important;
+        gap: 1rem !important;
+    }
+    
+    .d-flex.flex-wrap .btn-neon {
+        align-self: center;
+    }
+}
+
+/* Legacy overlay fixes - consolidated above */
+
+/* Keep the header row and button clickable above overlays */
+.events-header,
+.events-add-btn,
+.page-events .neon-card,
+.page-events-create .neon-card {
+  position: relative;
+  z-index: 10;
+}
+
+/* If some absolute header ornament overlaps, ignore its pointer events on these pages */
+.page-events header [style*="position:absolute"],
+.page-events-create header [style*="position:absolute"] {
+  pointer-events: none;
+}
+
+/* Buttons style stays neon; ensure visible */
+.btn-neon {
+  border:1px solid #16f1d3;
+  background:rgba(22,241,211,.12);
+  color:#0a0a0a !important;
+  border-radius:14px; font-weight:700;
+  box-shadow:0 0 18px rgba(22,241,211,.18), inset 0 0 8px rgba(22,241,211,.15);
+  transition: all 0.2s ease;
+}
+.btn-neon:hover { 
+  transform: translateY(-1px); 
+  color:#000000 !important; 
+  background:rgba(22,241,211,.22);
+  box-shadow:0 10px 24px rgba(22,241,211,.25); 
+}
+
+/* Event card visuals */
+.neon-card {
+  background: radial-gradient(120% 120% at 10% 10%, rgba(22,241,211,.06) 0%, rgba(0,0,0,0) 40%), linear-gradient(180deg, rgba(255,255,255,.02), rgba(0,0,0,0));
+  border:1px solid rgba(22,241,211,.35);
+  border-radius:18px;
+  box-shadow:0 0 24px rgba(22,241,211,.12);
+  overflow:hidden;
+}
+.event-poster-wrap{ 
+  width:100%; 
+  background:#071718;
+  min-height: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.event-poster{ 
+  display:block; 
+  width:100%; 
+  height:auto;
+  max-width: 100%;
+  object-fit: contain;
+}
+.event-body { white-space:pre-wrap; line-height:1.6; }
+.alert-neon{
+  border:1px solid #16f1d3; color:#e6f1fb; background:rgba(22,241,211,.08);
+  border-radius:14px; padding:.75rem 1rem; box-shadow:0 0 12px rgba(22,241,211,.2) inset;
+}
+
+/* Title glow - centered and neon light colored */
+.text-neon { 
+  color:#e6f1fb; 
+  text-shadow:0 0 18px rgba(22,241,211,.35); 
+  text-align: center;
+  display: block;
+  width: 100%;
+}
+
+/* Specific spacing for Events page elements */
+.events-header {
+  margin-bottom: 200px; /* 200px from title to buttons as requested */
+}
+
+.events-header h1 {
+  margin-bottom: 0;
+  text-align: center;
+  width: 100%;
+}
+
+.events-add-btn {
+  margin-bottom: 20px; /* 20px margin between button and "Niciun eveniment încă" */
+}
+
+/* Center the empty state message */
+.neon-card.text-center {
+  text-align: center;
+  margin-top: 20px; /* Additional spacing after button */
+}
+/* --- Fix spacing between "Evenimente" title and +Adaugă eveniment button --- */
+.events-header h1 {
+  margin-bottom: 50px !important; /* push 50px down to the button */
+}
+
+.events-add-btn {
+  margin-top: 0 !important; /* reset if it had margin from elsewhere */
+}
+
+/* Make event meta text readable on dark bg */
+.events-page-wrap .text-muted,
+.event-card .text-muted {
+  color: #e6f1fb !important; /* bright, high-contrast */
+  opacity: 0.95;             /* remove Bootstrap dim */
+}
+
+.events-page-wrap .small {
+  font-size: .95rem;         /* keep small but readable */
+}
+/* --- Title bar layout fix --- */
+.page-releases .title-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  margin-bottom: 2.5rem;
+}
+
+/* Force the button to be small and on the right (not full-width) */
+.page-releases .title-bar .btn-neon {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  display: inline-block !important;
+  width: auto !important;
+  padding: .6rem 1rem;
+  box-sizing: border-box;
+}
+
+/* Keep the title visible and centered */
+.page-releases .title-bar h1 {
+  margin: 0 !important;
+  text-align: center;
+  width: 100%;
+  z-index: 1;
+}
+  

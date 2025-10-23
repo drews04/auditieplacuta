@@ -1,0 +1,111 @@
+/* Neon pagination — site-wide */
+.ap-pagination{
+    display:flex;
+    justify-content:center;
+    margin-top:1rem;
+  }
+  
+  .neon-pagination{
+    display:flex;
+    gap:.5rem;
+    margin:0;
+    padding:0;
+  }
+  
+  .neon-pagination .page-item{
+    list-style:none;
+  }
+  
+  /* kill default Bootstrap page-link look so ours wins */
+  .neon-pagination .page-link{
+    background:transparent !important;
+    border:0 !important;
+    padding:0 !important;
+    color:inherit;
+  }
+  
+  /* core pill */
+  .neon-pagination .neon-page{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    min-width:42px;
+    height:42px;
+    padding:0 14px;
+    border-radius:999px;
+    text-decoration:none;
+    font-weight:600;
+    letter-spacing:.2px;
+    color:#e6f1fb;
+    background:linear-gradient(180deg,rgba(6,20,26,.6),rgba(6,20,26,.35));
+    border:1px solid rgba(22,241,211,.45);
+    backdrop-filter:blur(4px);
+    transition:box-shadow .2s ease,transform .12s ease,border-color .2s ease,background .2s ease,filter .2s ease;
+  }
+  
+  /* general hover (fallback) */
+  .neon-pagination .page-item:not(.disabled) .neon-page:hover{
+    border-color:#16f1d3;
+    box-shadow:0 0 18px rgba(22,241,211,.45),0 0 1px 1px rgba(22,241,211,.4) inset;
+  }
+  
+  /* active page */
+  .neon-pagination .page-item.active .neon-page,
+  .neon-pagination .neon-page.is-active{
+    background:radial-gradient(120% 120% at 50% 0%,rgba(22,241,211,.25) 0%,rgba(22,241,211,.12) 45%,rgba(6,20,26,.6) 100%);
+    border-color:#16f1d3;
+    box-shadow:0 0 20px rgba(22,241,211,.55),0 0 0 1px rgba(22,241,211,.45) inset;
+  }
+  
+  /* disabled state */
+  .neon-pagination .page-item.disabled .neon-page{
+    opacity:.45;
+    cursor:not-allowed;
+    border-color:rgba(22,241,211,.25);
+  }
+  
+  /* focus ring */
+  .neon-pagination .neon-page:focus{
+    outline:none;
+    box-shadow:0 0 0 2px rgba(22,241,211,.25);
+  }
+  
+  /* -------- Numbers vs Arrows behavior -------- */
+  
+  /* give arrows breathing room from numbers */
+  .neon-pagination .page-item.prev{ margin-right:1.25rem; }
+  .neon-pagination .page-item.next{ margin-left:1.25rem; }
+  
+  /* arrow pills are icon-only and a bit tighter */
+  .neon-pagination .page-item.prev .neon-page,
+  .neon-pagination .page-item.next .neon-page{
+    min-width:42px;
+    padding:0;
+  }
+  
+  /* NUMBERS hover: glow only (no movement) */
+  .neon-pagination .page-item:not(.disabled):not(.prev):not(.next) .neon-page:hover{
+    border-color:#16f1d3 !important;
+    box-shadow:0 0 18px rgba(22,241,211,.45),0 0 1px 1px rgba(22,241,211,.4) inset !important;
+    transform:none;
+  }
+  
+  /* ARROWS hover: brighter, grow, and nudge outward */
+  .neon-pagination .page-item.prev:not(.disabled) .neon-page:hover{
+    transform:translateX(-6px) scale(1.08);
+    filter:brightness(1.15);
+    border-color:#16f1d3 !important;
+    box-shadow:0 0 22px rgba(22,241,211,.55),0 0 1px 1px rgba(22,241,211,.45) inset !important;
+  }
+  .neon-pagination .page-item.next:not(.disabled) .neon-page:hover{
+    transform:translateX(6px) scale(1.08);
+    filter:brightness(1.15);
+    border-color:#16f1d3 !important;
+    box-shadow:0 0 22px rgba(22,241,211,.55),0 0 1px 1px rgba(22,241,211,.45) inset !important;
+  }
+  
+  /* touch devices: remove motion on hover */
+  @media (hover:none){
+    .neon-pagination .page-item .neon-page:hover{ transform:none; filter:none; }
+  }
+  

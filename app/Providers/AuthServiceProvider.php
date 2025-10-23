@@ -15,6 +15,7 @@ class AuthServiceProvider extends ServiceProvider
     protected $policies = [
         \App\Models\Forum\Thread::class => \App\Policies\Forum\ThreadPolicy::class,
         \App\Models\Forum\Post::class => \App\Policies\Forum\PostPolicy::class,
+        \App\Models\Events\Event::class => \App\Policies\EventPolicy::class,
     ];
 
     /**

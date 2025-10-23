@@ -48,6 +48,16 @@ class Thread extends Model
         return $this->belongsTo(\App\Models\User::class, 'last_post_user_id');
     }
     
+    public function likes()
+    {
+        return $this->morphMany(\App\Models\Forum\Like::class, 'likeable');
+    }
+    
+    public function likedBy(?int $userId): bool
+    {
+        return $userId ? $this->likes()->where('user_id', $userId)->exists() : false;
+    }
+    
     public function scopeVisible($query)
     {
         return $query->where('is_hidden', false);

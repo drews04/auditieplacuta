@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Forum Alert Test</title>
+    <link rel="stylesheet" href="assets/css/pill-alert.css">
+    <style>
+        body {
+            background: #0a0a0a;
+            color: #e6f1fb;
+            font-family: Arial, sans-serif;
+            padding: 20px;
+        }
+        .test-container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .test-button {
+            background: linear-gradient(180deg, rgba(6,20,26,.6), rgba(6,20,26,.35));
+            border: 1px solid rgba(22,241,211,.45);
+            color: #e6f1fb;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin: 10px;
+            transition: all 0.2s ease;
+        }
+        .test-button:hover {
+            border-color: #16f1d3;
+            box-shadow: 0 0 18px rgba(22,241,211,.45);
+        }
+        .info {
+            background: rgba(22,241,211,.1);
+            border: 1px solid rgba(22,241,211,.3);
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>Forum Alert System Test</h1>
+        
+        <div class="info">
+            <h3>Test Instructions:</h3>
+            <ol>
+                <li>Click "Test Single Reply" to simulate a single reply notification</li>
+                <li>Click "Test Multi Replies" to simulate multiple replies in one thread</li>
+                <li>Click "Test Multi Threads" to simulate replies across multiple threads</li>
+                <li>Use the Mute button to toggle sound on/off</li>
+                <li>Use the Close button to dismiss the pill</li>
+                <li>The pill should auto-dismiss after 5 seconds of typing completion</li>
+            </ol>
+        </div>
+
+        <button class="test-button" onclick="testSingleReply()">Test Single Reply</button>
+        <button class="test-button" onclick="testMultiReplies()">Test Multi Replies</button>
+        <button class="test-button" onclick="testMultiThreads()">Test Multi Threads</button>
+        <button class="test-button" onclick="clearStorage()">Clear LocalStorage</button>
+
+        <div id="reply-pill-root" class="reply-pill-root" aria-live="polite"></div>
+    </div>
+
+    <script>
+        // Test data
+        const testData = {
+            single: {
+                has_new: true,
+                type: "single",
+                count: 1,
+                thread: {
+                    id: 1,
+                    title: "Cum să câștig mai multe puncte în concurs?",
+                    url: "/forum/t/test-thread"
+                },
+                latest_user: {
+                    id: 2,
+                    name: "TestUser"
+                },
+                since: new Date().toISOString()
+            },
+            multiInThread: {
+                has_new: true,
+                type: "multi_in_thread",
+                count: 3,
+                thread: {
+                    id: 1,
+                    title: "Cum să câștig mai multe puncte în concurs?",
+                    url: "/forum/t/test-thread"
+                },
+                latest_user: {
+                    id: 3,
+                    name: "AnotherUser"
+                },
+                since: new Date().toISOString()
+            },
+            multiThreads: {
+                has_new: true,
+                type: "multi_threads",
+                count: 5,
+                thread: null,
+                latest_user: {
+                    id: 4,
+                    name: "ForumUser"
+                },
+                since: new Date().toISOString()
+            }
+        };
+
+        function testSingleReply() {
+            showTestPill(testData.single);
+        }
+
+        function testMultiReplies() {
+            showTestPill(testData.multiInThread);
+        }
+
+        function testMultiThreads() {
+            showTestPill(testData.multiThreads);
+        }
+
+        function clearStorage() {
+            localStorage.removeItem('ap_forum_last_seen_at');
+            localStorage.removeItem('ap_forum_pill_last_shown_at');
+            localStorage.removeItem('ap_forum_sound_muted');
+            alert('LocalStorage cleared!');
+        }
+
+        function showTestPill(data) {
+            // Remove existing pill
+            const existingPill = document.querySelector('.reply-pill');
+            if (existingPill) {
+                existingPill.remove();
+            }
+
+            // Build pill text
+            let pillText = '';
+            switch (data.type) {
+                case 'single':
+                    pillText = `@${data.latest_user.name} replied on "${data.thread.title}"`;
+                    break;
+                case 'multi_in_thread':
+                    pillText = `${data.count} new replies on "${data.thread.title}"`;
+                    break;
+                case 'multi_threads':
+                    pillText = `${data.count} new replies across your threads`;
+                    break;
+            }
+
+            // Create pill element
+            const pill = createTestPill(pillText, data);
+            
+            // Add to DOM
+            const root = document.getElementById('reply-pill-root');
+            root.appendChild(pill);
+            
+            // Trigger drop animation
+            requestAnimationFrame(() => {
+                pill.classList.add('pill-visible');
+            });
+
+            // Start typewriter effect
+            startTestTypewriter(pill, pillText);
+        }
+
+        function createTestPill(text, data) {
+            const pill = document.createElement('div');
+            pill.className = 'reply-pill';
+            
+            const isSoundMuted = localStorage.getItem('ap_forum_sound_muted') === 'true';
+            
+            pill.innerHTML = `
+                <div class="pill-content">
+                    <div class="pill-typing"></div>
+                    <div class="pill-buttons">
+                        <button class="pill-btn pill-open" data-url="${data.thread ? data.thread.url : '/forum'}">Open</button>
+                        <button class="pill-btn pill-mute" data-muted="${isSoundMuted}">${isSoundMuted ? '🔊' : '🔕'}</button>
+                        <button class="pill-btn pill-close">×</button>
+                    </div>
+                </div>
+            `;
+
+            // Add event listeners
+            pill.querySelector('.pill-open').addEventListener('click', () => {
+                const url = pill.querySelector('.pill-open').getAttribute('data-url');
+                alert(`Would navigate to: ${url}`);
+            });
+
+            pill.querySelector('.pill-mute').addEventListener('click', () => {
+                const isMuted = localStorage.getItem('ap_forum_sound_muted') === 'true';
+                const newMuted = !isMuted;
+                localStorage.setItem('ap_forum_sound_muted', newMuted.toString());
+                pill.querySelector('.pill-mute').setAttribute('data-muted', newMuted);
+                pill.querySelector('.pill-mute').textContent = newMuted ? '🔊' : '🔕';
+            });
+
+            pill.querySelector('.pill-close').addEventListener('click', () => {
+                dismissTestPill(pill);
+            });
+
+            return pill;
+        }
+
+        function startTestTypewriter(pill, text) {
+            const typingElement = pill.querySelector('.pill-typing');
+            let index = 0;
+            
+            // Play sound if not muted
+            const isMuted = localStorage.getItem('ap_forum_sound_muted') === 'true';
+            if (!isMuted) {
+                playTestSound();
+            }
+
+            function typeNext() {
+                if (index < text.length) {
+                    typingElement.textContent += text[index];
+                    index++;
+                    setTimeout(typeNext, 28); // 28ms per character
+                } else {
+                    // Typing complete, remove caret and start auto-dismiss timer
+                    typingElement.classList.add('typing-complete');
+                    setTimeout(() => {
+                        dismissTestPill(pill);
+                    }, 5000);
+                }
+            }
+
+            typeNext();
+        }
+
+        function playTestSound() {
+            // Simple beep sound using Web Audio API
+            try {
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
+                oscillator.type = 'sine';
+                
+                gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+                
+                oscillator.start(audioContext.currentTime);
+                oscillator.stop(audioContext.currentTime + 0.3);
+            } catch (e) {
+                console.warn('Could not play test sound:', e);
+            }
+        }
+
+        function dismissTestPill(pill) {
+            if (!pill || !pill.parentNode) {
+                return;
+            }
+
+            pill.classList.add('pill-exiting');
+            
+            setTimeout(() => {
+                if (pill.parentNode) {
+                    pill.parentNode.removeChild(pill);
+                }
+            }, 300);
+        }
+    </script>
+</body>
+</html>

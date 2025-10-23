@@ -1,0 +1,82 @@
+/* User Profile Page Styles */
+body.page-user-profile {
+    background: #151625 !important;
+    min-height: 100vh;
+}
+
+body.page-user-profile .user-page-wrapper {
+    background: #151625;
+    padding-top: 2rem;
+    padding-bottom: 2rem;
+}
+
+body.page-user-profile .user-card {
+    background: rgba(30, 31, 53, 0.8);
+    border: 1px solid #16f1d3;
+    border-radius: 12px;
+}
+
+body.page-user-profile .user-card .list-group-item {
+    background: transparent;
+    border-color: rgba(22, 241, 211, 0.2);
+    color: #ffffff;
+}
+
+body.page-user-profile .user-card .list-group-item:last-child {
+    border-bottom: none;
+}
+
+body.page-user-profile h1 {
+    color: #16f1d3;
+    text-shadow: 0 0 10px rgba(22, 241, 211, 0.3);
+    margin-bottom: 2rem;
+}
+
+/* Profile photo styling */
+body.page-user-profile .rounded-circle {
+    border: 3px solid #16f1d3;
+    box-shadow: 0 0 15px rgba(22, 241, 211, 0.3);
+}
+
+/* Upload button styling */
+body.page-user-profile .btn-primary {
+    background: #16f1d3;
+    border-color: #16f1d3;
+    color: #151625;
+    font-weight: bold;
+}
+
+body.page-user-profile .btn-primary:hover {
+    background: #14d4b8;
+    border-color: #14d4b8;
+    transform: scale(1.05);
+    transition: all 0.3s ease;
+}
+
+/* Modal styling */
+body.page-user-profile .modal-content {
+    background: #1e1f35;
+    border: 1px solid #16f1d3;
+}
+
+body.page-user-profile .modal-header {
+    border-bottom: 1px solid rgba(22, 241, 211, 0.3);
+}
+
+body.page-user-profile .modal-footer {
+    border-top: 1px solid rgba(22, 241, 211, 0.3);
+}
+
+body.page-user-profile .form-control {
+    background: #151625;
+    border: 1px solid #16f1d3;
+    color: #ffffff;
+}
+
+body.page-user-profile .form-control:focus {
+    background: #151625;
+    border-color: #16f1d3;
+    color: #ffffff;
+    box-shadow: 0 0 0 0.2rem rgba(22, 241, 211, 0.25);
+}
+

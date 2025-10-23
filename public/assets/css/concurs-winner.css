@@ -1,305 +1,124 @@
-/* public/assets/css/concurs-winner.css */
-/* Scope everything to the Concurs page */
-.page-concurs {
-    --ap-bg: #0b0f14;
-    --ap-surface: #0f1722;
-    --ap-border: rgba(22, 241, 211, 0.35);
-    --ap-neon: #16f1d3;
-    --ap-text: #eafdf9;
-    --ap-dim: rgba(234, 253, 249, .68);
-  }
-  
-  /* ---------- WINNER BANNER (top of page) ---------- */
-  .page-concurs .ap-winner-banner{
-    position: relative;
-    margin: 12px 0 22px;
-    border: 2px solid var(--ap-border);
-    border-radius: 16px;
-    background:
-      radial-gradient(1200px 200px at 50% -40%, rgba(22,241,211,.25), transparent 60%),
-      linear-gradient(180deg, #061016, #0b1220 60%, #0a111b);
-    box-shadow:
-      0 0 18px rgba(22,241,211,.25),
-      inset 0 0 20px rgba(22,241,211,.08);
-    overflow: hidden;
-  }
-  .page-concurs .ap-winner-banner::after{
-    content:"";
-    position:absolute; inset:-1px;
-    border-radius:16px;
-    pointer-events:none;
-    box-shadow:0 0 44px rgba(22,241,211,.35) inset;
-  }
-  .page-concurs .ap-winner-inner{
-    display:flex; flex-wrap:wrap; justify-content:center; align-items:center;
-    gap:.65rem; padding:14px 16px; color:var(--ap-text);
-    text-shadow:0 0 10px rgba(22,241,211,.15);
-    font-weight:800; letter-spacing:.2px;
-  }
-  .page-concurs .ap-winner-inner .cup{font-size:1.35rem; filter:drop-shadow(0 0 6px rgba(255,215,0,.25));}
-  .page-concurs .ap-winner-inner .label{opacity:.85}
-  .page-concurs .ap-winner-inner .song{
-    font-weight:900;
-    background:linear-gradient(90deg, #fff, #b7fff2 45%, #62ffe7);
-    -webkit-background-clip:text; background-clip:text; color:transparent;
-    text-shadow:none;
-  }
-  .page-concurs .ap-winner-inner .by{opacity:.65}
-  .page-concurs .ap-winner-inner .user{
-    color:#affff1; text-shadow:0 0 10px rgba(22,241,211,.35); font-weight:900;
-  }
-  
-  /* ---------- THEME / PILL rows (used in weekend + sections) ---------- */
-  .page-concurs .ap-theme-row{
-    display:flex; justify-content:space-between; align-items:center; gap:12px;
-    background:linear-gradient(180deg, #07141a, #0d1a22);
-    border:1px solid rgba(22,241,211,.18);
-    border-radius:12px; padding:10px 12px; color:var(--ap-text);
-  }
-  .page-concurs .ap-theme-row .ap-left{display:flex; align-items:center; flex-wrap:wrap; gap:.5rem}
-  .page-concurs .ap-cat-badge{
-    display:inline-flex; align-items:center; justify-content:center;
-    font-size:.75rem; font-weight:900; letter-spacing:.5px;
-    padding:.25rem .5rem; border-radius:999px; color:#002a24;
-    background-color:var(--ap-neon); box-shadow:0 0 10px rgba(22,241,211,.45);
-  }
-  .page-concurs .ap-label{opacity:.8}
-  .page-concurs .ap-title{font-weight:900}
-  
-  /* ---------- PLAY BUTTON (3D metallic) ---------- */
-  .page-concurs .play3d{
-    --size:44px;
-    inline-size:var(--size); block-size:var(--size);
-    display:grid; place-items:center;
-    border-radius:999px; border:1px solid rgba(255,255,255,.08);
-    background:
-      radial-gradient(120% 140% at 10% 10%, #1a2a33, #0f1a21 55%, #091118),
-      linear-gradient(180deg, rgba(255,255,255,.06), rgba(0,0,0,.18));
-    box-shadow:
-      0 4px 16px rgba(0,0,0,.45),
-      inset 0 1px 6px rgba(255,255,255,.08),
-      inset 0 -6px 10px rgba(0,0,0,.35);
-    cursor:pointer; position:relative; transition:transform .15s ease;
-  }
-  .page-concurs .play3d:hover{ transform:translateY(-1px); }
-  .page-concurs .play3d:active{ transform:translateY(1px) scale(.98); }
-  .page-concurs .play3d-core{
-    inline-size:68%; block-size:68%; border-radius:50%;
-    display:grid; place-items:center;
-    background:radial-gradient(circle at 30% 30%, #0b2228, #061016 60%);
-    border:1px solid rgba(255,255,255,.06);
-    box-shadow:inset 0 0 10px rgba(22,241,211,.15);
-  }
-  .page-concurs .play3d-triangle{
-    inline-size:0; block-size:0;
-    border-left:12px solid var(--ap-neon);
-    border-top:8px solid transparent; border-bottom:8px solid transparent;
-    filter:drop-shadow(0 0 10px rgba(22,241,211,.45));
-  }
-  
-  /* ---------- VOTE button VANISH effect ---------- */
-  @keyframes apFadeScale {
-    to { opacity:0; transform: translateY(-3px) scale(.92); }
-  }
-  .page-concurs .vote-btn.vanish{
-    animation: apFadeScale .6s var(--vanish-delay,0s) ease forwards;
-  }
-  
-  /* ---------- WEEKEND recap: winners grid ---------- */
-  .page-concurs .ap-winners-grid{
-    display:grid; gap:16px;
-    grid-template-columns:repeat(auto-fill,minmax(240px,1fr));
-  }
-  .page-concurs .ap-winner-card{
-    background:linear-gradient(180deg, #081018, #0e1822);
-    border:1px solid rgba(22,241,211,.16); border-radius:14px;
-    padding:12px; color:var(--ap-text);
-    box-shadow:0 6px 20px rgba(0,0,0,.25), inset 0 0 18px rgba(22,241,211,.06);
-  }
-  .page-concurs .ap-winner-card .head{
-    display:flex; align-items:center; gap:10px; margin-bottom:10px;
-  }
-  .page-concurs .ap-winner-card .meta{
-    display:flex; gap:12px; font-size:.85rem; opacity:.85;
-  }
-  .page-concurs .ap-winner-card .song-title{ font-weight:800; line-height:1.2; }
-  
-  /* ---------- Sticky “Votează până la …” pill (optional) ---------- */
-  .page-concurs .btn.btn-secondary.rounded-full{
-    position:fixed; right:16px; bottom:16px; z-index:1060;
-    border-radius:999px;
-  }
-  
-  /* Small helpers */
-  .page-concurs .text-light-emphasis{ color:var(--ap-dim) !important; }
-  
-  /* =========================================================
-   Winners List (Melodii câștigătoare) — page styles
-   Reuses neon tokens from the Concurs page
-   ========================================================= */
-:root{
-  --ap-neon: #16f1d3;
-  --ap-bg:   #0b0f16;
-  --ap-card: #0f1520;
-  --ap-text: #eafdf9;
-  --ap-muted:#9bb3be;
-  --ap-border: rgba(22,241,211,.25);
+/* =========================
+   WINNER REMINDER OVERLAY
+   ========================= */
+
+/* The full-screen overlay */
+#winnerReminder{
+  position: fixed;
+  inset: 0;                          /* top, right, bottom, left: 0 */
+  display: none;                     /* JS switches to 'flex' when shown */
+  align-items: center;               /* center vertically */
+  justify-content: center;           /* center horizontally */
+  background: rgba(0,0,0,.72);
+  z-index: 6000;                     /* above backdrops/toolbars */
 }
 
-.winners-hero{
-  background: #000;
-  border: 2px solid var(--ap-neon);
+/* Confetti behind the modal and never steals clicks */
+#confetti-bg{
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none !important;
+}
+
+/* The actual modal card */
+#winnerReminder .winner-box{
+  position: relative;                /* sits above canvas */
+  z-index: 1;
+  width: min(640px, calc(100% - 32px));
+  background: #0b0f16;
+  color: #eafdf9;
+  border: 1px solid rgba(22,241,211,.25);
   border-radius: 16px;
-  padding: 1.25rem 1.5rem;
-  margin-bottom: 1rem;
-  color: var(--ap-text);
-  box-shadow: 0 0 14px rgba(22,241,211,.35);
+  padding: 24px 22px;
+  box-shadow: 0 0 22px rgba(22,241,211,.20);
+  pointer-events: auto;              /* accept clicks */
 }
 
-.winners-hero h1{
-  margin: 0;
-  font-family: 'Orbitron', system-ui;
+/* Softer neon headings */
+#winnerReminder .w-title{
+  margin: 0 0 .35rem 0;
   font-weight: 900;
+  text-align: center;
+  color: #bffaf2;                    /* softer text color */
   letter-spacing: .5px;
-  color: var(--ap-neon);
-  text-shadow: 0 0 10px var(--ap-neon), 0 0 22px var(--ap-neon);
-  font-size: clamp(22px, 4vw, 32px);
+  text-shadow:
+    0 0 6px rgba(22,241,211,.25),
+    0 0 14px rgba(22,241,211,.15);
 }
 
-.winners-toolbar{
-  display: grid;
-  grid-template-columns: 1fr auto;
+#winnerReminder .w-sub{
+  text-align: center;
+  font-weight: 800;
+  color: #9ae6da;
+  text-shadow:
+    0 0 4px rgba(22,241,211,.2);
+  margin-bottom: .25rem;
+}
+
+#winnerReminder .w-lead{
+  text-align: center;
+  color: rgba(234,253,249,.85);
+  margin: 0 0 .8rem 0;
+}
+
+/* Actions row */
+#winnerReminder .w-actions{
+  display: flex;
   gap: .75rem;
-  margin-bottom: .75rem;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
 }
 
-.winners-toolbar .form-control{
-  background: #0d1420;
-  color: var(--ap-text);
-  border: 1px solid var(--ap-border);
-}
-
-.winners-card{
-  background: var(--ap-card);
-  color: var(--ap-text);
-  border: 2px solid var(--ap-border);
-  border-radius: 14px;
-  overflow: hidden;
-  box-shadow: 0 6px 24px rgba(0,0,0,.35);
-}
-
-/* Table */
-.winners-table{
-  margin: 0;
-  border-collapse: separate;
-  border-spacing: 0;
-  width: 100%;
-}
-
-.winners-table thead th{
-  background: #0b111c;
-  color: var(--ap-text);
-  border-bottom: 1px solid var(--ap-border);
-  font-weight: 800;
-  text-transform: uppercase;
-  font-size: .78rem;
-  letter-spacing: .04em;
-  padding: .65rem .75rem;
-}
-
-.winners-table tbody td{
-  padding: .7rem .75rem;
-  border-top: 1px solid rgba(255,255,255,.05);
-  vertical-align: middle;
-  color: var(--ap-text);
-}
-
-.winners-table tbody tr:hover{
-  background: rgba(22,241,211,.06);
-}
-
-/* Theme chip */
-.ap-theme-chip{
+/* Buttons (keep your class names) */
+#winnerReminder .btn-neon{
   display: inline-flex;
   align-items: center;
-  gap: .35rem;
-  border: 1px dashed var(--ap-neon);
-  color: var(--ap-neon);
-  padding: .25rem .5rem;
-  border-radius: 999px;
-  font-weight: 700;
-  font-size: .8rem;
-  background: rgba(22,241,211,.06);
-}
-
-/* Votes badge */
-.ap-votes-badge{
-  display: inline-block;
-  border-radius: 8px;
-  padding: .2rem .5rem;
+  justify-content: center;
+  padding: .6rem 1.05rem;
+  border-radius: 12px;
+  border: 1px solid rgba(22,241,211,.35);
+  background: rgba(22,241,211,.14);
+  color: #0c2d29;
   font-weight: 800;
-  background: rgba(22,241,211,.12);
-  border: 1px solid var(--ap-border);
-  color: var(--ap-text);
-}
-
-/* YouTube link button */
-.ap-yt-link{
-  display: inline-flex;
-  align-items: center;
-  gap: .4rem;
-  padding: .35rem .55rem;
-  border-radius: 10px;
-  border: 1px solid rgba(255,255,255,.12);
-  color: var(--ap-text);
   text-decoration: none;
-  transition: transform .12s ease, background .12s ease;
+  box-shadow: 0 0 10px rgba(22,241,211,.18);
+  transition: transform .12s ease, box-shadow .12s ease, background .12s ease;
 }
-.ap-yt-link:hover{
-  background: rgba(255,255,255,.08);
+#winnerReminder .btn-neon:hover{
   transform: translateY(-1px);
+  background: rgba(22,241,211,.20);
+  box-shadow: 0 0 14px rgba(22,241,211,.28);
 }
 
-/* Pagination (simple) */
-.winners-pagination{
+#winnerReminder .btn-ghost{
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: .55rem 1rem;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,.18);
+  background: rgba(255,255,255,.06);
+  color: #eafdf9;
+  font-weight: 800;
+  transition: transform .12s ease, background .12s ease;
+  cursor: pointer;
+}
+#winnerReminder .btn-ghost:hover{
+  transform: translateY(-1px);
+  background: rgba(255,255,255,.10);
+}
+
+/* Small pill under the actions */
+#winnerReminder .w-pill{
   display: flex;
   align-items: center;
   justify-content: center;
   gap: .4rem;
-  padding: .75rem;
-}
-.winners-pagination a,
-.winners-pagination span{
-  padding: .35rem .6rem;
-  border-radius: 10px;
-  border: 1px solid rgba(255,255,255,.12);
-  color: var(--ap-text);
-  text-decoration: none;
-}
-.winners-pagination .active{
-  background: rgba(22,241,211,.14);
-  border-color: var(--ap-neon);
-  color: var(--ap-neon);
+  margin-top: .6rem;
+  color: rgba(234,253,249,.75);
 }
 
-/* Mobile tweaks */
-@media (max-width: 640px){
-  .winners-toolbar{ grid-template-columns: 1fr; }
-  .winners-table thead{ display: none; }
-  .winners-table tbody tr{
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: .5rem;
-    padding: .6rem .6rem .8rem;
-    border-bottom: 1px solid rgba(255,255,255,.06);
-  }
-  .winners-table tbody td{
-    border: 0;
-    padding: 0;
-  }
-  .winners-table .td-inline{
-    display: flex; align-items: center; justify-content: space-between;
-    gap: .6rem; margin-top: .3rem;
-    color: var(--ap-muted);
-  }
-}
+/* Make sure any global backdrop doesn't cover the overlay */
+.modal-backdrop{ z-index: 5000; }

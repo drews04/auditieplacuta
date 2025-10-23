@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\User;
 
 use App\Http\Controllers\Controller;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use App\Models\UserStatsPersonal;
@@ -17,7 +18,7 @@ class UserProfileController extends Controller
         // Personal stats (from v_user_personal_stats)
         $stats = UserStatsPersonal::find($user->id);
 
-        // Today’s active song (optional)
+        // Today's active song (optional)
         $activeSong = Song::query()
             ->where('user_id', $user->id)
             ->whereDate('created_at', now()->toDateString())
@@ -49,5 +50,30 @@ class UserProfileController extends Controller
             'allTimePoints'   => $allTimePoints,
             'yearPoints'      => $yearPoints,
         ]);
+    }
+
+    public function uploadPhoto(Request $request)
+    {
+        $request->validate([
+            'profile_photo' => 'required|image|mimes:jpeg,png,jpg,webp|max:2048', // 2MB max
+        ]);
+
+        $user = Auth::user();
+
+        // Delete old photo if exists
+        if ($user->profile_photo_url && file_exists(public_path($user->profile_photo_url))) {
+            @unlink(public_path($user->profile_photo_url));
+        }
+
+        // Store new photo
+        $file = $request->file('profile_photo');
+        $filename = 'profile_' . $user->id . '_' . time() . '.' . $file->getClientOriginalExtension();
+        $file->move(public_path('uploads/profiles'), $filename);
+
+        // Update user
+        $user->profile_photo_url = '/uploads/profiles/' . $filename;
+        $user->save();
+
+        return redirect()->route('user.user_profile')->with('success', 'Poza de profil a fost actualizată cu succes!');
     }
 }
