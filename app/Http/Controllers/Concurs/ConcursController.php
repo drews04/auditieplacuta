@@ -36,6 +36,14 @@ class ConcursController extends Controller
             ->where('vote_end_at', '>', $now)
             ->orderByDesc('start_at')
             ->first();
+        // During freeze there may be no open voting; keep last closed visible (read-only) for poster + list
+        if (!$cycleVote) {
+            $cycleVote = DB::table('contest_cycles')
+                ->where('lane', 'voting')
+                ->where('status', 'closed')
+                ->orderByDesc('vote_end_at')
+                ->first();
+        }
 
         // BULLETPROOF FREEZE DETECTION: Check if submission.theme_id is NULL
         $submissionCycle = DB::table('contest_cycles')
@@ -70,7 +78,7 @@ class ConcursController extends Controller
         // ========== FLAGS ==========
 
         $submissionsOpen = (bool)$cycleSubmit && !$gapBetweenPhases;
-        $votingOpen      = (bool)$cycleVote && !$gapBetweenPhases;
+        $votingOpen      = (bool)$cycleVote && !$gapBetweenPhases && (($cycleVote->status ?? 'closed') === 'open');
 
         // ========== PER-USER FLAGS ==========
 
