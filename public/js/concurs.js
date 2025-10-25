@@ -64,8 +64,79 @@
       markShownToday();
       lsDel(KEY_CLOSED);
 
+      // Start confetti animation
+      startConfetti();
+
       clearTimeout(autoCloseTimer);
       autoCloseTimer = setTimeout(hidePopup, 30000);
+    }
+
+    // Confetti animation
+    function startConfetti() {
+      const canvas = document.getElementById('confetti-bg');
+      if (!canvas) return;
+      
+      const ctx = canvas.getContext('2d');
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+
+      const confetti = [];
+      const confettiCount = 150;
+      const colors = ['#16f1d3', '#0dcfb8', '#ffd700', '#ff6b6b', '#4ecdc4', '#ffe66d'];
+
+      for (let i = 0; i < confettiCount; i++) {
+        confetti.push({
+          x: Math.random() * canvas.width,
+          y: Math.random() * canvas.height - canvas.height,
+          r: Math.random() * 6 + 2,
+          d: Math.random() * confettiCount,
+          color: colors[Math.floor(Math.random() * colors.length)],
+          tilt: Math.floor(Math.random() * 10) - 10,
+          tiltAngleIncremental: Math.random() * 0.07 + 0.05,
+          tiltAngle: 0
+        });
+      }
+
+      let animationFrame;
+      function draw() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        confetti.forEach((c, i) => {
+          ctx.beginPath();
+          ctx.lineWidth = c.r / 2;
+          ctx.strokeStyle = c.color;
+          ctx.moveTo(c.x + c.tilt + c.r, c.y);
+          ctx.lineTo(c.x + c.tilt, c.y + c.tilt + c.r);
+          ctx.stroke();
+
+          c.tiltAngle += c.tiltAngleIncremental;
+          c.y += (Math.cos(c.d) + 3 + c.r / 2) / 2;
+          c.tilt = Math.sin(c.tiltAngle - i / 3) * 15;
+
+          if (c.y > canvas.height) {
+            confetti[i] = {
+              x: Math.random() * canvas.width,
+              y: -10,
+              r: c.r,
+              d: c.d,
+              color: c.color,
+              tilt: c.tilt,
+              tiltAngle: c.tiltAngle,
+              tiltAngleIncremental: c.tiltAngleIncremental
+            };
+          }
+        });
+
+        animationFrame = requestAnimationFrame(draw);
+      }
+
+      draw();
+
+      // Stop confetti after 10 seconds
+      setTimeout(() => {
+        if (animationFrame) cancelAnimationFrame(animationFrame);
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+      }, 10000);
     }
 
     function hidePopup(){

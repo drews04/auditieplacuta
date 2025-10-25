@@ -1,132 +1,237 @@
 /* =========================
-   WINNER REMINDER OVERLAY
+   WINNER REMINDER OVERLAY - SUPER CLEAN & ATTRACTIVE
    ========================= */
 
 /* The full-screen overlay */
-#winnerReminder{
+#winnerReminder {
   position: fixed;
-  inset: 0;                          /* top, right, bottom, left: 0 */
-  display: none;                     /* JS switches to 'flex' when shown */
-  align-items: center;               /* center vertically */
-  justify-content: center;           /* center horizontally */
-  background: rgba(0,0,0,.72);
-  z-index: 10000;                    /* ABOVE EVERYTHING (header is ~1000) */
+  inset: 0;
+  display: none; /* JS switches to 'flex' when shown */
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.95);
+  backdrop-filter: blur(12px);
+  z-index: 999999; /* ABOVE EVERYTHING */
+  font-family: 'Orbitron', system-ui, -apple-system, sans-serif;
 }
 
-/* Hide header when winner modal is active */
-#winnerReminder:not([style*="display: none"]) ~ header,
-#winnerReminder:not([style*="display: none"]) ~ .header,
-#winnerReminder:not([style*="display: none"]) ~ nav {
-  z-index: -1 !important;
-  pointer-events: none !important;
-}
-
-/* Confetti behind the modal and never steals clicks */
-#confetti-bg{
+/* Confetti canvas behind the modal */
+#confetti-bg {
   position: absolute;
   inset: 0;
   z-index: 0;
   pointer-events: none !important;
 }
 
-/* The actual modal card */
-#winnerReminder .winner-box{
-  position: relative;                /* sits above canvas */
+/* The actual modal card - SUPER CLEAN */
+#winnerReminder .winner-box {
+  position: relative;
   z-index: 1;
-  width: min(640px, calc(100% - 32px));
-  background: #0b0f16;
+  width: min(700px, calc(100% - 32px));
+  background: linear-gradient(135deg, #0a0e14 0%, #0f1419 100%);
   color: #eafdf9;
-  border: 1px solid rgba(22,241,211,.25);
-  border-radius: 16px;
-  padding: 24px 22px;
-  box-shadow: 0 0 22px rgba(22,241,211,.20);
-  pointer-events: auto;              /* accept clicks */
+  border: 3px solid #16f1d3;
+  border-radius: 24px;
+  padding: 48px 40px;
+  text-align: center;
+  box-shadow: 
+    0 0 40px rgba(22, 241, 211, 0.4),
+    0 0 80px rgba(22, 241, 211, 0.2),
+    inset 0 0 60px rgba(22, 241, 211, 0.05);
+  pointer-events: auto;
+  animation: modalFadeIn 0.4s ease-out;
 }
 
-/* Softer neon headings */
-#winnerReminder .w-title{
-  margin: 0 0 .35rem 0;
+@keyframes modalFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9) translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* Trophy watermark */
+#winnerReminder .winner-box::before {
+  content: "🏆";
+  position: absolute;
+  right: -30px;
+  top: -60px;
+  font-size: 360px;
+  opacity: 0.08;
+  transform: rotate(-12deg);
+  filter: drop-shadow(0 0 20px rgba(22, 241, 211, 0.3));
+  pointer-events: none;
+  animation: trophyFloat 6s ease-in-out infinite;
+}
+
+@keyframes trophyFloat {
+  0%, 100% { transform: rotate(-12deg) translateY(0); }
+  50% { transform: rotate(-12deg) translateY(-10px); }
+}
+
+/* Main title - SUPER NEON */
+#winnerReminder .w-title {
+  margin: 0 0 16px 0;
+  font-size: clamp(32px, 5vw, 48px);
   font-weight: 900;
-  text-align: center;
-  color: #bffaf2;                    /* softer text color */
-  letter-spacing: .5px;
+  color: #16f1d3;
+  letter-spacing: 1px;
   text-shadow:
-    0 0 6px rgba(22,241,211,.25),
-    0 0 14px rgba(22,241,211,.15);
+    0 0 10px #16f1d3,
+    0 0 20px #16f1d3,
+    0 0 40px rgba(22, 241, 211, 0.5),
+    0 0 80px rgba(22, 241, 211, 0.3);
+  animation: titlePulse 2s ease-in-out infinite;
 }
 
-#winnerReminder .w-sub{
-  text-align: center;
+@keyframes titlePulse {
+  0%, 100% { text-shadow: 0 0 10px #16f1d3, 0 0 20px #16f1d3, 0 0 40px rgba(22, 241, 211, 0.5); }
+  50% { text-shadow: 0 0 15px #16f1d3, 0 0 30px #16f1d3, 0 0 60px rgba(22, 241, 211, 0.7); }
+}
+
+/* Subtitle */
+#winnerReminder .w-sub {
+  font-size: clamp(20px, 3.5vw, 28px);
   font-weight: 800;
   color: #9ae6da;
-  text-shadow:
-    0 0 4px rgba(22,241,211,.2);
-  margin-bottom: .25rem;
+  text-shadow: 0 0 8px rgba(22, 241, 211, 0.4);
+  margin: 0 0 24px 0;
 }
 
-#winnerReminder .w-lead{
-  text-align: center;
-  color: rgba(234,253,249,.85);
-  margin: 0 0 .8rem 0;
+/* Lead text */
+#winnerReminder .w-lead {
+  color: rgba(234, 253, 249, 0.9);
+  font-size: clamp(15px, 2.5vw, 18px);
+  line-height: 1.6;
+  margin: 0 auto 32px;
+  max-width: 500px;
 }
 
 /* Actions row */
-#winnerReminder .w-actions{
+#winnerReminder .w-actions {
   display: flex;
-  gap: .75rem;
+  gap: 16px;
   justify-content: center;
   align-items: center;
   flex-wrap: wrap;
+  margin: 0 0 24px 0;
 }
 
-/* Buttons (keep your class names) */
-#winnerReminder .btn-neon{
+/* Primary button - GLOWING NEON */
+#winnerReminder .btn-neon {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: .6rem 1.05rem;
-  border-radius: 12px;
-  border: 1px solid rgba(22,241,211,.35);
-  background: rgba(22,241,211,.14);
-  color: #0c2d29;
-  font-weight: 800;
+  padding: 16px 32px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #16f1d3 0%, #0dcfb8 100%);
+  color: #001311;
+  font-size: 18px;
+  font-weight: 900;
   text-decoration: none;
-  box-shadow: 0 0 10px rgba(22,241,211,.18);
-  transition: transform .12s ease, box-shadow .12s ease, background .12s ease;
-}
-#winnerReminder .btn-neon:hover{
-  transform: translateY(-1px);
-  background: rgba(22,241,211,.20);
-  box-shadow: 0 0 14px rgba(22,241,211,.28);
+  border: none;
+  cursor: pointer;
+  box-shadow: 
+    0 0 20px rgba(22, 241, 211, 0.6),
+    0 0 40px rgba(22, 241, 211, 0.4),
+    0 4px 15px rgba(0, 0, 0, 0.3);
+  transition: all 0.3s ease;
+  letter-spacing: 0.5px;
 }
 
-#winnerReminder .btn-ghost{
+#winnerReminder .btn-neon:hover {
+  transform: translateY(-3px) scale(1.05);
+  box-shadow: 
+    0 0 30px rgba(22, 241, 211, 0.8),
+    0 0 60px rgba(22, 241, 211, 0.6),
+    0 6px 20px rgba(0, 0, 0, 0.4);
+  background: linear-gradient(135deg, #1ffde3 0%, #16f1d3 100%);
+}
+
+#winnerReminder .btn-neon:active {
+  transform: translateY(-1px) scale(1.02);
+}
+
+/* Ghost button */
+#winnerReminder .btn-ghost {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: .55rem 1rem;
-  border-radius: 12px;
-  border: 1px solid rgba(255,255,255,.18);
-  background: rgba(255,255,255,.06);
-  color: #eafdf9;
+  padding: 16px 32px;
+  border-radius: 16px;
+  background: transparent;
+  border: 2px solid #16f1d3;
+  color: #16f1d3;
+  font-size: 16px;
   font-weight: 800;
-  transition: transform .12s ease, background .12s ease;
   cursor: pointer;
-}
-#winnerReminder .btn-ghost:hover{
-  transform: translateY(-1px);
-  background: rgba(255,255,255,.10);
+  box-shadow: 
+    0 0 15px rgba(22, 241, 211, 0.3) inset,
+    0 0 15px rgba(22, 241, 211, 0.2);
+  transition: all 0.3s ease;
 }
 
-/* Small pill under the actions */
-#winnerReminder .w-pill{
-  display: flex;
+#winnerReminder .btn-ghost:hover {
+  transform: translateY(-2px);
+  background: rgba(22, 241, 211, 0.1);
+  box-shadow: 
+    0 0 20px rgba(22, 241, 211, 0.4) inset,
+    0 0 25px rgba(22, 241, 211, 0.3);
+}
+
+/* Time pill */
+#winnerReminder .w-pill {
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: .4rem;
-  margin-top: .6rem;
-  color: rgba(234,253,249,.75);
+  gap: 8px;
+  border: 2px solid #16f1d3;
+  border-radius: 999px;
+  padding: 12px 24px;
+  color: #16f1d3;
+  font-size: 15px;
+  font-weight: 700;
+  box-shadow: 
+    0 0 15px rgba(22, 241, 211, 0.4) inset,
+    0 0 20px rgba(22, 241, 211, 0.2);
 }
 
-/* Make sure any global backdrop doesn't cover the overlay */
-.modal-backdrop{ z-index: 5000; }
+/* Responsive */
+@media (max-width: 768px) {
+  #winnerReminder .winner-box {
+    padding: 36px 28px;
+    border-radius: 20px;
+  }
+
+  #winnerReminder .w-actions {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  #winnerReminder .btn-neon,
+  #winnerReminder .btn-ghost {
+    width: 100%;
+    max-width: 280px;
+  }
+}
+
+@media (max-width: 480px) {
+  #winnerReminder .winner-box {
+    padding: 28px 20px;
+  }
+
+  #winnerReminder .w-title {
+    margin-bottom: 12px;
+  }
+
+  #winnerReminder .w-sub {
+    margin-bottom: 16px;
+  }
+
+  #winnerReminder .w-lead {
+    margin-bottom: 24px;
+  }
+}
