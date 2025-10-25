@@ -435,23 +435,6 @@ unset($__errorArgs, $__bag); ?>
   
   <?php $isAdmin = auth()->check() && (auth()->user()->is_admin ?? false); ?>
   <?php if( (($isWinner ?? false) && ($gapBetweenPhases ?? false) && !session('winner_chose_theme')) || session('force_theme_modal') === true ): ?>
-    <style>
-      /* EMERGENCY: Hide header when winner modal is on page and visible */
-      #winnerReminder:not([style*="display: none"]) ~ * header,
-      #winnerReminder:not([style*="display:none"]) ~ * header,
-      body:has(#winnerReminder:not([style*="display: none"])) header,
-      body:has(#winnerReminder:not([style*="display:none"])) header,
-      body:has(#winnerReminder:not([style*="display: none"])) #gamfi-header,
-      body:has(#winnerReminder:not([style*="display: none"])) .menu-area {
-        display: none !important;
-        opacity: 0 !important;
-        visibility: hidden !important;
-        pointer-events: none !important;
-        position: absolute !important;
-        top: -99999px !important;
-        z-index: -1 !important;
-      }
-    </style>
     <div id="winnerReminder" style="display:none;">
       <canvas id="confetti-bg" style="pointer-events:none"></canvas>
       <div class="winner-box">
@@ -541,4 +524,4 @@ unset($__errorArgs, $__bag); ?>
 <?php $__env->stopPush(); ?>
 
 
-<?php echo $__env->make('layouts.app', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\xampp\htdocs\auditieplacuta\resources\views/concurs/index.blade.php ENDPATH**/ ?>
+<?php echo $__env->make('layouts.app', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\xampp\htdocs\auditieplacuta\resources\views\concurs\index.blade.php ENDPATH**/ ?>

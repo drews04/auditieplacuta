@@ -64,7 +64,6 @@ document.addEventListener('DOMContentLoaded', function() {
 <?php $__env->stopPush(); ?>
 
 <?php $__env->startPush('styles'); ?>
-<link rel="stylesheet" href="<?php echo e(asset('assets/css/concurs-winner.css')); ?>?v=<?php echo e(filemtime(public_path('assets/css/concurs-winner.css'))); ?>">
 <style>
 /* reuse your neon tokens */
 .neon-card{
@@ -85,4 +84,4 @@ document.addEventListener('DOMContentLoaded', function() {
 </style>
 <?php $__env->stopPush(); ?>
 
-<?php echo $__env->make('layouts.app', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\xampp\htdocs\auditieplacuta\resources\views/concurs/alege-tema.blade.php ENDPATH**/ ?>
+<?php echo $__env->make('layouts.app', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\xampp\htdocs\auditieplacuta\resources\views\concurs\alege-tema.blade.php ENDPATH**/ ?>

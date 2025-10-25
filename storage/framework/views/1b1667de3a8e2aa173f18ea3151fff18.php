@@ -1,0 +1,1 @@
+<?php /**PATH C:\xampp\htdocs\auditieplacuta\resources\views\user\user-trivia.blade.php ENDPATH**/ ?>

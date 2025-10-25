@@ -424,6 +424,23 @@
   {{-- Winner reminder overlay (no inline JS; handled by concurs.js) --}}
   @php $isAdmin = auth()->check() && (auth()->user()->is_admin ?? false); @endphp
   @if( (($isWinner ?? false) && ($gapBetweenPhases ?? false) && !session('winner_chose_theme')) || session('force_theme_modal') === true )
+    <style>
+      /* EMERGENCY: Hide header when winner modal is on page and visible */
+      #winnerReminder:not([style*="display: none"]) ~ * header,
+      #winnerReminder:not([style*="display:none"]) ~ * header,
+      body:has(#winnerReminder:not([style*="display: none"])) header,
+      body:has(#winnerReminder:not([style*="display:none"])) header,
+      body:has(#winnerReminder:not([style*="display: none"])) #gamfi-header,
+      body:has(#winnerReminder:not([style*="display: none"])) .menu-area {
+        display: none !important;
+        opacity: 0 !important;
+        visibility: hidden !important;
+        pointer-events: none !important;
+        position: absolute !important;
+        top: -99999px !important;
+        z-index: -1 !important;
+      }
+    </style>
     <div id="winnerReminder" style="display:none;">
       <canvas id="confetti-bg" style="pointer-events:none"></canvas>
       <div class="winner-box">

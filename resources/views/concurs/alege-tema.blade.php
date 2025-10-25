@@ -66,6 +66,7 @@ document.addEventListener('DOMContentLoaded', function() {
 @endpush
 
 @push('styles')
+<link rel="stylesheet" href="{{ asset('assets/css/concurs-winner.css') }}?v={{ filemtime(public_path('assets/css/concurs-winner.css')) }}">
 <style>
 /* reuse your neon tokens */
 .neon-card{

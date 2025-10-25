@@ -26,11 +26,14 @@
 
   /* ------------------------- WINNER POPUP -------------------------------- */
   (function () {
+    console.log('[WINNER MODAL SCRIPT] Loading winner modal logic');
+    
     const qs = new URLSearchParams(window.location.search);
     const force = qs.get('force_popup') === '1';
     const reset = qs.get('reset_popup') === '1';
 
     const popup = document.getElementById('winnerReminder');
+    console.log('[WINNER MODAL SCRIPT] Found popup element:', !!popup);
     if (!popup) return;
 
     const btnClose  = document.getElementById('btn-close-winner');
@@ -56,11 +59,44 @@
     let autoCloseTimer = null;
 
     function showPopup(){
+      console.log('[WINNER MODAL] showPopup() called');
+      
       if (deadlineEl) {
         const now = new Date();
         deadlineEl.textContent = `Până la 21:00, ${String(now.getDate()).padStart(2,'0')}.${String(now.getMonth()+1).padStart(2,'0')}.${now.getFullYear()}`;
       }
       popup.style.display = 'flex';
+      document.body.classList.add('winner-modal-active'); // Hide header
+      console.log('[WINNER MODAL] Body class added: winner-modal-active');
+      
+      // FORCE HIDE HEADER COMPLETELY - ALL POSSIBLE SELECTORS
+      const headerElements = [
+        document.querySelector('header'),
+        document.getElementById('gamfi-header'),
+        document.querySelector('.gamfi-header-section'),
+        document.querySelector('.menu-area'),
+        document.querySelector('.menu-sticky'),
+        document.querySelector('.transparent-header')
+      ];
+      
+      console.log('[WINNER MODAL] Found header elements:', headerElements.filter(el => el !== null).length);
+      
+      headerElements.forEach((el, index) => {
+        if (el) {
+          console.log(`[WINNER MODAL] Hiding element ${index}:`, el.className || el.tagName);
+          el.style.display = 'none';
+          el.style.visibility = 'hidden';
+          el.style.opacity = '0';
+          el.style.pointerEvents = 'none';
+          el.style.position = 'absolute';
+          el.style.top = '-9999px';
+          el.style.left = '-9999px';
+          el.style.zIndex = '-9999';
+        }
+      });
+      
+      console.log('[WINNER MODAL] All header elements hidden');
+      
       markShownToday();
       lsDel(KEY_CLOSED);
 
@@ -141,6 +177,30 @@
 
     function hidePopup(){
       popup.style.display = 'none';
+      document.body.classList.remove('winner-modal-active'); // Show header again
+      
+      // RESTORE HEADER - ALL ELEMENTS
+      const headerElements = [
+        document.querySelector('header'),
+        document.getElementById('gamfi-header'),
+        document.querySelector('.gamfi-header-section'),
+        document.querySelector('.menu-area'),
+        document.querySelector('.menu-sticky'),
+        document.querySelector('.transparent-header')
+      ];
+      
+      headerElements.forEach(el => {
+        if (el) {
+          el.style.display = '';
+          el.style.visibility = '';
+          el.style.opacity = '';
+          el.style.pointerEvents = '';
+          el.style.position = '';
+          el.style.top = '';
+          el.style.left = '';
+          el.style.zIndex = '';
+        }
+      });
     
       // NEW: snooze for 60 minutes so it doesn't re-open immediately
       try {
