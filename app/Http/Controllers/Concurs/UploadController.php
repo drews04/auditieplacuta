@@ -71,11 +71,20 @@ class UploadController extends Controller
                         ->exists();
                 }
                 
+                // Get list of users who liked (for dropdown)
+                $likes = DB::table('theme_likes')
+                    ->join('users', 'users.id', '=', 'theme_likes.user_id')
+                    ->where('theme_likes.theme_id', $themeId)
+                    ->select('users.id', 'users.name')
+                    ->get()
+                    ->map(fn($row) => (object)['user' => (object)['name' => $row->name]]);
+                
                 $submitTheme = (object)[
                     'id'          => $themeId,
                     'name'        => $cycleSubmit->theme_text,
                     'likes_count' => $likesCount,
                     'liked_by_me' => $likedByMe,
+                    'likes'       => $likes,
                 ];
             }
 

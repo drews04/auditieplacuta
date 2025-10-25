@@ -67,6 +67,29 @@ class VoteController extends Controller
             if (!empty($cycleVote->theme_text)) {
                 $themeId = $cycleVote->theme_id ?? null;
                 
+                // If theme_id is NULL but theme_text exists, try to find or create the theme
+                if (!$themeId) {
+                    $existingTheme = DB::table('contest_themes')
+                        ->where('name', $cycleVote->theme_text)
+                        ->first();
+                    
+                    if ($existingTheme) {
+                        $themeId = $existingTheme->id;
+                    } else {
+                        // Create theme (fallback for legacy cycles without theme_id)
+                        $themeId = DB::table('contest_themes')->insertGetId([
+                            'name' => $cycleVote->theme_text,
+                            'chosen_by_user_id' => null,
+                            'created_at' => now(),
+                        ]);
+                    }
+                    
+                    // Update cycle with theme_id for future requests
+                    DB::table('contest_cycles')
+                        ->where('id', $cycleVote->id)
+                        ->update(['theme_id' => $themeId]);
+                }
+                
                 // Query real likes count for this theme
                 $likesCount = $themeId ? DB::table('theme_likes')
                     ->where('theme_id', $themeId)
@@ -81,11 +104,20 @@ class VoteController extends Controller
                         ->exists();
                 }
                 
+                // Get list of users who liked (for dropdown)
+                $likes = DB::table('theme_likes')
+                    ->join('users', 'users.id', '=', 'theme_likes.user_id')
+                    ->where('theme_likes.theme_id', $themeId)
+                    ->select('users.id', 'users.name')
+                    ->get()
+                    ->map(fn($row) => (object)['user' => (object)['name' => $row->name]]);
+                
                 $voteTheme = (object)[
                     'id'          => $themeId,
                     'name'        => $cycleVote->theme_text,
                     'likes_count' => $likesCount,
                     'liked_by_me' => $likedByMe,
+                    'likes'       => $likes,
                 ];
             }
 
