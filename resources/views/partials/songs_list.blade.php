@@ -8,6 +8,7 @@
     $disabledVoteText     = $disabledVoteText     ?? null;    // custom disabled label
     $hideVoteStatus       = $hideVoteStatus       ?? false;   // hide entire right-side status area
     $votedSongId          = $votedSongId          ?? null;    // ID of song user voted for (purple glow)
+    $isAdmin              = auth()->check() && auth()->user()->is_admin;
 @endphp
 
 <div class="list-group">
@@ -18,10 +19,12 @@
         $yt        = trim($song->youtube_url ?? '');
         $isMine    = auth()->check() && (int) ($song->user_id ?? 0) === (int) auth()->id();
         $isVoted   = $votedSongId && (int) ($song->id ?? 0) === (int) $votedSongId;
+        $isDisqualified = (bool) ($song->is_disqualified ?? false);
+        $disqReason = $song->disqualification_reason ?? 'Descalificat';
 
-        $canVote = $showVoteButtons && !$userHasVotedToday && !$isMine && auth()->check();
+        $canVote = $showVoteButtons && !$userHasVotedToday && !$isMine && !$isDisqualified && auth()->check();
         
-        $itemClass = $isMine ? 'my-song' : ($isVoted ? 'voted-song' : '');
+        $itemClass = $isMine ? 'my-song' : ($isVoted ? 'voted-song' : ($isDisqualified ? 'disqualified-song' : ''));
     @endphp
 
     <div class="list-group-item d-flex justify-content-between align-items-center song-item {{ $itemClass }}">
@@ -46,11 +49,15 @@
             </button>
 
             <span class="fw-semibold song-title">{{ $label }}</span>
+            
+            @if($isDisqualified)
+                <span class="badge bg-danger ms-2" title="{{ $disqReason }}">❌ Descalificat</span>
+            @endif
         </div>
 
-        {{-- Right side (vote button / status) --}}
-        @unless ($hideVoteStatus)
-            <div class="d-flex align-items-center">
+        {{-- Right side (vote button / status + admin controls) --}}
+        <div class="d-flex align-items-center">
+            @unless ($hideVoteStatus)
                 @if ($hideDisabledButtons)
                     {{-- Explicitly hide anything on the right (used by Upload page / preview states) --}}
                 @else
@@ -77,8 +84,29 @@
                         </button>
                     @endif
                 @endif
-            </div>
-        @endunless
+            @endunless
+            
+            {{-- ADMIN DISQUALIFY BUTTONS (always visible for admin, regardless of hideVoteStatus) --}}
+            @if($isAdmin)
+                @if($isDisqualified)
+                    <button type="button" 
+                            class="btn btn-sm btn-outline-success admin-disqualify-toggle ms-2"
+                            data-song-id="{{ $song->id }}"
+                            data-action="enable"
+                            title="Re-activează melodia">
+                        ✓ Re-activează
+                    </button>
+                @else
+                    <button type="button" 
+                            class="btn btn-sm btn-outline-danger admin-disqualify-toggle ms-2"
+                            data-song-id="{{ $song->id }}"
+                            data-action="disqualify"
+                            title="Descalifică melodia">
+                        ✗ Descalifică
+                    </button>
+                @endif
+            @endif
+        </div>
     </div>
 @empty
     <div class="alert alert-info mb-0">Nu au fost încă adăugate melodii.</div>

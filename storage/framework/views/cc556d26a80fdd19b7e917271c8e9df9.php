@@ -1,5 +1,3 @@
-
-
 <?php $__env->startSection('title', 'Alege tema • Concurs'); ?>
 <?php $__env->startSection('body_class', 'page-concurs'); ?>
 
@@ -43,6 +41,27 @@
     </div>
   </div>
 <?php $__env->stopSection(); ?>
+
+<?php $__env->startPush('scripts'); ?>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const form = document.querySelector('.ap-theme-picker form');
+  if (form) {
+    console.log('✅ Theme picker form found:', form.action);
+    form.addEventListener('submit', function(e) {
+      console.log('🚀 Form is submitting...', {
+        category: form.querySelector('[name="category"]').value,
+        theme: form.querySelector('[name="theme"]').value,
+        action: form.action,
+        method: form.method
+      });
+    });
+  } else {
+    console.error('❌ Theme picker form NOT found');
+  }
+});
+</script>
+<?php $__env->stopPush(); ?>
 
 <?php $__env->startPush('styles'); ?>
 <style>

@@ -89,9 +89,15 @@
 
     const now = new Date();
     if (force) { showPopup(); return; }
-    // New rule: if server says user is winner AND site is frozen, show immediately
+    // New rule: if server says user is winner AND site is frozen AND hasn't picked yet, show immediately
     try {
       const flags = window.concursFlags || {};
+      // Check snooze timer
+      const snoozeUntil = localStorage.getItem('apWinnerModalSnoozeUntil');
+      if (snoozeUntil && new Date(snoozeUntil) > new Date()) {
+        console.log('[Winner Modal] Snoozed until', snoozeUntil);
+        return; // Still in snooze period
+      }
       if (flags.isWinner && !flags.tomorrowPicked) { showPopup(); return; }
     } catch (_) {}
     // Fallback: time-based window (kept for safety)
@@ -358,5 +364,53 @@ document.addEventListener('DOMContentLoaded', () => {
       // subtle neon pulse when clicked
       btn.classList.add('btn-glow');
       setTimeout(() => btn.classList.remove('btn-glow'), 800);
+  });
+});
+
+// ─────────────────────────────────────────────────────────────
+// ADMIN: Disqualify/Re-enable songs
+// ─────────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  document.addEventListener('click', (e) => {
+    const btn = e.target.closest('.admin-disqualify-toggle');
+    if (!btn) return;
+
+    const songId = btn.dataset.songId;
+    const action = btn.dataset.action; // 'disqualify' or 'enable'
+    const CSRF = document.querySelector('meta[name="csrf-token"]')?.content || '';
+
+    if (!confirm(action === 'disqualify' ? 'Descalifici această melodie?' : 'Re-activezi această melodie?')) {
+      return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = '...';
+
+    fetch(`/concurs/admin/disqualify/${songId}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-TOKEN': CSRF,
+        'Accept': 'application/json',
+      },
+      body: JSON.stringify({ action })
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (data.ok) {
+        // Reload page to refresh song list
+        window.location.reload();
+      } else {
+        alert(data.message || 'Eroare');
+        btn.disabled = false;
+        btn.textContent = action === 'disqualify' ? '✗ Descalifică' : '✓ Re-activează';
+      }
+    })
+    .catch(err => {
+      console.error(err);
+      alert('Eroare la descalificare');
+      btn.disabled = false;
+      btn.textContent = action === 'disqualify' ? '✗ Descalifică' : '✓ Re-activează';
+    });
   });
 });

@@ -1,4 +1,4 @@
-@extends('layouts.guest')
+
 
 @push('styles')
 <link rel="stylesheet" href="{{ asset('assets/css/register.css') }}?v={{ filemtime(public_path('assets/css/register.css')) }}">

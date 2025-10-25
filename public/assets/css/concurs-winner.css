@@ -10,7 +10,15 @@
   align-items: center;               /* center vertically */
   justify-content: center;           /* center horizontally */
   background: rgba(0,0,0,.72);
-  z-index: 6000;                     /* above backdrops/toolbars */
+  z-index: 10000;                    /* ABOVE EVERYTHING (header is ~1000) */
+}
+
+/* Hide header when winner modal is active */
+#winnerReminder:not([style*="display: none"]) ~ header,
+#winnerReminder:not([style*="display: none"]) ~ .header,
+#winnerReminder:not([style*="display: none"]) ~ nav {
+  z-index: -1 !important;
+  pointer-events: none !important;
 }
 
 /* Confetti behind the modal and never steals clicks */

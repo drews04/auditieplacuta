@@ -1,19 +1,32 @@
-@extends('layouts.app')
+
+
+@push('styles')
+<link rel="stylesheet" href="{{ asset('assets/css/register.css') }}">
+@endpush
 
 @section('content')
-    <div class="container">
-        <div class="alert alert-success d-flex align-items-center">
-            <span class="me-2" style="font-size: 18px;">✅</span>
-            <div>
-                Cont creat cu succes! Te poți autentifica.
-            </div>
-        </div>
+<div class="guest-container">
+  <div class="register-container text-center">
 
-        <script>
-            window.addEventListener('DOMContentLoaded', () => {
-                const showModal = new bootstrap.Modal(document.getElementById('loginModal'));
-                showModal.show();
-            });
-        </script>
+    <div class="logo mb-3">
+      <img src="{{ asset('assets/images/logo.png') }}" alt="Auditie Placuta">
     </div>
+
+    <h2>Cont creat cu succes!</h2>
+
+    <div class="alert alert-success mt-3">
+      ✅ Contul tău a fost creat! Te poți autentifica acum.
+    </div>
+
+  </div>
+</div>
+
+<script>
+  window.addEventListener('DOMContentLoaded', () => {
+    const modal = document.getElementById('loginModal');
+    if (modal) {
+      new bootstrap.Modal(modal).show();
+    }
+  });
+</script>
 @endsection

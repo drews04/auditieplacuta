@@ -41,6 +41,16 @@ class ThemeController extends Controller
      */
     public function store(Request $request)
     {
+        // ULTRA AGGRESSIVE LOGGING
+        file_put_contents(storage_path('logs/theme_pick_trace.txt'), "[" . date('Y-m-d H:i:s') . "] CONTROLLER HIT!\n", FILE_APPEND);
+        file_put_contents(storage_path('logs/theme_pick_trace.txt'), "User: " . (auth()->id() ?? 'NOT LOGGED IN') . "\n", FILE_APPEND);
+        file_put_contents(storage_path('logs/theme_pick_trace.txt'), "Data: " . json_encode($request->all()) . "\n\n", FILE_APPEND);
+        
+        \Log::info('[THEME_PICK_START]', [
+            'user_id' => auth()->id(),
+            'request_data' => $request->all(),
+        ]);
+        
         $data = $request->validate([
             'category' => ['required', 'string', 'max:40'],
             'theme'    => ['required', 'string', 'max:120'],
@@ -57,25 +67,54 @@ class ThemeController extends Controller
             ->where('lane', 'submission')
             ->where('status', 'open')
             ->first();
+        
+        \Log::info('[THEME_PICK_CHECK1]', [
+            'found_submission_cycle' => $submissionCycle ? $submissionCycle->id : null,
+            'theme_id' => $submissionCycle ? $submissionCycle->theme_id : null,
+        ]);
             
         if (!$submissionCycle || !is_null($submissionCycle->theme_id)) {
+            \Log::error('[THEME_PICK_FAIL1]', ['reason' => 'No frozen cycle']);
             return $this->respondError('Nu este fereastră de alegere a temei.');
         }
 
-        // 2) FIND LAST CLOSED VOTING CYCLE
+        // 2) FIND LAST WINNER (most recent)
+        $lastWinner = DB::table('winners')
+            ->orderByDesc('id')
+            ->first();
+
+        \Log::info('[THEME_PICK_CHECK2]', [
+            'found_last_winner' => $lastWinner ? $lastWinner->id : null,
+            'winner_cycle_id' => $lastWinner ? $lastWinner->cycle_id : null,
+            'winner_user_id' => $lastWinner ? $lastWinner->user_id : null,
+        ]);
+
+        if (!$lastWinner) {
+            \Log::error('[THEME_PICK_FAIL2]', ['reason' => 'No winner found']);
+            return $this->respondError('Nu există un câștigător pentru care să alegi tema.');
+        }
+
+        // Get the voting cycle for this winner
         $lastVoting = DB::table('contest_cycles')
-            ->where('lane', 'voting')
-            ->where('status', 'closed')
-            ->orderByDesc('vote_end_at')
+            ->where('id', $lastWinner->cycle_id)
             ->first();
 
         if (!$lastVoting) {
-            return $this->respondError('Nu există o rundă încheiată pentru care să alegi tema.');
+            \Log::error('[THEME_PICK_FAIL2B]', ['reason' => 'Winner cycle not found']);
+            return $this->respondError('Ciclul câștigătorului nu a fost găsit.');
         }
 
         // 3) VERIFY USER IS THE WINNER
-        $win = DB::table('winners')->where('cycle_id', $lastVoting->id)->first();
+        $win = $lastWinner;
+        
+        \Log::info('[THEME_PICK_CHECK3]', [
+            'found_winner' => $win ? $win->user_id : null,
+            'current_user' => auth()->id(),
+            'matches' => $win && (int)$win->user_id === (int)auth()->id(),
+        ]);
+        
         if (!$win || !auth()->check() || (int)$win->user_id !== (int)auth()->id()) {
+            \Log::error('[THEME_PICK_FAIL3]', ['reason' => 'Not the winner']);
             return $this->respondError('Nu ai permisiunea să alegi tema.');
         }
 
@@ -83,19 +122,42 @@ class ThemeController extends Controller
         $voteEndAt = Carbon::parse($lastVoting->vote_end_at);
         $deadline  = $voteEndAt->copy()->addHour();
         
+        \Log::info('[THEME_PICK_CHECK4]', [
+            'vote_end_at' => $voteEndAt->toDateTimeString(),
+            'deadline' => $deadline->toDateTimeString(),
+            'now' => $now->toDateTimeString(),
+            'is_past_deadline' => $now->gt($deadline),
+        ]);
+        
         if ($now->gt($deadline)) {
+            \Log::error('[THEME_PICK_FAIL4]', ['reason' => 'Past deadline']);
             return $this->respondError('Fereastra de alegere a temei s-a închis (după 21:00).');
         }
 
         // 5) CREATE THEME & NEW SUBMISSION CYCLE
         DB::beginTransaction();
         try {
-            // Create theme in contest_themes
-            $themeId = DB::table('contest_themes')->insertGetId([
-                'name'              => $themeText,
-                'chosen_by_user_id' => auth()->id(),
-                'created_at'        => $now,
-            ]);
+            // Check if theme already exists (reuse it) or create new one
+            $existingTheme = DB::table('contest_themes')->where('name', $themeText)->first();
+            
+            if ($existingTheme) {
+                $themeId = $existingTheme->id;
+                \Log::info('[THEME_PICK_REUSE]', [
+                    'theme_id' => $themeId,
+                    'theme_name' => $themeText,
+                    'reason' => 'Theme already exists',
+                ]);
+            } else {
+                $themeId = DB::table('contest_themes')->insertGetId([
+                    'name'              => $themeText,
+                    'chosen_by_user_id' => auth()->id(),
+                    'created_at'        => $now,
+                ]);
+                \Log::info('[THEME_PICK_CREATE]', [
+                    'theme_id' => $themeId,
+                    'theme_name' => $themeText,
+                ]);
+            }
 
             // Find the NEWEST frozen submission opened at 20:00
             $frozen = DB::table('contest_cycles')
@@ -109,21 +171,23 @@ class ThemeController extends Controller
                 throw new \Exception('Nu am găsit runda înghețată pentru setarea temei.');
             }
 
-            // UNFREEZE + ADVANCE NOW: Promote frozen submission → voting, open new submission with chosen theme
+            // BULLETPROOF ROTATION: Promote frozen → voting, open new submission with chosen theme
             $tomorrow2000 = Carbon::parse($frozen->submit_end_at, $tz)->addDay()->setTime(20, 0, 0);
 
-            // Promote frozen submission to voting immediately
+            // 1. Promote frozen submission → voting (songs move to vote page)
+            // IMPORTANT: poster_url is preserved automatically (not in UPDATE, so it stays)
             DB::table('contest_cycles')
                 ->where('id', $frozen->id)
                 ->update([
                     'lane'        => 'voting',
                     'status'      => 'open',
                     'vote_end_at' => $tomorrow2000,
-                    // keep existing theme_id/theme_text so vote page shows yesterday's theme
+                    // Keep original theme_id/theme_text so vote page shows yesterday's theme
+                    // poster_url is NOT updated, so it stays from submission phase
                     'updated_at'  => $now,
                 ]);
 
-            // Open a fresh submission for uploads with the same theme
+            // 2. Open NEW submission for uploads with chosen theme
             DB::table('contest_cycles')->insert([
                 'lane'          => 'submission',
                 'status'        => 'open',
@@ -134,6 +198,13 @@ class ThemeController extends Controller
                 'vote_end_at'   => null,
                 'created_at'    => $now,
                 'updated_at'    => $now,
+            ]);
+            
+            \Log::info('[THEME_PICK_ROTATE]', [
+                'promoted_cycle' => $frozen->id,
+                'new_theme_id' => $themeId,
+                'new_theme_text' => $themeText,
+                'user_id' => auth()->id(),
             ]);
 
             // Audit log (optional - skip if table doesn't exist)
@@ -167,8 +238,31 @@ class ThemeController extends Controller
             \Log::warning('concurs:inherit-poster failed: ' . $e->getMessage());
         }
 
+        // Clear ALL modal flags to prevent loop
+        \Log::info('[THEME_PICK_BEFORE_SESSION]', [
+            'user_id' => auth()->id(),
+            'session_before' => session()->all(),
+        ]);
+        
         session()->forget('ap_show_theme_modal');
-        session()->put('winner_chose_theme', 1);
+        session()->forget('force_theme_modal');
+        session()->put('winner_chose_theme', true);
+        session()->save(); // Force save session immediately
+        
+        \Log::info('[THEME_PICK_AFTER_SESSION]', [
+            'user_id' => auth()->id(),
+            'winner_chose_theme' => session('winner_chose_theme'),
+            'session_after' => session()->all(),
+        ]);
+        
+        // DEBUG: Log successful theme pick
+        \Log::info('[THEME_PICK_SUCCESS]', [
+            'user_id' => auth()->id(),
+            'theme_id' => $themeId,
+            'theme_text' => $themeText,
+            'new_submission_created' => true,
+            'frozen_cycle_id' => $frozen->id,
+        ]);
 
         if ($request->ajax() || $request->wantsJson()) {
             return response()->json([

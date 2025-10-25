@@ -105,4 +105,8 @@ class ContestCycle extends Model
         }
         return "{$diff->i}m";
     }
+    public function contestTheme()
+{
+    return $this->belongsTo(\App\Models\ContestTheme::class, 'contest_theme_id');
+}
 }

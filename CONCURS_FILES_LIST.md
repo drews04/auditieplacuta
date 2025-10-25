@@ -1,0 +1,38 @@
+Concurs files (names only)
+
+- DeclareWinner.php
+- FallbackTheme.php
+- HealthCheck.php
+- InheritPoster.php
+- ConcursController.php
+- UploadController.php
+- VoteController.php
+- ThemeController.php
+- ArchiveController.php
+- CycleController.php
+- PosterController.php
+- index.blade.php
+- upload.blade.php
+- vote.blade.php
+- alege-tema.blade.php
+- theme_picker.blade.php
+- winner_recap.blade.php
+- youtube_modal.blade.php
+- concurs.js
+- theme-like.js
+- concurs-winner.css
+- concurs.css
+- concurs-override.css
+- web.php
+- 2025_09_17_174355_add_poster_url_to_contest_cycles_table.php
+- 2025_10_20_200001_add_poster_url_to_contest_cycles.php
+- 2025_10_20_200002_create_banned_songs_table.php
+- 2025_10_20_200003_add_chosen_by_user_id_to_contest_themes.php
+- 2025_09_14_115610_harden_votes_uniques_only.php
+- 2025_09_14_121358_add_youtube_id_unique_to_songs.php
+- 2025_10_07_032709_drop_tiebreaks_table.php
+- 2025_10_15_081328_harden_theme_likes_unique.php
+- 2025_10_15_081551_drop_tiebreak_fk_from_votes.php
+- 2025_10_15_081834_drop_all_tiebreak_refs.php
+- 2025_10_15_082350_kill_tiebreaks_safely.php
+

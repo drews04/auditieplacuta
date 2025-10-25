@@ -192,6 +192,9 @@ class DeclareWinner extends Command
             // Freeze only; actual rotation will occur on theme pick/fallback
             $this->freezeSubmission($now);
 
+            // Archive the completed cycle for historical browsing
+            $this->archiveCycle($votingCycle->id, $winnerUserId, $winnerSongId, $now);
+
             DB::commit();
             $this->info("[DECLARE] Winner declared for cycle {$votingCycle->id}: song {$winnerSongId}, user {$winnerUserId} ({$decideMethod})");
             $this->info("[FREEZE] Submission frozen (theme_id=NULL). Nothing advances until theme is chosen.");
@@ -417,5 +420,160 @@ class DeclareWinner extends Command
             'submission_count' => (int)($counts->submission_count ?? 0),
             'voting_count'     => (int)($counts->voting_count ?? 0),
         ];
+    }
+
+    /**
+     * Archive completed cycle for historical browsing
+     * 
+     * Creates a snapshot of the cycle with all rankings, winner data, etc.
+     * This snapshot is independent and won't be affected by future DB changes.
+     */
+    private function archiveCycle($cycleId, $winnerUserId, $winnerSongId, $now): void
+    {
+        try {
+            // Get cycle data
+            $cycle = DB::table('contest_cycles')->where('id', $cycleId)->first();
+            if (!$cycle) {
+                $this->warn("[ARCHIVE] Cycle {$cycleId} not found");
+                return;
+            }
+
+            // Get theme data
+            $theme = null;
+            $themeName = $cycle->theme_text ?? 'Concurs';
+            $themeCategory = 'Gen';
+            $themeLikesCount = 0;
+
+            if ($cycle->theme_id) {
+                $theme = DB::table('contest_themes')->where('id', $cycle->theme_id)->first();
+                if ($theme) {
+                    $themeName = $theme->name;
+                    // Extract category from theme name (e.g., "T&Z — Melodii din Brazilia" → "T&Z")
+                    $parts = preg_split('/\s*[-—]\s*/u', $themeName, 2);
+                    $themeCategory = trim($parts[0] ?? 'Gen');
+                    
+                    // Get likes count
+                    $themeLikesCount = DB::table('theme_likes')
+                        ->where('theme_id', $cycle->theme_id)
+                        ->count();
+                }
+            }
+
+            // Get winner data
+            $winnerSong = DB::table('songs')->where('id', $winnerSongId)->first();
+            $winnerUser = DB::table('users')->where('id', $winnerUserId)->first();
+
+            if (!$winnerSong || !$winnerUser) {
+                $this->warn("[ARCHIVE] Winner data not found for cycle {$cycleId}");
+                return;
+            }
+
+            // Get winner votes and points
+            $winnerVotes = DB::table('votes')->where('song_id', $winnerSongId)->count();
+            $winnerPoints = $this->calculatePoints($cycleId, $winnerSongId);
+
+            // Build complete ranking data (JSON snapshot)
+            $rankings = $this->buildRankingData($cycleId);
+
+            // Get poster URL
+            $posterUrl = $cycle->poster_url ?? null;
+
+            // Insert archive entry
+            DB::table('contest_archives')->insert([
+                'cycle_id'             => $cycleId,
+                'theme_id'             => $cycle->theme_id,
+                'theme_name'           => $themeName,
+                'theme_category'       => $themeCategory,
+                'theme_likes_count'    => $themeLikesCount,
+                'winner_user_id'       => $winnerUserId,
+                'winner_song_id'       => $winnerSongId,
+                'winner_name'          => $winnerUser->name ?? 'Unknown',
+                'winner_photo_url'     => $winnerUser->profile_photo_url ?? null,
+                'winner_song_title'    => $winnerSong->title ?? 'Unknown Song',
+                'winner_song_url'      => $winnerSong->youtube_url ?? '',
+                'winner_votes'         => $winnerVotes,
+                'winner_points'        => $winnerPoints,
+                'poster_url'           => $posterUrl,
+                'vote_end_at'          => $cycle->vote_end_at,
+                'archived_at'          => $now,
+                'ranking_data'         => json_encode($rankings),
+                'created_at'           => $now,
+                'updated_at'           => $now,
+            ]);
+
+            $this->info("[ARCHIVE] Cycle {$cycleId} archived successfully");
+        } catch (\Throwable $e) {
+            $this->warn("[ARCHIVE] Failed to archive cycle {$cycleId}: {$e->getMessage()}");
+            // Don't throw - archiving is non-critical
+        }
+    }
+
+    /**
+     * Build complete ranking data for archiving
+     */
+    private function buildRankingData($cycleId): array
+    {
+        $songs = DB::table('songs')
+            ->join('users', 'users.id', '=', 'songs.user_id')
+            ->where('songs.cycle_id', $cycleId)
+            ->select('songs.*', 'users.name as user_name')
+            ->get();
+
+        $rankings = [];
+        foreach ($songs as $song) {
+            $votes = DB::table('votes')->where('song_id', $song->id)->count();
+            $points = $this->calculatePoints($cycleId, $song->id);
+
+            $rankings[] = [
+                'song_id'      => $song->id,
+                'user_name'    => $song->user_name,
+                'song_title'   => $song->title ?? 'Unknown',
+                'youtube_url'  => $song->youtube_url ?? '',
+                'votes'        => $votes,
+                'points'       => $points,
+            ];
+        }
+
+        // Sort by points DESC, then votes DESC
+        usort($rankings, function($a, $b) {
+            if ($b['points'] !== $a['points']) {
+                return $b['points'] - $a['points'];
+            }
+            return $b['votes'] - $a['votes'];
+        });
+
+        // Add rank numbers
+        foreach ($rankings as $i => $ranking) {
+            $rankings[$i]['rank'] = $i + 1;
+        }
+
+        return $rankings;
+    }
+
+    /**
+     * Calculate points for a song based on voting position
+     */
+    private function calculatePoints($cycleId, $songId): int
+    {
+        // Get all songs with vote counts
+        $songs = DB::table('songs')
+            ->where('cycle_id', $cycleId)
+            ->select('id', DB::raw('(SELECT COUNT(*) FROM votes WHERE votes.song_id = songs.id) as vote_count'))
+            ->get()
+            ->sortByDesc('vote_count')
+            ->values();
+
+        // Find position of this song
+        $position = 0;
+        foreach ($songs as $index => $song) {
+            if ($song->id == $songId) {
+                $position = $index + 1;
+                break;
+            }
+        }
+
+        // Points distribution: 25, 18, 15, 12, 10, 8, 6, 4, 2, 1, 0...
+        $pointsMap = [1 => 25, 2 => 18, 3 => 15, 4 => 12, 5 => 10, 6 => 8, 7 => 6, 8 => 4, 9 => 2, 10 => 1];
+        return $pointsMap[$position] ?? 0;
     }
 }

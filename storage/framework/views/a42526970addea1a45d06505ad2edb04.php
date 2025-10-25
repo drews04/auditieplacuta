@@ -5,10 +5,12 @@
 
     <div class="d-flex flex-wrap justify-content-center gap-2 alege-tema-inputs">
       <select name="category" class="form-select alege-tema-select" style="max-width:220px;">
-        <option value="CSD">CSD — Cu și despre</option>
-        <option value="ITC">ITC — În titlu cuvânt</option>
-        <option value="Artiști">Artiști</option>
-        <option value="Genuri">Genuri</option>
+        <option value="ITC">ITC</option>
+        <option value="IVC">IVC</option>
+        <option value="Gen">Gen</option>
+        <option value="E&S">E&S</option>
+        <option value="T&Z">T&Z</option>
+        <option value="Div">Div</option>
       </select>
 
       <input

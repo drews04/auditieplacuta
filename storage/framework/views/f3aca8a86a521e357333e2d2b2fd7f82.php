@@ -1,5 +1,3 @@
-
-
 <?php $__env->startSection('title', 'Muzică – Auditie Placuta'); ?>
 
 <?php $__env->startSection('content'); ?>

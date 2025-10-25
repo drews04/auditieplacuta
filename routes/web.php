@@ -73,7 +73,7 @@ use App\Http\Controllers\WinnersController;
 
 // --- Concurs (NEW structure) ---
 use App\Http\Controllers\Concurs\{ConcursController, UploadController, VoteController, ThemeController, ArchiveController};
-use App\Http\Controllers\Concurs\Admin\{CycleController as AdminCycleController, PosterController as AdminPosterController};
+use App\Http\Controllers\Concurs\Admin\{CycleController as AdminCycleController, PosterController as AdminPosterController, DisqualifyController};
 
 // --- Forum ---
 use App\Http\Controllers\Forum\CategoryController;
@@ -293,7 +293,7 @@ Route::middleware('auth')->group(function () {
 Route::middleware('auth')->group(function () {
     Route::get('/concurs/alege-tema',  [ThemeController::class, 'create'])->name('concurs.alege-tema.create');
     Route::post('/concurs/alege-tema', [ThemeController::class, 'store'])->name('concurs.alege-tema.store');
-    Route::post('/concurs/tema/alege', [ThemeController::class, 'store'])->name('concurs.theme.pick'); // Alt route
+    
 });
 
 // Theme likes
@@ -303,8 +303,8 @@ Route::middleware('auth')->group(function () {
 
 // Archive
 Route::get('/concurs/arhiva', [ArchiveController::class, 'index'])->name('concurs.arhiva');
-Route::get('/concurs/arhiva/{date}', [ArchiveController::class, 'show'])->name('concurs.arhiva.show');
-Route::get('/concurs/arhiva/{date}/voters/{song}', [ArchiveController::class, 'votersJson'])->name('concurs.arhiva.voters');
+Route::get('/concurs/arhiva/{cycleId}', [ArchiveController::class, 'show'])->name('concurs.arhiva.show');
+Route::get('/concurs/arhiva/navigate/{direction}', [ArchiveController::class, 'navigate'])->name('concurs.arhiva.navigate');
 
 // Legacy redirects
 Route::get('/concurs/incarca-melodie', fn () => redirect()->to(route('concurs') . '#concurs-submit'))->name('concurs.incarca-melodie');
@@ -329,6 +329,9 @@ Route::middleware(['auth', AdminOnly::class])->group(function () {
     // Poster management
     Route::post('/admin/concurs/poster', [AdminPosterController::class, 'store'])->name('admin.concurs.poster.store');
     Route::delete('/admin/concurs/poster', [AdminPosterController::class, 'destroy'])->name('admin.concurs.poster.destroy');
+    
+    // Song disqualification
+    Route::post('/concurs/admin/disqualify/{songId}', [DisqualifyController::class, 'toggle'])->name('concurs.admin.disqualify');
 });
 
 // ───────────────────────────────────────────────────────────────────────────────

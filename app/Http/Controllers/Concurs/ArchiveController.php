@@ -4,170 +4,152 @@ namespace App\Http\Controllers\Concurs;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
-use App\Models\ContestCycle;
-use App\Models\Winner;
-use App\Models\Song;
-use App\Models\Vote;
+use Carbon\Carbon;
 
 /**
- * Archive pages for past competitions
+ * Archive Controller - Browse historical contest cycles
  */
 class ArchiveController extends Controller
 {
     /**
-     * Paginated list of finished competitions (newest first)
+     * Show archived cycle by ID
+     * 
+     * GET /concurs/arhiva/{cycleId}
+     */
+    public function show(Request $request, $cycleId = null)
+    {
+        $tz = config('app.timezone', 'Europe/Bucharest');
+
+        // If no cycleId provided, show latest archived cycle
+        if (!$cycleId) {
+            $latest = DB::table('contest_archives')
+                ->orderByDesc('vote_end_at')
+                ->first();
+            
+            if ($latest) {
+                return redirect()->route('concurs.arhiva.show', ['cycleId' => $latest->cycle_id]);
+            }
+            
+            // No archives yet
+            return redirect()->route('concurs')->with('info', 'Nu există încă concursuri arhivate.');
+        }
+
+        // Get archive entry
+        $archive = DB::table('contest_archives')
+            ->where('cycle_id', $cycleId)
+            ->first();
+
+        if (!$archive) {
+            return redirect()->route('concurs')->with('error', 'Concursul arhivat nu a fost găsit.');
+        }
+
+        // Decode ranking data
+        $rankings = json_decode($archive->ranking_data, true) ?? [];
+
+        // Get winner's other winning posters (for carousel)
+        $winnerPosters = DB::table('contest_archives')
+            ->where('winner_user_id', $archive->winner_user_id)
+            ->orderByDesc('vote_end_at')
+            ->select('cycle_id', 'theme_name', 'poster_url', 'vote_end_at')
+            ->get();
+
+        // Get prev/next navigation
+        $prevArchive = DB::table('contest_archives')
+            ->where('vote_end_at', '<', $archive->vote_end_at)
+            ->orderByDesc('vote_end_at')
+            ->first();
+
+        $nextArchive = DB::table('contest_archives')
+            ->where('vote_end_at', '>', $archive->vote_end_at)
+            ->orderBy('vote_end_at')
+            ->first();
+
+        // Format date (e.g., "24 Octombrie 2025")
+        $voteEndDate = Carbon::parse($archive->vote_end_at, $tz);
+        $formattedDate = $voteEndDate->translatedFormat('d F Y');
+
+        return view('concurs.arhiva', compact(
+            'archive',
+            'rankings',
+            'winnerPosters',
+            'prevArchive',
+            'nextArchive',
+            'formattedDate'
+        ));
+    }
+
+    /**
+     * Navigate to prev/next archived cycle
+     * 
+     * GET /concurs/arhiva/navigate/{direction}?current={cycleId}
+     */
+    public function navigate(Request $request, $direction)
+    {
+        $currentCycleId = $request->query('current');
+
+        if (!$currentCycleId) {
+            // If on main concurs page, go to latest archive
+            if ($direction === 'prev') {
+                $latest = DB::table('contest_archives')
+                    ->orderByDesc('vote_end_at')
+                    ->first();
+                
+                if ($latest) {
+                    return redirect()->route('concurs.arhiva.show', ['cycleId' => $latest->cycle_id]);
+                }
+            }
+            
+            return redirect()->route('concurs');
+        }
+
+        // Get current archive
+        $current = DB::table('contest_archives')
+            ->where('cycle_id', $currentCycleId)
+            ->first();
+
+        if (!$current) {
+            return redirect()->route('concurs');
+        }
+
+        // Navigate
+        if ($direction === 'prev') {
+            // Go to older cycle
+            $target = DB::table('contest_archives')
+                ->where('vote_end_at', '<', $current->vote_end_at)
+                ->orderByDesc('vote_end_at')
+                ->first();
+        } else {
+            // Go to newer cycle
+            $target = DB::table('contest_archives')
+                ->where('vote_end_at', '>', $current->vote_end_at)
+                ->orderBy('vote_end_at')
+                ->first();
+        }
+
+        if ($target) {
+            return redirect()->route('concurs.arhiva.show', ['cycleId' => $target->cycle_id]);
+        }
+
+        // If no target (reached end), go to main concurs if going "next", stay if going "prev"
+        if ($direction === 'next') {
+            return redirect()->route('concurs');
+        }
+
+        return redirect()->route('concurs.arhiva.show', ['cycleId' => $currentCycleId]);
+    }
+
+    /**
+     * List all archives (paginated)
+     * 
+     * GET /concurs/arhiva
      */
     public function index(Request $request)
     {
-        $now = Carbon::now();
-
-        // Finished cycles only
-        $cycles = ContestCycle::query()
-            ->where('vote_end_at', '<=', $now)
+        $archives = DB::table('contest_archives')
             ->orderByDesc('vote_end_at')
             ->paginate(10);
 
-        // Attach winner snapshot if present (falls back to computed)
-        $winners = Winner::whereIn('cycle_id', $cycles->pluck('id'))->get()->keyBy('cycle_id');
-
-        $items = $cycles->getCollection()->map(function ($c) use ($winners) {
-            $w = $winners->get($c->id);
-            if (!$w) {
-                $w = $this->computeWinner($c->id);
-            }
-            $c->winner_snapshot = $w; // may be null if no votes
-            return $c;
-        });
-
-        $cycles->setCollection($items);
-
-        return view('concurs.archive.index', compact('cycles'));
-    }
-
-    /**
-     * Detail page for one competition (standings + who voted)
-     */
-    public function show(string $date)
-    {
-        $now = Carbon::now();
-
-        // We key archive pages by the day voting ENDED (YYYY-MM-DD)
-        $cycle = ContestCycle::query()
-            ->whereDate('vote_end_at', $date)
-            ->where('vote_end_at', '<=', $now) // safety: finished only
-            ->firstOrFail();
-
-        // Winner snapshot (or compute if missing)
-        $winner = Winner::where('cycle_id', $cycle->id)->first()
-            ?? $this->computeWinner($cycle->id);
-
-        // All songs in this cycle
-        $songs = Song::with('user')
-            ->where('cycle_id', $cycle->id)
-            ->orderBy('id')
-            ->get();
-
-        // All votes (one per user per cycle)
-        $votes = Vote::with('user')
-            ->where('cycle_id', $cycle->id)
-            ->get()
-            ->groupBy('song_id'); // group voters per song
-
-        // Standings (by vote count desc)
-        $standings = $songs->map(function ($song) use ($votes) {
-            $voters = $votes->get($song->id, collect());
-            $song->vote_count = $voters->count();
-            $song->voters = $voters->pluck('user'); // collection of User models
-            return $song;
-        })->sortByDesc('vote_count')->values();
-
-        // Prev / Next finished cycles for arrow navigation
-        $prev = ContestCycle::where('vote_end_at', '<', $cycle->vote_end_at)
-            ->orderByDesc('vote_end_at')->first();
-
-        $next = ContestCycle::where('vote_end_at', '>', $cycle->vote_end_at)
-            ->where('vote_end_at', '<=', $now)
-            ->orderBy('vote_end_at')->first();
-
-        return view('concurs.archive.show', compact('cycle', 'winner', 'standings', 'prev', 'next'));
-    }
-
-    /**
-     * JSON endpoint: voters for a specific song in a finished cycle
-     */
-    public function votersJson(string $date, int $songId)
-    {
-        $now = Carbon::now();
-
-        // Find finished cycle by the date its voting ended (YYYY-MM-DD)
-        $cycle = ContestCycle::query()
-            ->whereDate('vote_end_at', $date)
-            ->where('vote_end_at', '<=', $now)
-            ->firstOrFail();
-
-        // Ensure the song belongs to this cycle
-        $song = Song::with('user:id,name')
-            ->where('id', $songId)
-            ->where('cycle_id', $cycle->id)
-            ->firstOrFail();
-
-        // Pull voters for that song within this cycle
-        $votes = Vote::with('user:id,name')
-            ->where('cycle_id', $cycle->id)
-            ->where('song_id', $song->id)
-            ->get();
-
-        $voters = $votes->map(function ($v) {
-            return [
-                'id'   => optional($v->user)->id,
-                'name' => optional($v->user)->name ?? '—',
-            ];
-        })->values();
-
-        return response()->json([
-            'cycle_id'   => $cycle->id,
-            'date'       => $cycle->vote_end_at->toDateString(),
-            'song'       => [
-                'id'    => $song->id,
-                'title' => $song->title,
-                'user'  => [
-                    'id'   => optional($song->user)->id,
-                    'name' => optional($song->user)->name ?? '—',
-                ],
-            ],
-            'vote_count' => $voters->count(),
-            'voters'     => $voters,
-        ]);
-    }
-
-    /**
-     * Compute winner if the snapshot row is missing
-     * Returns a lightweight object with: song_id, user_id, vote_count, song, user
-     */
-    protected function computeWinner(int $cycleId)
-    {
-        $top = Vote::select('song_id', DB::raw('COUNT(*) as vc'))
-            ->where('cycle_id', $cycleId)
-            ->groupBy('song_id')
-            ->orderByDesc('vc')
-            ->orderBy('song_id') // stable
-            ->first();
-
-        if (!$top) return null;
-
-        $song = Song::with('user')->find($top->song_id);
-        if (!$song) return null;
-
-        return (object) [
-            'cycle_id'   => $cycleId,
-            'song_id'    => $song->id,
-            'user_id'    => $song->user_id,
-            'vote_count' => (int) $top->vc,
-            'song'       => $song,
-            'user'       => $song->user,
-        ];
+        return view('concurs.arhiva-index', compact('archives'));
     }
 }
-

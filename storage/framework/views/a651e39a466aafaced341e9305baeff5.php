@@ -1,5 +1,3 @@
-
-
 <?php $__env->startSection('title', 'Acasă – Auditie Placuta'); ?>
 <?php $__env->startSection('content'); ?>
 <?php $__env->startSection('body_class', 'page-home'); ?>

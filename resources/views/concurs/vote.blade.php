@@ -9,6 +9,7 @@
   <link rel="stylesheet" href="{{ asset('assets/css/theme-like.css') }}?v={{ filemtime(public_path('assets/css/theme-like.css')) }}">
   <link rel="stylesheet" href="{{ asset('assets/css/concurs-override.css') }}?v={{ time() }}">
   <link rel="stylesheet" href="{{ asset('assets/css/concurs-mobile.css') }}?v={{ time() }}">
+  <link rel="stylesheet" href="{{ asset('assets/css/song-disqualified.css') }}?v={{ time() }}">
 @endpush
 
 {{-- main site styles (same include as /concurs) --}}

@@ -1,4 +1,4 @@
-@extends('layouts.guest')
+
 
 @push('styles')
 <link rel="stylesheet" href="{{ asset('assets/css/register.css') }}">
@@ -76,3 +76,4 @@
   </div>
 </div>
 @endsection
+    

@@ -1,4 +1,4 @@
-@extends('layouts.guest')
+
 
 @section('content')
     <div class="login-container">

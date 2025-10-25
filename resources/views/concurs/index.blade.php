@@ -28,11 +28,7 @@
 @section('title', 'Concursul de Azi')
 @section('body_class', 'page-concurs')
 
-{{-- Winner recap banner (safe) --}}
-@includeWhen(isset($winnerStripCycle, $winnerStripWinner) && $winnerStripCycle && $winnerStripWinner, 'concurs.partials.winner_recap', [
-    'lastFinishedCycle' => $winnerStripCycle,
-    'lastWinner' => $winnerStripWinner
-])
+
 
 {{-- Winner pick-theme button --}}
 @if($isWinner ?? false)
@@ -49,6 +45,31 @@
 @endif
 
 @section('content')
+  {{-- Archive Navigation Arrows --}}
+  <div class="container">
+    <div class="archive-nav d-flex justify-content-between align-items-center mb-4 mt-3">
+      @php
+        // Get latest archived cycle for "previous" navigation
+        $latestArchive = DB::table('contest_archives')
+            ->orderByDesc('vote_end_at')
+            ->first();
+      @endphp
+      
+      @if($latestArchive)
+        <a href="{{ route('concurs.arhiva.show', ['cycleId' => $latestArchive->cycle_id]) }}" 
+           class="btn btn-outline-primary archive-nav-btn">
+          ← Arhiva
+        </a>
+      @else
+        <div></div>
+      @endif
+
+      <h1 class="mb-0 fw-bold" style="font-size: clamp(20px, 4vw, 28px);">Concursul de Azi</h1>
+
+      <div></div> {{-- Right side placeholder (no "next" from current) --}}
+    </div>
+  </div>
+
   {{-- Admin-only Start modal trigger --}}
   @auth
     @if((auth()->user()->is_admin ?? false) || auth()->id() === 1)
@@ -402,7 +423,7 @@
 
   {{-- Winner reminder overlay (no inline JS; handled by concurs.js) --}}
   @php $isAdmin = auth()->check() && (auth()->user()->is_admin ?? false); @endphp
-  @if( ((($isWinner ?? false) && ($gapBetweenPhases ?? false))) || session('force_theme_modal') === true )
+  @if( (($isWinner ?? false) && ($gapBetweenPhases ?? false) && !session('winner_chose_theme')) || session('force_theme_modal') === true )
     <div id="winnerReminder" style="display:none;">
       <canvas id="confetti-bg" style="pointer-events:none"></canvas>
       <div class="winner-box">

@@ -157,15 +157,17 @@ class UploadController extends Controller
                               : back()->with('error', $msg);
         }
 
-        // 5) CHECK BANNED SONGS (past winners)
-        $banned = DB::table('banned_songs')
+        // 5) CHECK IF SONG IS A PAST WINNER (auto-disqualify but allow upload)
+        $isPastWinner = DB::table('banned_songs')
             ->where('youtube_id', $videoId)
             ->exists();
-
-        if ($banned) {
-            $msg = 'Această melodie a câștigat deja și nu poate fi re-încărcată.';
-            return $wantsJson ? response()->json(['message' => $msg], 409)
-                              : back()->with('error', $msg);
+        
+        $isDisqualified = false;
+        $disqualificationReason = null;
+        
+        if ($isPastWinner) {
+            $isDisqualified = true;
+            $disqualificationReason = 'Această melodie a câștigat deja concursul și este descalificată automat.';
         }
 
         // 6) CHECK FOR DUPLICATE IN SAME CYCLE
@@ -198,13 +200,15 @@ class UploadController extends Controller
 
         // 8) INSERT SONG
         DB::table('songs')->insert([
-            'user_id'     => $user->id,
-            'cycle_id'    => $cycleSubmit->id,
-            'youtube_id'  => $videoId,
-            'youtube_url' => $url,
-            'title'       => $title,
-            'created_at'  => $now,
-            'updated_at'  => $now,
+            'user_id'                  => $user->id,
+            'cycle_id'                 => $cycleSubmit->id,
+            'youtube_id'               => $videoId,
+            'youtube_url'              => $url,
+            'title'                    => $title,
+            'is_disqualified'          => $isDisqualified,
+            'disqualification_reason'  => $disqualificationReason,
+            'created_at'               => $now,
+            'updated_at'               => $now,
         ]);
 
         $ok = '✅ Melodie încărcată cu succes!';

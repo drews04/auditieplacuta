@@ -92,6 +92,64 @@
     0 0 6px #16f1d3,
     0 0 12px rgba(22,241,211,0.6);
 }
+/* === Concurs pages: match header background to page background === */
+.page-concurs header,
+.page-concurs .site-header,
+.page-concurs .navbar,
+.page-concurs .header,
+.page-concurs-upload header,
+.page-concurs-upload .site-header,
+.page-concurs-upload .navbar,
+.page-concurs-upload .header,
+.page-concurs-vote header,
+.page-concurs-vote .site-header,
+.page-concurs-vote .navbar,
+.page-concurs-vote .header{
+  background: #151625 !important;  /* identical to body background */
+  border-bottom: 0 !important;
+  box-shadow: none !important;
+  margin-bottom: 0 !important;
+  width: 100% !important;          /* avoid 100vw covering scrollbar */
+}
+
+.page-concurs header::before,
+.page-concurs header::after,
+.page-concurs .site-header::before,
+.page-concurs .site-header::after,
+.page-concurs .navbar::before,
+.page-concurs .navbar::after,
+.page-concurs .header::before,
+.page-concurs .header::after,
+.page-concurs-upload header::before,
+.page-concurs-upload header::after,
+.page-concurs-upload .site-header::before,
+.page-concurs-upload .site-header::after,
+.page-concurs-upload .navbar::before,
+.page-concurs-upload .navbar::after,
+.page-concurs-upload .header::before,
+.page-concurs-upload .header::after,
+.page-concurs-vote header::before,
+.page-concurs-vote header::after,
+.page-concurs-vote .site-header::before,
+.page-concurs-vote .site-header::after,
+.page-concurs-vote .navbar::before,
+.page-concurs-vote .navbar::after,
+.page-concurs-vote .header::before,
+.page-concurs-vote .header::after{
+  content: none !important;         /* kill decorative seams */
+}
+
+/* STRONG OVERRIDE: some themes paint background on inner .menu-area */
+.page-concurs #gamfi-header,
+.page-concurs #gamfi-header .menu-area,
+.page-concurs-upload #gamfi-header,
+.page-concurs-upload #gamfi-header .menu-area,
+.page-concurs-vote #gamfi-header,
+.page-concurs-vote #gamfi-header .menu-area{
+  background: #151625 !important;   /* match body */
+  box-shadow: none !important;
+  border-bottom: 0 !important;
+}
 /* === Arena mega menu — HARD center lists under titles === */
 .mega_menu_hov .gamfi_mega_menu_sect .gamfi_mega_menu .mega_menu_content .menu_column{
   position: relative;
@@ -114,24 +172,4 @@
   display: inline-block !important;
   padding: 0 !important;
   margin: 0 !important;
-}
-/* Arena mega menu — center lists under titles (final) */
-.mega_menu_hov .gamfi_mega_menu_sect .mega_menu_content .menu_column{
-  text-align: center !important;
-}
-
-.mega_menu_hov .gamfi_mega_menu_sect .mega_menu_content .menu_column > ul{
-  float: none !important;              /* kill legacy float */
-  display: table !important;           /* shrink to content for easy centering */
-  width: auto !important;
-  margin: 12px auto 0 !important;      /* center under H2 */
-  padding-left: 0 !important;
-  list-style: none !important;
-  text-align: left !important;
-}
-
-.mega_menu_hov .gamfi_mega_menu_sect .mega_menu_content .menu_column > ul > li > a{
-  background: none !important;         /* some themes add bullets via bg */
-  padding-left: 0 !important;          /* kill left indent */
-  margin-left: 0 !important;
 }

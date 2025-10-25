@@ -26,10 +26,6 @@
 <?php $__env->startSection('body_class', 'page-concurs'); ?>
 
 
-<?php echo $__env->renderWhen(isset($winnerStripCycle, $winnerStripWinner) && $winnerStripCycle && $winnerStripWinner, 'concurs.partials.winner_recap', [
-    'lastFinishedCycle' => $winnerStripCycle,
-    'lastWinner' => $winnerStripWinner
-], array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1])); ?>
 
 
 <?php if($isWinner ?? false): ?>
@@ -46,6 +42,31 @@
 <?php endif; ?>
 
 <?php $__env->startSection('content'); ?>
+  
+  <div class="container">
+    <div class="archive-nav d-flex justify-content-between align-items-center mb-4 mt-3">
+      <?php
+        // Get latest archived cycle for "previous" navigation
+        $latestArchive = DB::table('contest_archives')
+            ->orderByDesc('vote_end_at')
+            ->first();
+      ?>
+      
+      <?php if($latestArchive): ?>
+        <a href="<?php echo e(route('concurs.arhiva.show', ['cycleId' => $latestArchive->cycle_id])); ?>" 
+           class="btn btn-outline-primary archive-nav-btn">
+          ← Arhiva
+        </a>
+      <?php else: ?>
+        <div></div>
+      <?php endif; ?>
+
+      <h1 class="mb-0 fw-bold" style="font-size: clamp(20px, 4vw, 28px);">Concursul de Azi</h1>
+
+      <div></div> 
+    </div>
+  </div>
+
   
   <?php if(auth()->guard()->check()): ?>
     <?php if((auth()->user()->is_admin ?? false) || auth()->id() === 1): ?>
@@ -413,7 +434,7 @@ unset($__errorArgs, $__bag); ?>
 
   
   <?php $isAdmin = auth()->check() && (auth()->user()->is_admin ?? false); ?>
-  <?php if( ((($isWinner ?? false) && ($gapBetweenPhases ?? false))) || session('force_theme_modal') === true ): ?>
+  <?php if( (($isWinner ?? false) && ($gapBetweenPhases ?? false) && !session('winner_chose_theme')) || session('force_theme_modal') === true ): ?>
     <div id="winnerReminder" style="display:none;">
       <canvas id="confetti-bg" style="pointer-events:none"></canvas>
       <div class="winner-box">

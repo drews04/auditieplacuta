@@ -8,6 +8,7 @@
     $disabledVoteText     = $disabledVoteText     ?? null;    // custom disabled label
     $hideVoteStatus       = $hideVoteStatus       ?? false;   // hide entire right-side status area
     $votedSongId          = $votedSongId          ?? null;    // ID of song user voted for (purple glow)
+    $isAdmin              = auth()->check() && auth()->user()->is_admin;
 ?>
 
 <div class="list-group">
@@ -18,10 +19,12 @@
         $yt        = trim($song->youtube_url ?? '');
         $isMine    = auth()->check() && (int) ($song->user_id ?? 0) === (int) auth()->id();
         $isVoted   = $votedSongId && (int) ($song->id ?? 0) === (int) $votedSongId;
+        $isDisqualified = (bool) ($song->is_disqualified ?? false);
+        $disqReason = $song->disqualification_reason ?? 'Descalificat';
 
-        $canVote = $showVoteButtons && !$userHasVotedToday && !$isMine && auth()->check();
+        $canVote = $showVoteButtons && !$userHasVotedToday && !$isMine && !$isDisqualified && auth()->check();
         
-        $itemClass = $isMine ? 'my-song' : ($isVoted ? 'voted-song' : '');
+        $itemClass = $isMine ? 'my-song' : ($isVoted ? 'voted-song' : ($isDisqualified ? 'disqualified-song' : ''));
     ?>
 
     <div class="list-group-item d-flex justify-content-between align-items-center song-item <?php echo e($itemClass); ?>">
@@ -46,11 +49,15 @@
             </button>
 
             <span class="fw-semibold song-title"><?php echo e($label); ?></span>
+            
+            <?php if($isDisqualified): ?>
+                <span class="badge bg-danger ms-2" title="<?php echo e($disqReason); ?>">❌ Descalificat</span>
+            <?php endif; ?>
         </div>
 
         
-        <?php if (! ($hideVoteStatus)): ?>
-            <div class="d-flex align-items-center">
+        <div class="d-flex align-items-center">
+            <?php if (! ($hideVoteStatus)): ?>
                 <?php if($hideDisabledButtons): ?>
                     
                 <?php else: ?>
@@ -78,8 +85,29 @@
                         </button>
                     <?php endif; ?>
                 <?php endif; ?>
-            </div>
-        <?php endif; ?>
+            <?php endif; ?>
+            
+            
+            <?php if($isAdmin): ?>
+                <?php if($isDisqualified): ?>
+                    <button type="button" 
+                            class="btn btn-sm btn-outline-success admin-disqualify-toggle ms-2"
+                            data-song-id="<?php echo e($song->id); ?>"
+                            data-action="enable"
+                            title="Re-activează melodia">
+                        ✓ Re-activează
+                    </button>
+                <?php else: ?>
+                    <button type="button" 
+                            class="btn btn-sm btn-outline-danger admin-disqualify-toggle ms-2"
+                            data-song-id="<?php echo e($song->id); ?>"
+                            data-action="disqualify"
+                            title="Descalifică melodia">
+                        ✗ Descalifică
+                    </button>
+                <?php endif; ?>
+            <?php endif; ?>
+        </div>
     </div>
 <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
     <div class="alert alert-info mb-0">Nu au fost încă adăugate melodii.</div>

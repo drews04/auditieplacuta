@@ -1,0 +1,23 @@
+/* Disqualified song styling */
+.disqualified-song {
+    opacity: 0.6;
+    background-color: rgba(220, 53, 69, 0.1) !important;
+    border-left: 4px solid #dc3545 !important;
+}
+
+.disqualified-song .song-title {
+    text-decoration: line-through;
+}
+
+.admin-disqualify-toggle {
+    font-size: 0.85rem;
+    padding: 0.25rem 0.5rem;
+    white-space: nowrap;
+}
+
+.admin-disqualify-toggle:hover {
+    transform: scale(1.05);
+    transition: transform 0.2s;
+}
+
+

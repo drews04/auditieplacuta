@@ -1,6 +1,3 @@
-
-
-
 <?php $__env->startPush('styles'); ?>
   
   <link rel="stylesheet" href="<?php echo e(asset('assets/css/concurs-winner.css')); ?>?v=<?php echo e(filemtime(public_path('assets/css/concurs-winner.css'))); ?>">
@@ -9,6 +6,7 @@
   <link rel="stylesheet" href="<?php echo e(asset('assets/css/theme-like.css')); ?>?v=<?php echo e(filemtime(public_path('assets/css/theme-like.css'))); ?>">
   <link rel="stylesheet" href="<?php echo e(asset('assets/css/concurs-override.css')); ?>?v=<?php echo e(time()); ?>">
   <link rel="stylesheet" href="<?php echo e(asset('assets/css/concurs-mobile.css')); ?>?v=<?php echo e(time()); ?>">
+  <link rel="stylesheet" href="<?php echo e(asset('assets/css/song-disqualified.css')); ?>?v=<?php echo e(time()); ?>">
 <?php $__env->stopPush(); ?>
 
 

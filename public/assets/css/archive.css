@@ -1,0 +1,243 @@
+/* ==========================================
+   ARCHIVE PAGE - NEON STYLE
+   ========================================== */
+
+/* Navigation */
+.archive-nav {
+    margin-top: 20px;
+}
+
+.archive-nav-btn {
+    min-width: 140px;
+    font-weight: 600;
+    padding: 10px 20px;
+    background: rgba(22, 241, 211, 0.1);
+    border: 2px solid #16f1d3;
+    color: #16f1d3;
+    border-radius: 8px;
+    text-decoration: none;
+    transition: all 0.3s;
+    font-size: 16px;
+}
+
+.archive-nav-btn:hover {
+    background: rgba(22, 241, 211, 0.2);
+    box-shadow: 0 0 20px rgba(22, 241, 211, 0.5);
+    color: #fff;
+    transform: translateY(-2px);
+}
+
+/* Theme Title */
+.archive-theme-title {
+    font-size: clamp(28px, 5vw, 48px);
+    color: #16f1d3;
+    text-shadow: 0 0 15px #16f1d3, 0 0 30px rgba(22, 241, 211, 0.5);
+    font-weight: 800;
+    letter-spacing: 1px;
+}
+
+.archive-date {
+    font-size: 20px;
+    color: rgba(255, 255, 255, 0.7);
+    font-weight: 500;
+}
+
+/* Winner Card - NEON STYLE */
+.archive-winner-card {
+    background: rgba(22, 241, 211, 0.05);
+    border: 2px solid rgba(22, 241, 211, 0.3) !important;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(22, 241, 211, 0.2);
+}
+
+.archive-winner-photo {
+    width: 80px;
+    height: 80px;
+    object-fit: cover;
+    border: 3px solid #16f1d3;
+    border-radius: 50%;
+    box-shadow: 0 0 15px rgba(22, 241, 211, 0.5);
+}
+
+/* Ranking Table - NEON STYLE */
+.card {
+    background: rgba(22, 241, 211, 0.03);
+    border: 2px solid rgba(22, 241, 211, 0.2) !important;
+    border-radius: 12px;
+}
+
+.archive-ranking-table {
+    font-size: 15px;
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.archive-ranking-table thead {
+    background: rgba(22, 241, 211, 0.15);
+}
+
+.archive-ranking-table th {
+    background-color: transparent;
+    border-bottom: 2px solid #16f1d3 !important;
+    color: #16f1d3;
+    font-weight: 700;
+    padding: 15px 10px;
+    text-transform: uppercase;
+    font-size: 13px;
+    letter-spacing: 0.5px;
+}
+
+.archive-ranking-table td {
+    padding: 12px 10px;
+    border-bottom: 1px solid rgba(22, 241, 211, 0.1);
+    vertical-align: middle;
+}
+
+.archive-ranking-row {
+    transition: all 0.3s;
+    background: rgba(0, 0, 0, 0.2);
+}
+
+.archive-ranking-row:hover {
+    background-color: rgba(22, 241, 211, 0.1);
+    transform: scale(1.01);
+}
+
+.archive-hidden {
+    display: none;
+}
+
+/* Show More Button - NEON STYLE */
+#showMoreRankings {
+    background: rgba(22, 241, 211, 0.1);
+    border: 2px solid #16f1d3;
+    color: #16f1d3;
+    font-weight: 600;
+    padding: 10px 30px;
+    border-radius: 8px;
+    transition: all 0.3s;
+}
+
+#showMoreRankings:hover {
+    background: rgba(22, 241, 211, 0.2);
+    box-shadow: 0 0 20px rgba(22, 241, 211, 0.5);
+    color: #fff;
+    transform: translateY(-2px);
+}
+
+/* Poster Carousel */
+.archive-poster-carousel-container {
+    overflow: hidden;
+    position: relative;
+}
+
+.archive-poster-carousel {
+    display: flex;
+    gap: 20px;
+    overflow-x: auto;
+    scroll-behavior: smooth;
+    padding: 10px 0;
+    cursor: grab;
+    user-select: none;
+}
+
+.archive-poster-carousel.active {
+    cursor: grabbing;
+}
+
+.archive-poster-carousel::-webkit-scrollbar {
+    height: 8px;
+}
+
+.archive-poster-carousel::-webkit-scrollbar-track {
+    background: rgba(0,0,0,0.1);
+    border-radius: 10px;
+}
+
+.archive-poster-carousel::-webkit-scrollbar-thumb {
+    background: #16f1d3;
+    border-radius: 10px;
+}
+
+.archive-poster-item {
+    flex: 0 0 auto;
+    width: 200px;
+    height: 200px;
+    position: relative;
+}
+
+.archive-poster-link {
+    display: block;
+    width: 100%;
+    height: 100%;
+    position: relative;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.archive-poster-link:hover {
+    transform: translateY(-5px) scale(1.05);
+    box-shadow: 0 8px 24px rgba(22, 241, 211, 0.4);
+}
+
+.archive-poster-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.archive-poster-placeholder {
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    text-align: center;
+    color: white;
+    font-weight: 600;
+    font-size: 14px;
+}
+
+.archive-poster-overlay {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: linear-gradient(to top, rgba(0,0,0,0.9), transparent);
+    padding: 15px 10px 10px;
+    color: white;
+    font-size: 12px;
+    text-align: center;
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+
+.archive-poster-link:hover .archive-poster-overlay {
+    opacity: 1;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .archive-winner-photo {
+        width: 60px;
+        height: 60px;
+    }
+
+    .archive-poster-item {
+        width: 150px;
+        height: 150px;
+    }
+
+    .archive-nav {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .archive-nav-btn {
+        width: 100%;
+    }
+}
+
